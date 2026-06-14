@@ -30,12 +30,29 @@ export interface BlogPost {
   content: string;
 }
 
+export interface Track {
+  slug: string;
+  title: string;
+  tagline: string;
+  summary: string;
+  icon: string;        // emoji — no image dependency
+  color: string;       // tailwind color token e.g. "blue"
+  order: number;
+  prereqs: string[];   // track slugs this depends on
+  leadsTo: string[];   // track slugs this unlocks
+  tags: string[];
+  courseCount?: number;
+  content: string;
+}
+
 export interface Course {
   slug: string;
   title: string;
   summary: string;
   level: "Beginner" | "Intermediate" | "Advanced" | "Beginner to Intermediate";
   status: "draft" | "published" | "coming-soon";
+  track: string;       // track slug this belongs to
+  prereqs: string[];   // course slugs recommended before this
   tags: string[];
   lessonCount?: number;
   content: string;
@@ -146,11 +163,17 @@ export function getCourses(): Course[] {
       summary: data.summary ?? "",
       level: data.level ?? "Intermediate",
       status: data.status ?? "draft",
+      track: data.track ?? "uncategorised",
+      prereqs: data.prereqs ?? [],
       tags: data.tags ?? [],
       lessonCount: data.lessonCount,
       content,
     } satisfies Course;
   });
+}
+
+export function getCoursesByTrack(trackSlug: string): Course[] {
+  return getCourses().filter((c) => c.track === trackSlug);
 }
 
 export function getCourse(slug: string): Course | null {
@@ -172,8 +195,68 @@ export function getCourse(slug: string): Course | null {
     summary: data.summary ?? "",
     level: data.level ?? "Intermediate",
     status: data.status ?? "draft",
+    track: data.track ?? "uncategorised",
+    prereqs: data.prereqs ?? [],
     tags: data.tags ?? [],
     lessonCount: data.lessonCount,
+    content,
+  };
+}
+
+// ─── Tracks ───────────────────────────────────────────────────────────────────
+
+export function getTracks(): Track[] {
+  const dir = getContentDir("tracks");
+  const files = readMdxFiles(dir);
+
+  return files
+    .map((file) => {
+      const slug = file.replace(/\.mdx?$/, "");
+      const raw = fs.readFileSync(path.join(dir, file), "utf-8");
+      const { data, content } = matter(raw);
+      return {
+        slug,
+        title: data.title ?? slug,
+        tagline: data.tagline ?? "",
+        summary: data.summary ?? "",
+        icon: data.icon ?? "📚",
+        color: data.color ?? "zinc",
+        order: data.order ?? 99,
+        prereqs: data.prereqs ?? [],
+        leadsTo: data.leadsTo ?? [],
+        tags: data.tags ?? [],
+        courseCount: data.courseCount,
+        content,
+      } satisfies Track;
+    })
+    .sort((a, b) => a.order - b.order);
+}
+
+export function getTrack(slug: string): Track | null {
+  const dir = getContentDir("tracks");
+  const mdxPath = path.join(dir, `${slug}.mdx`);
+  const mdPath = path.join(dir, `${slug}.md`);
+  const resolvedPath = fs.existsSync(mdxPath)
+    ? mdxPath
+    : fs.existsSync(mdPath)
+      ? mdPath
+      : null;
+  if (!resolvedPath) return null;
+
+  const raw = fs.readFileSync(resolvedPath, "utf-8");
+  const { data, content } = matter(raw);
+  return {
+    slug,
+    title: data.title ?? slug,
+    tagline: data.tagline ?? "",
+    summary: data.summary ?? "",
+    icon: data.icon ?? "📚",
+    color: data.color ?? "zinc",
+    order: data.order ?? 99,
+    prereqs: data.prereqs ?? [],
+    leadsTo: data.leadsTo ?? [],
+    tags: data.tags ?? [],
+    courseCount: data.courseCount,
     content,
   };
 }

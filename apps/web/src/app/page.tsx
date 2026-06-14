@@ -88,9 +88,9 @@ export default function HomePage() {
             },
             {
               icon: <GraduationCap className="w-5 h-5" />,
-              label: "Courses",
-              desc: "Practical, code-first",
-              href: "/courses",
+              label: "Learn",
+              desc: "Tracks, fundamentals & applied AI",
+              href: "/learn",
               color: "text-amber-500",
             },
             {
