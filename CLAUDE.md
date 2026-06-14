@@ -93,6 +93,72 @@ pnpm typecheck
 
 ---
 
+## Course content style — LMS format
+
+Courses must follow an LMS (Learning Management System) style, not blog style. Every chapter must be structured and scannable. Use the JSX components registered in `courseComponents` in `apps/web/src/components/mdx/course-components.tsx`.
+
+### Chapter structure (every chapter must have all five)
+
+```mdx
+<ChapterHeader number={N} title="Chapter Title" time={minutes} />
+
+<LearningObjectives>
+- Bullet 1 — specific, measurable
+- Bullet 2
+</LearningObjectives>
+
+[Chapter content — prose, code, callouts, diagrams]
+
+<ChapterSummary>
+- Key point 1
+- Key point 2
+</ChapterSummary>
+
+<Checkpoint>
+1. Question testing comprehension?
+2. Question requiring application?
+</Checkpoint>
+```
+
+### Available components
+
+| Component | Use for |
+|---|---|
+| `<ChapterHeader number={N} title="..." time={N} />` | Chapter heading with number and time estimate |
+| `<LearningObjectives>` | What learner will achieve — bullet list children |
+| `<Callout type="tip|info|warning|important|note">` | Highlighted callout boxes |
+| `<Diagram title="..." caption="...">` | Replaces images — use ASCII art in `{...}` template literal |
+| `<ChapterSummary>` | End-of-chapter bullet summary |
+| `<Checkpoint>` | 2-3 comprehension questions as ordered list |
+| `<KeyTerm definition="...">term</KeyTerm>` | Inline highlighted key terms |
+| `<CodeFile filename="server.py">` | Code block with filename label |
+| `<Steps>` / `<Step number={N} title="...">` | Numbered procedure steps with connector line |
+
+### Diagram convention — never use broken image paths
+
+Do not use `![alt text](/images/path.png)`. Always use `<Diagram>` with ASCII art:
+
+```mdx
+<Diagram title="Architecture Overview" caption="Optional caption text">
+{`
+  ┌──────────┐     protocol     ┌──────────┐
+  │  Client  │────────────────►│  Server  │
+  └──────────┘                  └──────────┘`}
+</Diagram>
+```
+
+Use box-drawing characters: `─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼ ╌ ╍` and arrows `→ ← ↑ ↓ ▼ ▲ ►`.
+
+### Tone for course content
+
+- Explain the "why" before the "how" — context before code
+- Use tables for comparisons (when to use X vs Y)
+- Name things correctly on first use, avoid jargon without definition
+- Code examples must run as-is (no placeholder `...` that breaks copy-paste)
+- Every chapter stands alone — a reader should be able to jump to Chapter 5
+
+---
+
 ## Content writing conventions
 
 MDX frontmatter for blog posts:
