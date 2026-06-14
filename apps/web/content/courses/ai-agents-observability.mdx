@@ -1,53 +1,1384 @@
 ---
-title: "AI Agents with Observability"
+title: "AI Agents — From Basics to Multi-Agent Systems"
 slug: "ai-agents-observability"
-summary: "Build LangGraph agents the right way: with tracing, cost tracking, error handling, and human-in-the-loop approval. Learn to run agents you can actually trust."
-level: "Intermediate"
-status: "coming-soon"
+summary: "Understand what AI agents are, how they think and act, and how to build them — from a simple single-agent tool-caller to a collaborative multi-agent pipeline. Covers LangGraph, CrewAI, AutoGen, Agno, and more. Ends with a real hands-on project and full observability."
+level: "Beginner to Intermediate"
+status: "published"
 track: "applied-ai"
 prereqs: []
-tags: ["LangGraph", "Langfuse", "Observability", "Python", "Agents"]
-lessonCount: 7
+tags: ["AI Agents", "LangGraph", "CrewAI", "AutoGen", "Agno", "Multi-Agent", "Langfuse", "Observability", "Python", "Tool Calling"]
+lessonCount: 10
 ---
 
-## The problem this course solves
+## Overview
 
-Most AI agent tutorials show you how to build an agent. Very few show you how to run one safely and sustainably.
+A chatbot answers questions. An **agent** takes action.
 
-This course covers both. You will build LangGraph agents and instrument them with full observability from the start.
+When you ask a chatbot "What is the weather today?", it can only tell you what it knows from training. An agent, given the right tools, can actually check the weather API, read the result, and then tell you. And if you ask it to *book a meeting for a day with no rain this week*, an agent can check the weather forecast for multiple days, check your calendar, find a gap, and create the event — all by itself, with no step-by-step instruction from you.
 
-## What you will learn
+This is the core shift: from AI that **knows** things to AI that **does** things.
 
-- How to structure LangGraph workflows for maintainability
-- How to add Langfuse tracing to any LangGraph agent
-- How to track token usage and cost per task
-- How to implement human-in-the-loop approval for consequential actions
-- How to handle errors, retries, and budget limits
-- How to read your observability data to improve your agents
+This course teaches you how agents work from the ground up, how to build them in Python, how to connect multiple agents together to tackle complex tasks, and — critically — how to observe and trust what they are doing.
 
-## Course outline
-
-### Lesson 1: LangGraph fundamentals
-State, nodes, edges, and the loop pattern. Why LangGraph instead of simple chains.
-
-### Lesson 2: Building your first observable agent
-Adding Langfuse callbacks from the start. Understanding what a trace tells you.
-
-### Lesson 3: Token budgets and cost control
-Setting limits. Stopping agents that run away. Alerting on unexpected costs.
-
-### Lesson 4: Tool calls and logging
-Logging every tool call with input and output. Finding issues in traces. Safe error recovery.
-
-### Lesson 5: Human-in-the-loop
-Pausing workflows for approval. Consequential actions. The approval queue pattern.
-
-### Lesson 6: Error handling and retries
-Graceful degradation. Retry with backoff. Distinguishing transient from permanent failures.
-
-### Lesson 7: Reading your data
-Using Langfuse dashboards. Identifying expensive tasks. Finding patterns in failures.
+**You do not need prior agent experience.** Familiarity with Python and basic LLM APIs (Claude, OpenAI) will help.
 
 ---
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified when this launches.*
+## What you will build
+
+By the end of this course you will have:
+- A working single-agent system that uses tools to research and write
+- A multi-agent pipeline where a Researcher agent and a Writer agent collaborate
+- Full observability: every token, every tool call, every cost tracked in Langfuse
+- A human-in-the-loop approval gate for consequential actions
+
+---
+
+## Chapter 1 — What is an AI Agent?
+
+### The simplest definition
+
+An AI agent is a system where a language model controls a loop — it takes in information, decides what to do, acts (often through tools), sees the result, and goes again. It keeps going until the task is done.
+
+```
+Input →  [ Think ] → Act → Observe → [ Think ] → Act → Observe → ... → Done
+```
+
+A chatbot does one round trip: you ask, it answers, done. An agent does many round trips: it can plan, use tools, handle errors, and self-correct.
+
+### Chatbot vs Agent: a side-by-side comparison
+
+| | Chatbot | Agent |
+|---|---|---|
+| Input | A message | A goal |
+| Output | A response | A result (file, action, decision) |
+| Memory | Usually per-session only | Can have persistent memory |
+| Tools | None | Many (search, write, query, click) |
+| Autonomy | Low — you drive | High — it drives |
+| Reliability | Predictable | Needs observation and guardrails |
+
+### A concrete example
+
+**Chatbot version of "Write me a blog post about LangGraph":**
+- You ask → it writes from training data → done
+
+**Agent version:**
+1. Agent receives the goal
+2. Decides to search the web for recent LangGraph news
+3. Calls a `web_search` tool → reads 3 results
+4. Decides to fetch one article in full
+5. Calls `fetch_page` tool → reads the content
+6. Drafts the blog post
+7. Calls `write_file` to save the draft
+8. Reports back: "I've saved a 1,200-word blog post draft to /drafts/langgraph.md"
+
+![Chatbot vs Agent flow — single response vs multi-step autonomous loop](/images/courses/agents/01-chatbot-vs-agent.png)
+*Left: a chatbot answers in one step. Right: an agent loops through think → act → observe until the goal is achieved.*
+
+### When should you use an agent?
+
+Use an agent when:
+- The task has **multiple steps** that need to be decided at runtime (not hardcoded)
+- The task needs **tools** (search, write, database, API)
+- The task can **fail and recover** (retry a search if the first result was unhelpful)
+- The task is **too complex** to complete in one prompt-response
+
+Do **not** use an agent when:
+- A single LLM call is enough
+- The steps are fixed and known — just chain prompts in code instead
+- Low latency is critical (agents take multiple round trips)
+- Errors are unrecoverable (agents can fail in unexpected ways)
+
+---
+
+## Chapter 2 — The Agent Loop
+
+### ReAct: the core pattern
+
+The most common agent pattern is **ReAct** (Reason + Act), introduced in a 2022 research paper. It alternates between:
+
+1. **Reasoning** — the model thinks about what to do next (sometimes shown as a "thought" in the output)
+2. **Acting** — the model calls a tool or produces a final answer
+3. **Observing** — the model sees the tool result and reasons again
+
+```
+[Thought]: I need to find the current weather in Amsterdam.
+[Action]:  call weather_api(city="Amsterdam")
+[Observation]: {"temp": 14, "condition": "partly cloudy", "wind_mph": 18}
+[Thought]: I now have the weather. I can answer the question.
+[Answer]:  It is 14°C and partly cloudy in Amsterdam today, with winds of 18 mph.
+```
+
+This loop is invisible to the user — they just see the final answer. But understanding it helps you build better agents and debug them when they go wrong.
+
+![The ReAct loop: Thought → Action → Observation cycle](/images/courses/agents/02-react-loop.png)
+*The ReAct loop repeats until the agent decides it has enough information to answer or has completed the task*
+
+### How modern LLMs do this
+
+Claude, GPT-4, and Gemini all support **tool calling** (also called function calling). This is the mechanism that makes the Act step work:
+
+1. You define tools with a name, description, and input schema
+2. You send the user's message + the list of tool definitions to the model
+3. The model responds with either a **tool call** (I want to call this tool with these args) or a **final answer**
+4. If a tool call: you run the tool, send the result back, and ask the model to continue
+5. Repeat until the model gives a final answer
+
+The model never runs tools itself. It just requests them. **You** run the tool and show it the result. This is an important distinction — you stay in control of what actually executes.
+
+---
+
+## Chapter 3 — Tools and Function Calling
+
+### Defining a tool
+
+Every tool needs three things:
+- A **name** the model can reference
+- A **description** that tells the model when and why to use it
+- A **JSON schema** defining what inputs it takes
+
+Here is how you define tools for the Anthropic (Claude) API directly:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+# Define the tool
+tools = [
+    {
+        "name": "get_weather",
+        "description": "Get the current weather for a city. Returns temperature in Celsius and conditions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "description": "The city name, e.g. 'Amsterdam', 'London'"
+                }
+            },
+            "required": ["city"]
+        }
+    }
+]
+```
+
+### A minimal agent loop (raw API)
+
+This is the simplest possible agent — no framework, just the raw loop:
+
+```python
+import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+# This is our "tool" — the actual function that does the work
+def get_weather(city: str) -> dict:
+    # In real life, call a weather API here
+    mock_data = {
+        "Amsterdam": {"temp_c": 14, "condition": "Partly cloudy"},
+        "London": {"temp_c": 11, "condition": "Rainy"},
+    }
+    return mock_data.get(city, {"error": "City not found"})
+
+
+def run_agent(user_message: str):
+    tools = [
+        {
+            "name": "get_weather",
+            "description": "Get current weather for a city.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "city": {"type": "string", "description": "City name"}
+                },
+                "required": ["city"]
+            }
+        }
+    ]
+
+    messages = [{"role": "user", "content": user_message}]
+
+    while True:
+        # Ask the model what to do
+        response = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1024,
+            tools=tools,
+            messages=messages,
+        )
+
+        # If the model wants to use a tool
+        if response.stop_reason == "tool_use":
+            # Extract the tool calls from the response
+            tool_use_block = next(b for b in response.content if b.type == "tool_use")
+            tool_name = tool_use_block.name
+            tool_input = tool_use_block.input
+
+            print(f"  → Tool call: {tool_name}({tool_input})")
+
+            # Run the actual tool
+            if tool_name == "get_weather":
+                result = get_weather(**tool_input)
+            else:
+                result = {"error": f"Unknown tool: {tool_name}"}
+
+            print(f"  ← Tool result: {result}")
+
+            # Add the model's response and our tool result to the conversation
+            messages.append({"role": "assistant", "content": response.content})
+            messages.append({
+                "role": "user",
+                "content": [{
+                    "type": "tool_result",
+                    "tool_use_id": tool_use_block.id,
+                    "content": json.dumps(result)
+                }]
+            })
+            # Loop again — let the model react to the tool result
+
+        else:
+            # Model gave a final text answer — we are done
+            final_text = next(b.text for b in response.content if hasattr(b, "text"))
+            print(f"\nFinal answer: {final_text}")
+            return final_text
+
+
+run_agent("What is the weather like in Amsterdam today?")
+```
+
+Run this and you will see the tool call happen, the result come back, and the model form a natural language answer from it.
+
+### Tool design principles
+
+**Be specific in descriptions.** The model only knows what your docstring says.
+
+| Bad description | Good description |
+|---|---|
+| "Gets files" | "List all files in the /workspace directory and return their names and sizes" |
+| "Database thing" | "Run a SELECT query against the products database. Returns up to 50 rows. Only SELECT is allowed." |
+| "API call" | "Fetch the current BTC/USD price from the CoinGecko public API. Returns price as a float." |
+
+**Return structured data.** Return dicts or lists, not free-form strings. The model handles structured data more reliably.
+
+**Handle errors gracefully.** Return `{"error": "message"}` instead of raising exceptions — the model can read the error and try something different.
+
+**Limit scope.** A tool that does one thing is easier for the model to use correctly than a tool that does many things.
+
+---
+
+## Chapter 4 — Single-Agent Patterns
+
+### The research agent
+
+The most common single-agent pattern is a research agent: it searches for information, reads it, synthesises it.
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langgraph.prebuilt import create_react_agent
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.tools import tool
+
+# Tools
+search = DuckDuckGoSearchRun()
+
+@tool
+def save_to_file(filename: str, content: str) -> str:
+    """Save content to a file in the current directory."""
+    with open(filename, "w") as f:
+        f.write(content)
+    return f"Saved {len(content)} characters to {filename}"
+
+# Model
+model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
+
+# Agent — create_react_agent builds the ReAct loop automatically
+agent = create_react_agent(model, tools=[search, save_to_file])
+
+# Run
+result = agent.invoke({
+    "messages": [
+        ("human", "Research what MCP (Model Context Protocol) is, write a 300-word summary, and save it to mcp-summary.txt")
+    ]
+})
+
+print(result["messages"][-1].content)
+```
+
+The `create_react_agent` from LangGraph handles the entire ReAct loop: it sends messages to the model, processes tool calls, adds results back, and loops until the model stops requesting tools.
+
+Install dependencies:
+```bash
+pip install langgraph langchain-anthropic langchain-community duckduckgo-search
+```
+
+### The router agent
+
+A router agent looks at the user's input and decides which specialised handler to call — like a receptionist directing calls.
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+
+@tool
+def handle_writing_request(topic: str, length: str) -> str:
+    """Handle a request to write something — a blog post, email, or summary."""
+    return f"[WRITING HANDLER] Writing {length} piece about: {topic}"
+
+@tool
+def handle_code_request(language: str, task: str) -> str:
+    """Handle a request to write or explain code."""
+    return f"[CODE HANDLER] Writing {language} code for: {task}"
+
+@tool
+def handle_research_request(query: str) -> str:
+    """Handle a request to research or find information."""
+    return f"[RESEARCH HANDLER] Researching: {query}"
+
+model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
+agent = create_react_agent(model, tools=[
+    handle_writing_request, handle_code_request, handle_research_request
+])
+```
+
+The model decides which tool to call based on the user's request. Each tool could be a full sub-agent in a more complex system.
+
+### The code execution agent
+
+Some agent frameworks (like E2B, or locally with subprocess) allow agents to write and run code:
+
+```python
+@tool
+def run_python_code(code: str) -> str:
+    """
+    Run a Python code snippet and return its output.
+    Only safe, non-destructive code. No file system writes, no network.
+    """
+    import subprocess
+    result = subprocess.run(
+        ["python3", "-c", code],
+        capture_output=True, text=True, timeout=10
+    )
+    if result.returncode != 0:
+        return f"Error:\n{result.stderr}"
+    return result.stdout
+```
+
+> **Security note:** Giving an agent code execution is powerful but risky. Always sandbox it — use a container, a VM, or a service like [E2B](https://e2b.dev). Never run agent-generated code on your host machine without sandboxing.
+
+---
+
+## Chapter 5 — Memory: What Agents Remember
+
+Without memory, every agent run starts fresh. The agent does not know what it did yesterday, what you prefer, or what it already looked up. Memory is what makes agents useful over time.
+
+### The four types of agent memory
+
+![Four types of agent memory: in-context, key-value, vector, episodic](/images/courses/agents/05-memory-types.png)
+*Four types of agent memory — each has different characteristics for what to store and when to retrieve it*
+
+**1. In-context memory (conversation history)**
+- What it is: the full list of messages in the current conversation
+- Strengths: immediate, no setup needed
+- Limits: disappears when the session ends, bounded by context window
+- When to use: for the current task only
+
+```python
+# LangGraph automatically manages this in the `messages` state key
+state = {"messages": [("human", "What did we discuss earlier?")]}
+```
+
+**2. Key-value memory (simple persistent storage)**
+- What it is: a dictionary-style store keyed by string IDs
+- Strengths: fast, simple, exact lookup
+- When to use: user preferences, settings, entity facts ("user's timezone = Europe/Amsterdam")
+
+```python
+import json, pathlib
+
+MEMORY_FILE = pathlib.Path("agent_memory.json")
+
+def save_fact(key: str, value: str):
+    memory = json.loads(MEMORY_FILE.read_text()) if MEMORY_FILE.exists() else {}
+    memory[key] = value
+    MEMORY_FILE.write_text(json.dumps(memory, indent=2))
+
+def recall_fact(key: str) -> str | None:
+    if not MEMORY_FILE.exists():
+        return None
+    return json.loads(MEMORY_FILE.read_text()).get(key)
+```
+
+**3. Vector (semantic) memory**
+- What it is: text stored as embeddings, retrieved by similarity
+- Strengths: can find relevant past context even without exact keyword match
+- When to use: large knowledge bases, past conversation recall, document search
+
+```python
+# Simplified example using chromadb
+import chromadb
+from anthropic import Anthropic
+
+client_chroma = chromadb.Client()
+collection = client_chroma.create_collection("agent_memory")
+anthropic_client = Anthropic()
+
+def embed_and_store(text: str, doc_id: str):
+    response = anthropic_client.embeddings.create(
+        model="voyage-3",
+        input=[text]
+    )
+    collection.add(
+        documents=[text],
+        embeddings=[response.embeddings[0].embedding],
+        ids=[doc_id]
+    )
+
+def recall_similar(query: str, n: int = 3) -> list[str]:
+    response = anthropic_client.embeddings.create(
+        model="voyage-3", input=[query]
+    )
+    results = collection.query(
+        query_embeddings=[response.embeddings[0].embedding], n_results=n
+    )
+    return results["documents"][0]
+```
+
+**4. Episodic memory (past runs)**
+- What it is: a log of past tasks, decisions, and outcomes
+- When to use: helping the agent learn from past mistakes or improve over time
+
+---
+
+## Chapter 6 — Multi-Agent Systems
+
+### Why multiple agents?
+
+A single agent handling everything has real limits:
+- **Context window**: a very long task can overflow the context
+- **Specialisation**: a generalist agent is worse at writing than one focused purely on writing
+- **Reliability**: independent checks catch errors a single agent misses
+- **Parallelism**: multiple agents can work on different parts of a task at the same time
+
+Multi-agent systems let you break complex tasks into focused subtasks, assign each to a specialist, and coordinate the results.
+
+### The core multi-agent patterns
+
+![Three multi-agent patterns: Orchestrator, Pipeline, and Swarm](/images/courses/agents/06-multiagent-patterns.png)
+*The three main multi-agent patterns — each suits different types of tasks*
+
+**Pattern 1: Orchestrator + Subagents**
+
+One orchestrator agent receives the goal, breaks it down, and delegates subtasks to specialised subagents. It collects results and forms the final output.
+
+```
+User → Orchestrator → Researcher Agent → Orchestrator
+                    → Writer Agent    → Orchestrator
+                    → Editor Agent    → Orchestrator → Final Output
+```
+
+Best for: complex tasks where the subtasks are known in advance and can be assigned clearly.
+
+**Pattern 2: Pipeline**
+
+Agents pass results to the next agent in a fixed sequence. Each agent does one thing and hands off.
+
+```
+User → Researcher → Summariser → Writer → Editor → Output
+```
+
+Best for: tasks with a clear, fixed sequence of steps.
+
+**Pattern 3: Peer-to-peer / Swarm**
+
+Agents communicate directly with each other, without a central orchestrator. Each agent decides whether to pass a task on.
+
+Best for: emergent, exploratory tasks where the path is not known in advance.
+
+### Building a multi-agent pipeline with LangGraph
+
+LangGraph is built around **graphs** — nodes are steps (agents or functions), edges connect them. This makes the flow explicit and easy to reason about.
+
+```python
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph, START, END
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+import operator
+
+# Shared state that flows through the graph
+class ResearchState(TypedDict):
+    topic: str
+    research: str
+    draft: str
+    messages: Annotated[list[BaseMessage], operator.add]
+
+
+model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
+
+
+# Node 1: Researcher agent
+def researcher_node(state: ResearchState) -> ResearchState:
+    print("  [Researcher] Starting research...")
+    response = model.invoke([
+        HumanMessage(content=f"""You are a research specialist.
+Research the following topic and provide key facts, recent developments, and important context.
+Be thorough but concise. Output structured research notes.
+
+Topic: {state['topic']}""")
+    ])
+    return {"research": response.content}
+
+
+# Node 2: Writer agent
+def writer_node(state: ResearchState) -> ResearchState:
+    print("  [Writer] Writing draft...")
+    response = model.invoke([
+        HumanMessage(content=f"""You are an expert technical writer.
+Using the research notes below, write a clear, engaging blog post (400-600 words).
+Use a conversational but professional tone. Include a title and 3-4 paragraphs.
+
+Research notes:
+{state['research']}""")
+    ])
+    return {"draft": response.content}
+
+
+# Node 3: Editor agent
+def editor_node(state: ResearchState) -> ResearchState:
+    print("  [Editor] Reviewing draft...")
+    response = model.invoke([
+        HumanMessage(content=f"""You are a sharp editor.
+Review this draft for:
+1. Clarity — is every sentence easy to understand?
+2. Accuracy — does anything seem wrong or misleading?
+3. Structure — does it flow well?
+4. Tone — is it appropriate and consistent?
+
+Return the improved draft with any corrections applied. Keep the same length.
+
+Draft:
+{state['draft']}""")
+    ])
+    return {"draft": response.content}
+
+
+# Build the graph
+graph = StateGraph(ResearchState)
+graph.add_node("researcher", researcher_node)
+graph.add_node("writer", writer_node)
+graph.add_node("editor", editor_node)
+
+# Define the flow: Start → Researcher → Writer → Editor → End
+graph.add_edge(START, "researcher")
+graph.add_edge("researcher", "writer")
+graph.add_edge("writer", "editor")
+graph.add_edge("editor", END)
+
+app = graph.compile()
+
+
+# Run the pipeline
+result = app.invoke({"topic": "How LangGraph makes AI agent workflows reliable"})
+print("\n─── FINAL DRAFT ───")
+print(result["draft"])
+```
+
+![LangGraph pipeline: Researcher → Writer → Editor nodes connected by edges](/images/courses/agents/06-langgraph-pipeline.png)
+*The LangGraph graph for our three-agent pipeline. Each node is an agent, each edge is a handoff.*
+
+### Conditional routing
+
+What if the editor decides the draft needs more research? You can add conditional edges:
+
+```python
+def should_revise(state: ResearchState) -> str:
+    """Decide whether to revise or finish."""
+    if "NEEDS_MORE_RESEARCH" in state["draft"]:
+        return "researcher"  # loop back
+    return END
+
+graph.add_conditional_edges("editor", should_revise, {
+    "researcher": "researcher",
+    END: END
+})
+```
+
+This is the power of LangGraph: you define the graph, and the control flow is explicit. No hidden magic.
+
+---
+
+## Chapter 7 — Agent Frameworks
+
+You do not need to build every agent from scratch. Here are the main frameworks, what each one is good at, and when to reach for it.
+
+### LangGraph
+
+**What it is:** A low-level graph-based framework for building stateful agent workflows. You define nodes (agents or functions) and edges (connections between them). Full control over the flow.
+
+**Best for:** Production systems where reliability and debuggability matter. Complex multi-step workflows. Any use case where you need human-in-the-loop or exact control over flow.
+
+**Strengths:**
+- Explicit control flow — you see exactly what will happen
+- State management built in
+- Great observability via LangSmith and Langfuse
+- Supports interrupts and human approval gates
+- Strong community and active development
+
+```python
+from langgraph.prebuilt import create_react_agent
+from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+
+@tool
+def search(query: str) -> str:
+    """Search the web for information."""
+    return f"[Search results for: {query}]"
+
+agent = create_react_agent(ChatAnthropic(model="claude-3-5-sonnet-20241022"), [search])
+result = agent.invoke({"messages": [("human", "What is LangGraph?")]})
+```
+
+---
+
+### CrewAI
+
+**What it is:** A high-level framework where you define a "crew" of agents with roles, goals, and backstory — like defining job descriptions. The crew collaborates on tasks.
+
+**Best for:** Quickly setting up role-based teams. Business process automation where roles are clear (researcher, writer, reviewer, manager).
+
+**Strengths:**
+- Very fast to prototype
+- Natural "team" metaphor
+- Built-in sequential and parallel task execution
+- Clear role definitions
+
+```python
+from crewai import Agent, Task, Crew, Process
+from crewai_tools import SerperDevTool
+
+search_tool = SerperDevTool()
+
+researcher = Agent(
+    role="Senior Research Analyst",
+    goal="Uncover the latest developments in AI agents",
+    backstory="You are an expert at finding and synthesising information.",
+    tools=[search_tool],
+    verbose=True,
+    llm="claude-3-5-sonnet-20241022"
+)
+
+writer = Agent(
+    role="Tech Content Writer",
+    goal="Write engaging, accurate articles about AI",
+    backstory="You translate complex technical topics into clear, readable prose.",
+    llm="claude-3-5-sonnet-20241022"
+)
+
+research_task = Task(
+    description="Research the latest news about AI agents. Find 5 key developments.",
+    expected_output="A structured list of 5 AI agent developments with sources.",
+    agent=researcher
+)
+
+write_task = Task(
+    description="Write a 500-word blog post using the research provided.",
+    expected_output="A complete blog post with title and 4 paragraphs.",
+    agent=writer
+)
+
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, write_task],
+    process=Process.sequential,
+    verbose=True
+)
+
+result = crew.kickoff()
+print(result.raw)
+```
+
+Install: `pip install crewai crewai-tools`
+
+---
+
+### AutoGen (Microsoft)
+
+**What it is:** A framework where agents communicate through conversation. You define agents that can message each other, with a `UserProxyAgent` that can also run code locally.
+
+**Best for:** Conversational multi-agent setups. Code generation + execution workflows. Scenarios where agents debate and refine answers.
+
+**Strengths:**
+- Agents can have long back-and-forth conversations
+- Code execution built in (via UserProxyAgent)
+- Group chat support (multiple agents in one conversation)
+- Good for debate/verification patterns
+
+```python
+import autogen
+
+config_list = [
+    {
+        "model": "claude-3-5-sonnet-20241022",
+        "api_key": "your-key",
+        "api_type": "anthropic"
+    }
+]
+
+assistant = autogen.AssistantAgent(
+    name="assistant",
+    llm_config={"config_list": config_list},
+    system_message="You are a helpful AI assistant. Write clean, well-documented Python code."
+)
+
+user_proxy = autogen.UserProxyAgent(
+    name="user_proxy",
+    human_input_mode="NEVER",   # runs automatically without asking
+    code_execution_config={"work_dir": "output", "use_docker": False},
+    max_consecutive_auto_reply=5,
+)
+
+user_proxy.initiate_chat(
+    assistant,
+    message="Write a Python function that calculates the Fibonacci sequence, then test it."
+)
+```
+
+Install: `pip install pyautogen`
+
+---
+
+### Agno (formerly Phidata)
+
+**What it is:** A lightweight Python-first framework for building agents quickly. Minimal boilerplate, strong tool ecosystem, built-in structured output support.
+
+**Best for:** Quick prototypes. When you want a clean, readable agent definition without much setup.
+
+**Strengths:**
+- Very clean, Pythonic API
+- Built-in tools for DuckDuckGo, Wikipedia, YouTube, Finance, and more
+- Structured output via Pydantic models
+- Minimal dependencies
+- Good for local development
+
+```python
+from agno.agent import Agent
+from agno.models.anthropic import Claude
+from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.file import FileTools
+
+agent = Agent(
+    model=Claude(id="claude-3-5-sonnet-20241022"),
+    tools=[DuckDuckGoTools(), FileTools()],
+    description="You are a research assistant that finds information and saves it.",
+    markdown=True,
+    show_tool_calls=True,
+)
+
+agent.print_response(
+    "Search for recent news about AI agents, summarise the top 3 stories, "
+    "and save the summary to research.md",
+    stream=True
+)
+```
+
+Install: `pip install agno`
+
+---
+
+### OpenAI Swarm
+
+**What it is:** A lightweight educational framework by OpenAI showing how multi-agent handoffs work. Very minimal — useful for learning the concepts, not really for production.
+
+**Best for:** Learning. Understanding how agent handoffs work at a low level.
+
+```python
+from swarm import Swarm, Agent
+
+client = Swarm()
+
+triage_agent = Agent(
+    name="Triage Agent",
+    instructions="Determine if the user needs a research agent or a writing agent, then transfer them.",
+)
+
+research_agent = Agent(
+    name="Research Agent",
+    instructions="Research topics thoroughly and return structured findings.",
+)
+
+def transfer_to_research():
+    return research_agent
+
+triage_agent.functions = [transfer_to_research]
+
+response = client.run(
+    agent=triage_agent,
+    messages=[{"role": "user", "content": "Research the history of the internet"}]
+)
+```
+
+---
+
+### Smolagents (HuggingFace)
+
+**What it is:** HuggingFace's lightweight agent framework. Code-first — agents write and run Python code as their action, rather than calling discrete tools.
+
+**Best for:** Data science workflows, numerical tasks, anything well-suited to Python scripting as the action layer. Works well with open-source models.
+
+```python
+from smolagents import CodeAgent, DuckDuckGoSearchTool, HfApiModel
+
+agent = CodeAgent(
+    tools=[DuckDuckGoSearchTool()],
+    model=HfApiModel("Qwen/Qwen2.5-72B-Instruct")
+)
+
+agent.run("Search for Python best practices in 2025 and list the top 5.")
+```
+
+Install: `pip install smolagents`
+
+---
+
+### Which framework should you use?
+
+| Framework | Effort to start | Control | Production-ready | Best for |
+|---|---|---|---|---|
+| LangGraph | Medium | Very high | Yes | Reliable multi-step workflows |
+| CrewAI | Low | Medium | Yes | Role-based agent teams |
+| AutoGen | Medium | Medium | Yes (with care) | Code gen + execution, debates |
+| Agno | Very low | Medium | Yes | Quick prototypes, clean code |
+| OpenAI Swarm | Very low | Low | No — educational only | Learning handoffs |
+| Smolagents | Low | Medium | Partial | Code-first, open models |
+
+> **My recommendation for getting started:** use **Agno** for quick experiments and **LangGraph** for anything you plan to keep running.
+
+---
+
+## Chapter 8 — Observability with Langfuse
+
+### Why observability matters
+
+An agent that runs 10 tool calls, spends $0.80 in tokens, and produces a wrong answer is a problem you cannot debug without traces. You need to know:
+
+- Which tool was called and with what arguments?
+- What did the model say at each step?
+- How many tokens did each step use?
+- Where did it go wrong?
+
+**Langfuse** (open-source, self-hostable, also cloud) is the standard tool for this.
+
+![Langfuse trace view showing agent steps, token counts, and cost](/images/courses/agents/08-langfuse-trace.png)
+*Langfuse shows every step of an agent run: tool calls, model responses, token usage, and cost — all in one view*
+
+### Setting up Langfuse
+
+Self-host with Docker (from the project's `infra/docker/` folder) or use [langfuse.com](https://langfuse.com) (free tier available).
+
+```bash
+pip install langfuse
+```
+
+Set environment variables:
+```bash
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_HOST="http://localhost:3000"  # or https://cloud.langfuse.com
+```
+
+### Adding Langfuse to LangGraph agents
+
+```python
+from langfuse.callback import CallbackHandler
+from langgraph.prebuilt import create_react_agent
+from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+
+# Create the Langfuse callback — this logs everything automatically
+langfuse_handler = CallbackHandler()
+
+@tool
+def search_web(query: str) -> str:
+    """Search the web for information about a topic."""
+    return f"[Mock results for: {query}]"
+
+agent = create_react_agent(
+    ChatAnthropic(model="claude-3-5-sonnet-20241022"),
+    tools=[search_web]
+)
+
+# Pass the callback when invoking the agent
+result = agent.invoke(
+    {"messages": [("human", "What is MCP?")]},
+    config={"callbacks": [langfuse_handler]}
+)
+
+print(result["messages"][-1].content)
+# After this runs, open Langfuse and you'll see the full trace
+```
+
+### Adding Langfuse manually (without LangChain)
+
+If you are using the raw Anthropic SDK:
+
+```python
+from langfuse import Langfuse
+from langfuse.decorators import observe, langfuse_context
+import anthropic
+
+langfuse = Langfuse()
+client = anthropic.Anthropic()
+
+@observe()  # This decorator captures this function as a trace
+def run_my_agent(user_message: str) -> str:
+    langfuse_context.update_current_trace(
+        name="research-agent",
+        user_id="pranav",
+        tags=["research", "production"]
+    )
+
+    response = client.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": user_message}]
+    )
+    return response.content[0].text
+
+result = run_my_agent("Explain AI agents in one paragraph")
+langfuse.flush()  # Ensure all traces are sent
+```
+
+### What to track
+
+At minimum, track these for every agent run:
+
+| What | Why |
+|---|---|
+| Input message | Understand what triggered the run |
+| Each tool call + inputs | Debug wrong decisions |
+| Each tool result | Spot tool failures |
+| Token count per step | Find expensive steps |
+| Total cost | Monitor your spend |
+| Final output | Evaluate quality |
+| Error if any | Catch and fix failures |
+
+### Setting a cost budget
+
+Prevent runaway agents:
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_core.callbacks import BaseCallbackHandler
+
+class CostGuard(BaseCallbackHandler):
+    def __init__(self, max_usd: float):
+        self.max_usd = max_usd
+        self.total_cost = 0.0
+
+    def on_llm_end(self, response, **kwargs):
+        # Rough estimate: claude-3.5-sonnet costs ~$3/$15 per M tokens (in/out)
+        usage = response.llm_output.get("usage", {})
+        cost = (usage.get("input_tokens", 0) * 3 + usage.get("output_tokens", 0) * 15) / 1_000_000
+        self.total_cost += cost
+        if self.total_cost > self.max_usd:
+            raise Exception(f"Budget exceeded: ${self.total_cost:.4f} > ${self.max_usd}")
+
+cost_guard = CostGuard(max_usd=0.50)  # Stop if cost exceeds $0.50
+# Pass as: config={"callbacks": [cost_guard]}
+```
+
+---
+
+## Chapter 9 — Human-in-the-Loop
+
+Agents should not act autonomously on consequential actions — sending emails, deploying code, deleting data, posting publicly. These need human approval.
+
+### The interrupt pattern in LangGraph
+
+LangGraph has a built-in `interrupt` mechanism:
+
+```python
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import interrupt
+from typing import TypedDict
+
+class AgentState(TypedDict):
+    task: str
+    plan: str
+    approved: bool
+    result: str
+
+
+def plan_node(state: AgentState) -> AgentState:
+    """Agent creates a plan."""
+    print(f"  [Planner] Creating plan for: {state['task']}")
+    plan = f"Plan for '{state['task']}':\n1. Research the topic\n2. Draft the content\n3. Save to file"
+    return {"plan": plan}
+
+
+def approval_node(state: AgentState) -> AgentState:
+    """Pause and ask a human to approve the plan."""
+    # interrupt() pauses the graph and returns control to the caller
+    # The caller can inspect the state and then resume
+    human_decision = interrupt({
+        "message": "Please review and approve this plan:",
+        "plan": state["plan"],
+    })
+    return {"approved": human_decision.get("approved", False)}
+
+
+def execute_node(state: AgentState) -> AgentState:
+    """Execute the approved plan."""
+    if not state["approved"]:
+        return {"result": "Execution cancelled by human reviewer."}
+    print(f"  [Executor] Executing approved plan...")
+    return {"result": f"Successfully executed: {state['plan']}"}
+
+
+# Build graph with memory (required for interrupt to work)
+memory = MemorySaver()
+builder = StateGraph(AgentState)
+builder.add_node("planner", plan_node)
+builder.add_node("approval", approval_node)
+builder.add_node("executor", execute_node)
+builder.add_edge(START, "planner")
+builder.add_edge("planner", "approval")
+builder.add_edge("approval", "executor")
+builder.add_edge("executor", END)
+
+app = builder.compile(checkpointer=memory)
+
+# Run until the interrupt
+thread_id = {"configurable": {"thread_id": "run-001"}}
+events = list(app.stream(
+    {"task": "Write and post a LinkedIn article about MCP", "approved": False, "plan": "", "result": ""},
+    config=thread_id
+))
+
+# At this point, the agent is paused at the approval node
+print("\nAgent paused for human review.")
+print(f"Plan to review: {events[-1].get('approval', {}).get('plan', 'see state')}")
+
+# Human reviews and resumes
+user_decision = {"approved": True}  # or False to cancel
+final_events = list(app.stream(
+    Command(resume=user_decision),   # Resume with human's decision
+    config=thread_id
+))
+print(f"Result: {final_events[-1].get('executor', {}).get('result')}")
+```
+
+### Trust levels for actions
+
+A good pattern is to classify tools by their risk level and apply different policies:
+
+```python
+class ActionRisk:
+    READ_ONLY = "read"       # No approval needed — just reading
+    LOW_RISK = "low"         # Log but no approval needed
+    MEDIUM_RISK = "medium"   # Notify human, proceed unless they object within 60s
+    HIGH_RISK = "high"       # Block until human explicitly approves
+
+TOOL_RISK_LEVELS = {
+    "read_file": ActionRisk.READ_ONLY,
+    "search_web": ActionRisk.READ_ONLY,
+    "write_file": ActionRisk.LOW_RISK,
+    "send_email": ActionRisk.HIGH_RISK,
+    "post_to_social_media": ActionRisk.HIGH_RISK,
+    "delete_records": ActionRisk.HIGH_RISK,
+    "deploy_code": ActionRisk.HIGH_RISK,
+}
+```
+
+As a general rule: if an action is **reversible**, you can automate it. If it is **irreversible** (deleting, publishing, sending), require human approval.
+
+---
+
+## Chapter 10 — Hands-on Project: Multi-Agent Research Pipeline
+
+Now let us build a complete system: a three-agent pipeline (Researcher → Writer → Publisher) with Langfuse observability and a human approval gate before publishing.
+
+### Architecture
+
+```
+User gives a topic
+     ↓
+Researcher Agent (web search + notes)
+     ↓
+Writer Agent (drafts the post)
+     ↓
+[Human approval gate] ← you review the draft
+     ↓ (if approved)
+Publisher Agent (saves to file + updates database)
+```
+
+![Complete multi-agent research pipeline with approval gate](/images/courses/agents/10-pipeline-architecture.png)
+*The complete pipeline: three agents connected by a LangGraph graph, with a human approval step before any content is published*
+
+### The full project
+
+```python
+"""
+research_pipeline.py — Multi-agent research and writing pipeline
+with Langfuse observability and human-in-the-loop approval.
+
+Install:
+    pip install langgraph langchain-anthropic langfuse duckduckgo-search
+
+Run:
+    python research_pipeline.py
+"""
+
+import operator
+import sqlite3
+from pathlib import Path
+from typing import TypedDict, Annotated
+
+from langchain_anthropic import ChatAnthropic
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.messages import HumanMessage, BaseMessage
+from langchain_core.tools import tool
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import interrupt, Command
+from langfuse.callback import CallbackHandler
+
+
+# ─── State ────────────────────────────────────────────────────────────────────
+
+class PipelineState(TypedDict):
+    topic: str
+    research_notes: str
+    draft: str
+    approved: bool
+    publish_path: str
+    messages: Annotated[list[BaseMessage], operator.add]
+
+
+# ─── Setup ────────────────────────────────────────────────────────────────────
+
+model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
+search_tool = DuckDuckGoSearchRun()
+langfuse_handler = CallbackHandler()
+WORKSPACE = Path.home() / "ai-workspace" / "published"
+WORKSPACE.mkdir(parents=True, exist_ok=True)
+
+
+# ─── Node 1: Researcher ───────────────────────────────────────────────────────
+
+def researcher_node(state: PipelineState) -> PipelineState:
+    print(f"\n[Researcher] Researching: {state['topic']}")
+
+    # Search the web for the topic
+    search_results = search_tool.run(state["topic"])
+
+    # Ask the model to synthesise research notes
+    response = model.invoke(
+        [HumanMessage(content=f"""You are a research specialist.
+I have searched the web for "{state['topic']}" and got these results:
+
+{search_results}
+
+Please synthesise this into clear, structured research notes covering:
+- Key concepts and definitions
+- Current developments or trends
+- Important examples or use cases
+- Any limitations or open questions
+
+Be factual and specific. Cite sources where visible.""")],
+        config={"callbacks": [langfuse_handler]}
+    )
+
+    print(f"[Researcher] Notes compiled ({len(response.content)} chars)")
+    return {"research_notes": response.content}
+
+
+# ─── Node 2: Writer ───────────────────────────────────────────────────────────
+
+def writer_node(state: PipelineState) -> PipelineState:
+    print(f"\n[Writer] Writing draft about: {state['topic']}")
+
+    response = model.invoke(
+        [HumanMessage(content=f"""You are a skilled technical writer.
+Using these research notes, write a blog post about "{state['topic']}".
+
+Research notes:
+{state['research_notes']}
+
+Requirements:
+- Title that is specific and interesting (not generic)
+- Introduction that hooks the reader with a concrete scenario
+- 3-4 body paragraphs covering the key points
+- A practical conclusion with one actionable takeaway
+- Tone: clear, honest, builder-oriented. Avoid hype words like "revolutionary" or "cutting-edge".
+- Length: 500-700 words
+
+Write the complete post now.""")],
+        config={"callbacks": [langfuse_handler]}
+    )
+
+    print(f"[Writer] Draft ready ({len(response.content)} chars)")
+    return {"draft": response.content}
+
+
+# ─── Node 3: Human Approval Gate ─────────────────────────────────────────────
+
+def approval_node(state: PipelineState) -> PipelineState:
+    print("\n[Approval Gate] Pausing for human review...")
+    print("─" * 60)
+    print(state["draft"][:500] + "...\n[truncated for display]")
+    print("─" * 60)
+
+    decision = interrupt({
+        "message": "Review the draft above. Approve to publish?",
+        "draft_preview": state["draft"][:500]
+    })
+
+    approved = decision.get("approved", False)
+    print(f"[Approval Gate] Decision: {'APPROVED' if approved else 'REJECTED'}")
+    return {"approved": approved}
+
+
+# ─── Node 4: Publisher ────────────────────────────────────────────────────────
+
+def publisher_node(state: PipelineState) -> PipelineState:
+    if not state["approved"]:
+        print("\n[Publisher] Draft rejected. Saving as unpublished.")
+        path = WORKSPACE / "rejected" / f"{state['topic'].replace(' ', '-').lower()}.md"
+    else:
+        print("\n[Publisher] Publishing approved draft.")
+        path = WORKSPACE / f"{state['topic'].replace(' ', '-').lower()}.md"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(state["draft"], encoding="utf-8")
+    print(f"[Publisher] Saved to: {path}")
+
+    return {"publish_path": str(path)}
+
+
+# ─── Graph ────────────────────────────────────────────────────────────────────
+
+def build_pipeline():
+    memory = MemorySaver()
+    builder = StateGraph(PipelineState)
+
+    builder.add_node("researcher", researcher_node)
+    builder.add_node("writer", writer_node)
+    builder.add_node("approval", approval_node)
+    builder.add_node("publisher", publisher_node)
+
+    builder.add_edge(START, "researcher")
+    builder.add_edge("researcher", "writer")
+    builder.add_edge("writer", "approval")
+    builder.add_edge("approval", "publisher")
+    builder.add_edge("publisher", END)
+
+    return builder.compile(checkpointer=memory)
+
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
+def run_pipeline(topic: str):
+    app = build_pipeline()
+    thread_id = {"configurable": {"thread_id": f"run-{topic[:20].replace(' ', '-')}"}}
+
+    initial_state = {
+        "topic": topic,
+        "research_notes": "",
+        "draft": "",
+        "approved": False,
+        "publish_path": "",
+        "messages": [],
+    }
+
+    print(f"\n{'='*60}")
+    print(f"Starting pipeline for: {topic}")
+    print(f"{'='*60}")
+
+    # Run until the interrupt (approval gate)
+    for event in app.stream(initial_state, config=thread_id):
+        pass  # Events are printed inside nodes
+
+    # Simulate human review — in a real app, this comes from a UI
+    print("\n>>> Waiting for human approval (auto-approving for demo)...")
+    human_input = {"approved": True}  # Change to False to reject
+
+    # Resume from the interrupt
+    for event in app.stream(Command(resume=human_input), config=thread_id):
+        pass
+
+    print(f"\n{'='*60}")
+    print("Pipeline complete. Check Langfuse for full traces.")
+    print(f"{'='*60}")
+
+
+if __name__ == "__main__":
+    run_pipeline("How AI agents work and why they matter in 2025")
+```
+
+### Running it
+
+```bash
+export ANTHROPIC_API_KEY="your-key"
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_HOST="http://localhost:3000"
+
+python research_pipeline.py
+```
+
+Then open Langfuse and you will see:
+- A trace for the full pipeline run
+- Sub-spans for each agent (researcher, writer)
+- Token counts and cost for each LLM call
+- Tool calls with inputs and outputs
+
+![Langfuse showing the complete pipeline trace with researcher and writer spans](/images/courses/agents/10-langfuse-full-trace.png)
+*Langfuse showing the full trace: researcher span (search + synthesis), writer span (draft generation), total tokens, and cost*
+
+---
+
+## Quick Reference
+
+### Agent building checklist
+
+- [ ] Define tools with clear, specific descriptions
+- [ ] Return structured data from tools (dicts/lists)
+- [ ] Handle tool errors gracefully — return `{"error": "..."}` not exceptions
+- [ ] Add logging to every tool call
+- [ ] Set a token/cost budget
+- [ ] Add Langfuse from the start
+- [ ] Require human approval for irreversible actions
+
+### Framework decision tree
+
+```
+Need quick experiment?          → Agno
+Need role-based team?           → CrewAI
+Need code generation + exec?    → AutoGen
+Need reliable production flow?  → LangGraph
+Learning how handoffs work?     → OpenAI Swarm (educational)
+Using open-source models?       → Smolagents or LangGraph
+```
+
+### Key terms
+
+| Term | Meaning |
+|---|---|
+| Agent | LLM + tools + loop that autonomously completes goals |
+| ReAct | Reason + Act — the standard agent loop pattern |
+| Tool calling | The API mechanism by which LLMs request tool execution |
+| Orchestrator | An agent that delegates tasks to other agents |
+| Human-in-the-loop | A required human approval step before an action |
+| Observability | Tracing every step, token, and cost of agent runs |
+| LangGraph | Graph-based framework for stateful agent workflows |
+| Langfuse | Open-source observability platform for LLM applications |
+| Interrupt | LangGraph primitive that pauses a graph for human input |
+| State | Shared data that flows through a LangGraph graph |
+
+---
+
+*Questions or feedback? Email hello@pranavsrivastava.com*

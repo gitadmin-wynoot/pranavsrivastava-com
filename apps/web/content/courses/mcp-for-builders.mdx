@@ -1,47 +1,1074 @@
 ---
 title: "MCP for Practical Builders"
 slug: "mcp-for-builders"
-summary: "A hands-on course on building MCP servers in Python. Connect AI tools to your files, databases, APIs, and internal systems — safely and observably."
-level: "Intermediate"
-status: "coming-soon"
+summary: "Learn Model Context Protocol from scratch — how it works, how to build servers in Python, and how to give AI assistants safe, controlled access to your files, databases, and APIs. Ends with a real hands-on project."
+level: "Beginner to Intermediate"
+status: "published"
 track: "applied-ai"
-prereqs: ["ai-agents-observability"]
-tags: ["MCP", "Python", "Agents", "Security", "Tools"]
-lessonCount: 6
+prereqs: []
+tags: ["MCP", "Python", "Claude", "AI Tools", "Agents", "Security", "FastMCP"]
+lessonCount: 10
 ---
 
-## What this course covers
+## Overview
 
-MCP (Model Context Protocol) is the standard for connecting AI models to tools and context. This course teaches you to build MCP servers — the things that make those connections work.
+Imagine you ask Claude to check your emails, write a reply, save a draft to your notes app, and then look up a related contact in your database. Without any extra setup, Claude cannot do any of that — it has no access to your email, notes, or database. It is sealed inside its own world.
 
-By the end, you will have built three real MCP servers and know how to design, secure, and observe them.
+**MCP (Model Context Protocol)** is the bridge that changes this. It is an open standard that lets AI assistants connect to your tools and data in a structured, safe, and predictable way.
+
+This course teaches you how MCP works, how to build your own MCP servers in Python, and how to give AI assistants access to real systems — while keeping safety and observability built in from the start.
+
+**No prior experience with MCP required.** You just need to be comfortable with Python basics.
+
+---
 
 ## What you will build
 
-- A file access MCP server with read/write controls
-- A database query MCP server with parameterized access
-- An idea tracker MCP server for personal use
+By the end of this course, you will have:
 
-## Course outline
-
-### Lesson 1: MCP concepts
-What MCP is, how it works, and why it matters for AI applications.
-
-### Lesson 2: Your first MCP server
-Using the Python MCP SDK. Defining tools. Connecting to Claude Code.
-
-### Lesson 3: File access with boundaries
-Safe file reading and writing. Whitelisting paths. Logging every access.
-
-### Lesson 4: Database tools
-Parameterized queries. Read-only vs read-write tools. Schema-aware tools.
-
-### Lesson 5: Security patterns
-Least privilege. Input validation. Never expose shell tools publicly. Transport choices.
-
-### Lesson 6: Observability and debugging
-Logging tool calls and results. Connecting to Langfuse. Diagnosing problems.
+- A working understanding of the MCP protocol
+- Three MCP servers: one for files, one for a database, one for APIs
+- A complete hands-on project: a Personal Content Assistant MCP server that Claude can use to manage your notes, search the web, and query your data
 
 ---
 
-*Coming soon. Join the waitlist by emailing hello@pranavsrivastava.com.*
+## Chapter 1 — The Problem MCP Solves
+
+### AI assistants live in a bubble
+
+When you use Claude, GPT-4, or Gemini in a chat window, the AI can only work with what is inside the conversation. It cannot open files on your computer, query your database, check your calendar, or call your internal APIs. Every time you need the AI to do something with real data, you have to copy-paste it in manually.
+
+This sounds like a minor inconvenience, but it compounds quickly:
+- You have 50 notes you want summarised — you can't paste all of them
+- You want the AI to check a live price from your database — it can't
+- You want an agent to run a workflow on your machine — it has no way in
+
+### The old approach: N × M integrations
+
+Before MCP, every AI application had to build its own custom connections to every tool it needed.
+
+![The N×M integration problem — before MCP, every AI app needed custom code to connect to every tool](/images/courses/mcp/01-nm-problem.png)
+*Before MCP: 3 AI apps × 4 tools = 12 separate integrations, each built differently*
+
+If you have 3 AI apps and 4 tools, that is 12 custom integrations to build and maintain. Every new tool means you update every app. Every new app means you integrate every tool.
+
+This is expensive, fragile, and does not scale.
+
+### MCP: one standard, everything connects
+
+MCP fixes this by defining a single protocol that any AI app can use to talk to any tool server.
+
+![MCP Architecture — AI clients connect through MCP to any number of servers](/images/courses/mcp/02-mcp-architecture.png)
+*With MCP: any MCP-compatible AI client can connect to any MCP server. N + M instead of N × M.*
+
+Now:
+- Each tool is wrapped in one MCP server
+- Any MCP-compatible AI client (Claude Desktop, Claude Code, your own app) can use it
+- You build the tool once and it works everywhere
+
+> **A useful analogy:** MCP is to AI tools what the **USB standard** is to hardware peripherals. Before USB, every mouse and keyboard had its own connector. After USB, one port, everything works. MCP does the same for AI tools.
+
+Another analogy from software: the **Language Server Protocol (LSP)** unified how code editors (VS Code, Neovim, Emacs) connect to language servers (Python, TypeScript, Rust). MCP does the same thing for AI models.
+
+### Who made MCP?
+
+MCP was created by Anthropic and released as an open standard in November 2024. It is now supported by Claude Desktop, Claude Code, many third-party apps, and has an active open-source ecosystem. There are MCP servers for databases, file systems, GitHub, Slack, Google Drive, Notion, and hundreds of other tools — and the list grows daily.
+
+---
+
+## Chapter 2 — How MCP Works
+
+Before you write a single line of code, it is worth understanding what is actually happening when an AI uses an MCP server.
+
+### The three pieces: Host, Client, Server
+
+![MCP three-part architecture: Host, Client, Server](/images/courses/mcp/03-host-client-server.png)
+*The three components of the MCP architecture and how they relate*
+
+**Host** — the AI application the user talks to. Examples: Claude Desktop, Claude Code, a custom Python script, an AI agent framework.
+
+**Client** — the MCP client lives inside the host. It manages the connection to one MCP server. One server = one client. If you have three MCP servers, the host has three clients.
+
+**Server** — the MCP server is the thing you build. It runs as a separate process (usually Python or TypeScript). It exposes tools, resources, and prompts to the AI.
+
+### The three primitives
+
+MCP servers can expose three types of things:
+
+**Tools** — functions the AI can call. Examples: `read_file`, `query_database`, `send_email`. The AI decides when to call a tool based on what the user asked. Tools are the most important primitive.
+
+**Resources** — data sources the AI can read, like files or database records exposed as URIs (like `notes://my-note` or `db://customers`). Resources are read-only data, not actions.
+
+**Prompts** — reusable prompt templates that users or the AI can invoke. Think of them as saved instructions that can be filled in with variables.
+
+> **Quick rule of thumb:** Use **Tools** when you want the AI to *do* something. Use **Resources** when you want the AI to *read* something. Use **Prompts** when you want to standardise how the AI approaches a task.
+
+### How communication works
+
+MCP uses **JSON-RPC 2.0** — a lightweight message format. Every message is JSON. The AI sends a request, the server sends a response. Simple.
+
+```
+AI Client                    MCP Server
+    |                            |
+    |-- initialize request ----> |
+    |<-- capabilities response --|
+    |                            |
+    |-- tools/list request ----> |
+    |<-- list of tools ----------|
+    |                            |
+    |-- tools/call (read_file) ->|
+    |<-- file contents ----------|
+```
+
+### Transport: how they connect
+
+MCP currently supports two transports:
+
+**stdio (standard input/output)** — the AI app launches your MCP server as a child process and communicates through stdin/stdout. This is how local MCP servers work (on your computer). Simple, fast, no network involved.
+
+**Streamable HTTP** — the MCP server runs as an HTTP server. The AI connects over HTTP with streaming support. Used for remote MCP servers (deployed to the cloud).
+
+Most of what you will build in this course uses **stdio**, which means your MCP server runs locally on your machine.
+
+---
+
+## Chapter 3 — Setting Up Your Environment
+
+### What you need
+
+- Python 3.10 or newer
+- `pip` or `uv` (package manager)
+- Claude Desktop (free) or Claude Code — to test your MCP server
+
+### Install the MCP Python SDK
+
+```bash
+pip install mcp
+```
+
+Or with `uv`:
+```bash
+uv add mcp
+```
+
+The package is called `mcp` and it includes everything you need: the server framework, the client, and the CLI tools.
+
+### Install Claude Desktop
+
+Download Claude Desktop from [claude.ai/download](https://claude.ai/download). This is the desktop app from Anthropic and it has built-in MCP support. It is free to use for testing your servers.
+
+### Verify your setup
+
+Create a file called `test_mcp.py`:
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Test Server")
+
+@mcp.tool()
+def hello(name: str) -> str:
+    """Say hello to someone"""
+    return f"Hello, {name}! MCP is working."
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+Run it:
+```bash
+python test_mcp.py
+```
+
+If it starts without errors and waits (no output), your setup is correct. Press Ctrl+C to stop it.
+
+### How FastMCP works
+
+`FastMCP` is a high-level framework on top of the raw MCP Python SDK. It removes all the boilerplate and lets you define tools and resources with simple Python decorators — similar to how FastAPI works for web servers. This is what you will use throughout this course.
+
+---
+
+## Chapter 4 — Your First MCP Server
+
+Now let us build a real (if simple) MCP server and connect it to Claude Desktop.
+
+### The server
+
+Create a file called `my_server.py`:
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+# Give your server a name — this is what Claude sees
+mcp = FastMCP("My First Server")
+
+
+@mcp.tool()
+def add_numbers(a: float, b: float) -> float:
+    """Add two numbers together and return the result."""
+    return a + b
+
+
+@mcp.tool()
+def reverse_text(text: str) -> str:
+    """Reverse a string of text."""
+    return text[::-1]
+
+
+@mcp.tool()
+def word_count(text: str) -> dict:
+    """Count words, characters, and lines in a piece of text."""
+    words = len(text.split())
+    chars = len(text)
+    lines = len(text.splitlines())
+    return {"words": words, "characters": chars, "lines": lines}
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Connecting it to Claude Desktop
+
+Open Claude Desktop, go to **Settings → Developer → Edit Config**. This opens a JSON file (`claude_desktop_config.json`). Add your server:
+
+```json
+{
+  "mcpServers": {
+    "my-first-server": {
+      "command": "python",
+      "args": ["/absolute/path/to/my_server.py"]
+    }
+  }
+}
+```
+
+> **Important:** Use the full absolute path to your file. `~/my_server.py` will not work — write out the full path like `/Users/pranav/code/my_server.py`.
+
+Restart Claude Desktop. You should see a small hammer icon (🔨) in the chat input area indicating MCP tools are available.
+
+Now ask Claude: *"Add 17 and 25 using my tools"* or *"How many words are in 'The quick brown fox jumped'?"*
+
+![Claude Desktop showing MCP tools available in the chat interface](/images/courses/mcp/04-claude-desktop-tools.png)
+*Claude Desktop with MCP tools loaded — the hammer icon confirms the server is connected*
+
+### What just happened?
+
+When Claude saw your question, it:
+1. Decided which tool to use
+2. Called your MCP server with the right arguments
+3. Got the result back
+4. Used that result to form its response
+
+You did not tell Claude how to choose tools or when to call them. The AI figures that out from the tool descriptions (the docstrings you wrote). **Good docstrings = better tool use.** Always write clear, specific descriptions.
+
+### The anatomy of a tool
+
+```python
+@mcp.tool()
+def your_tool_name(
+    param_one: str,          # type annotations are required
+    param_two: int = 10      # defaults work too
+) -> str:                    # return type is used by the AI
+    """
+    This description is what Claude reads to decide when to use this tool.
+    Be specific. Mention what inputs it expects and what it returns.
+    Bad: "Does something with text"
+    Good: "Counts the number of words, sentences, and paragraphs in a text
+           and returns them as a JSON object."
+    """
+    return "result"
+```
+
+---
+
+## Chapter 5 — File System Tools
+
+One of the most immediately useful things you can give Claude access to is your local file system. Let us build a file server — with safety controls built in.
+
+### Why safety matters here
+
+Without safety controls, a poorly designed file server could let Claude:
+- Read your passwords or SSH keys
+- Write to system files
+- Delete important documents
+
+We will build something that only operates within a specific allowed directory.
+
+### Building a safe file server
+
+```python
+import os
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("File Server")
+
+# Only allow access to this directory and its children
+ALLOWED_BASE = Path.home() / "ai-workspace"
+ALLOWED_BASE.mkdir(exist_ok=True)
+
+
+def safe_path(relative_path: str) -> Path:
+    """
+    Resolve a relative path and verify it stays inside ALLOWED_BASE.
+    Raises ValueError if the resolved path escapes the allowed directory.
+    """
+    resolved = (ALLOWED_BASE / relative_path).resolve()
+    if not str(resolved).startswith(str(ALLOWED_BASE.resolve())):
+        raise ValueError(f"Access denied: path is outside allowed directory")
+    return resolved
+
+
+@mcp.tool()
+def read_file(path: str) -> str:
+    """
+    Read the contents of a file. Path is relative to the workspace directory.
+    Example: read_file("notes/todo.txt")
+    """
+    try:
+        full_path = safe_path(path)
+        return full_path.read_text(encoding="utf-8")
+    except ValueError as e:
+        return f"Error: {e}"
+    except FileNotFoundError:
+        return f"Error: File not found: {path}"
+
+
+@mcp.tool()
+def write_file(path: str, content: str) -> str:
+    """
+    Write content to a file. Creates the file and any missing directories.
+    Path is relative to the workspace directory.
+    """
+    try:
+        full_path = safe_path(path)
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        full_path.write_text(content, encoding="utf-8")
+        return f"Written {len(content)} characters to {path}"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def list_files(directory: str = "") -> list[str]:
+    """
+    List files in a directory within the workspace. Leave empty for the root.
+    Returns relative paths from the workspace root.
+    """
+    try:
+        target = safe_path(directory) if directory else ALLOWED_BASE
+        if not target.is_dir():
+            return [f"Error: {directory} is not a directory"]
+        return [
+            str(p.relative_to(ALLOWED_BASE))
+            for p in sorted(target.rglob("*"))
+            if p.is_file()
+        ]
+    except ValueError as e:
+        return [f"Error: {e}"]
+
+
+@mcp.tool()
+def delete_file(path: str) -> str:
+    """
+    Delete a file from the workspace. Cannot delete directories.
+    Path is relative to the workspace directory.
+    """
+    try:
+        full_path = safe_path(path)
+        if not full_path.exists():
+            return f"Error: File not found: {path}"
+        if full_path.is_dir():
+            return "Error: Use a dedicated tool to delete directories"
+        full_path.unlink()
+        return f"Deleted: {path}"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Testing it
+
+Ask Claude: *"Create a file called notes/ideas.txt with three AI project ideas"*
+
+Watch it call `write_file` with the path and content. Then ask: *"What files are in my workspace?"* to see `list_files` in action.
+
+![Claude calling write_file and list_files tools in sequence](/images/courses/mcp/05-file-tools-demo.png)
+*Claude orchestrates multiple tool calls to complete a multi-step file task*
+
+### Key safety pattern: path traversal prevention
+
+The `safe_path` function is the most important part of this server. Without it, a user (or the AI itself) could request a path like `../../etc/passwd` — using `../` to escape the workspace and read system files. The `.resolve()` call expands all `../` segments, and then we check that the result starts with our allowed base. This pattern should be in every file server you build.
+
+---
+
+## Chapter 6 — Database Tools
+
+Next, let us give Claude the ability to query a database. We will use SQLite (no server to run — just a file) but the patterns apply to PostgreSQL, MySQL, or any other database.
+
+### Why parameterized queries matter
+
+Never build SQL queries by joining strings. If you do:
+```python
+# NEVER DO THIS
+query = f"SELECT * FROM users WHERE name = '{name}'"
+```
+
+A user could input `'; DROP TABLE users; --` and delete your database. This is called **SQL injection**.
+
+Always use parameterized queries:
+```python
+# ALWAYS DO THIS
+cursor.execute("SELECT * FROM users WHERE name = ?", (name,))
+```
+
+The database handles escaping. No injection possible.
+
+### Building a safe database server
+
+```python
+import sqlite3
+import json
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Database Server")
+
+DB_PATH = Path.home() / "ai-workspace" / "data.db"
+
+
+def get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # returns dicts instead of tuples
+    return conn
+
+
+@mcp.tool()
+def list_tables() -> list[str]:
+    """List all tables in the database."""
+    with get_connection() as conn:
+        cursor = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        )
+        return [row["name"] for row in cursor.fetchall()]
+
+
+@mcp.tool()
+def describe_table(table_name: str) -> list[dict]:
+    """
+    Show the columns and types for a table.
+    Returns a list of column definitions.
+    """
+    # Validate table name — only allow alphanumeric and underscores
+    if not table_name.replace("_", "").isalnum():
+        return [{"error": "Invalid table name"}]
+    with get_connection() as conn:
+        cursor = conn.execute(f"PRAGMA table_info({table_name})")
+        return [
+            {"column": row["name"], "type": row["type"], "nullable": not row["notnull"]}
+            for row in cursor.fetchall()
+        ]
+
+
+@mcp.tool()
+def query_database(sql: str, limit: int = 50) -> list[dict]:
+    """
+    Run a SELECT query against the database. Returns up to `limit` rows.
+    Only SELECT queries are allowed — no INSERT, UPDATE, DELETE, or DROP.
+    Example: query_database("SELECT * FROM products WHERE price < 100")
+    """
+    # Safety: only allow SELECT statements
+    cleaned = sql.strip().upper()
+    if not cleaned.startswith("SELECT"):
+        return [{"error": "Only SELECT queries are allowed"}]
+
+    # Protect against LIMIT bypass
+    if ";" in sql:
+        return [{"error": "Multiple statements not allowed"}]
+
+    with get_connection() as conn:
+        try:
+            cursor = conn.execute(sql)
+            rows = cursor.fetchmany(limit)
+            return [dict(row) for row in rows]
+        except sqlite3.Error as e:
+            return [{"error": str(e)}]
+
+
+@mcp.tool()
+def insert_record(table_name: str, data: dict) -> str:
+    """
+    Insert a record into a table.
+    Example: insert_record("notes", {"title": "My note", "content": "Hello"})
+    """
+    if not table_name.replace("_", "").isalnum():
+        return "Error: Invalid table name"
+
+    columns = ", ".join(data.keys())
+    placeholders = ", ".join(["?" for _ in data])
+    values = list(data.values())
+
+    with get_connection() as conn:
+        try:
+            conn.execute(
+                f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})",
+                values
+            )
+            conn.commit()
+            return f"Inserted 1 record into {table_name}"
+        except sqlite3.Error as e:
+            return f"Error: {e}"
+
+
+# Seed a demo table on startup so you have something to query
+def seed_demo():
+    with get_connection() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        count = conn.execute("SELECT COUNT(*) as c FROM notes").fetchone()["c"]
+        if count == 0:
+            demo_notes = [
+                ("MCP Idea", "Build an MCP server for my calendar"),
+                ("Blog post", "Write about AI agent observability"),
+                ("Project idea", "Multi-agent content pipeline"),
+            ]
+            conn.executemany(
+                "INSERT INTO notes (title, content) VALUES (?, ?)", demo_notes
+            )
+            conn.commit()
+
+
+seed_demo()
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Testing it
+
+Ask Claude: *"What tables do I have in my database?"* then *"Show me all my notes"* then *"Add a new note called 'MCP course' with content 'Learning MCP is practical and fun'"*.
+
+Watch it chain `list_tables` → `describe_table` → `query_database` → `insert_record` to complete a multi-step task.
+
+---
+
+## Chapter 7 — Web and API Tools
+
+Claude cannot browse the internet by default. Let us change that by adding web fetching capabilities.
+
+```python
+import httpx
+from bs4 import BeautifulSoup
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Web Tools")
+
+
+@mcp.tool()
+async def fetch_webpage(url: str) -> str:
+    """
+    Fetch the text content of a webpage. Returns the cleaned text, not raw HTML.
+    Best for public web pages. Does not work behind login walls.
+    """
+    # Basic URL validation — only allow http and https
+    if not url.startswith(("http://", "https://")):
+        return "Error: URL must start with http:// or https://"
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            response = await client.get(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; MCP-Bot/1.0)"}
+            )
+            response.raise_for_status()
+
+        # Parse HTML and extract readable text
+        soup = BeautifulSoup(response.text, "html.parser")
+        # Remove scripts and styles
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
+        text = soup.get_text(separator="\n", strip=True)
+        # Limit to avoid overwhelming the context
+        return text[:8000] if len(text) > 8000 else text
+
+    except httpx.HTTPStatusError as e:
+        return f"HTTP Error {e.response.status_code}: {url}"
+    except httpx.RequestError as e:
+        return f"Network error: {e}"
+
+
+@mcp.tool()
+async def call_api(
+    url: str,
+    method: str = "GET",
+    headers: dict | None = None,
+    body: dict | None = None
+) -> dict:
+    """
+    Make an HTTP request to an API endpoint. Returns status code and response body.
+    method: GET, POST, PUT, PATCH, DELETE
+    headers: optional dict of request headers (for auth tokens, content-type etc.)
+    body: optional dict to send as JSON body (for POST/PUT/PATCH)
+    """
+    allowed_methods = {"GET", "POST", "PUT", "PATCH", "DELETE"}
+    if method.upper() not in allowed_methods:
+        return {"error": f"Method must be one of: {', '.join(allowed_methods)}"}
+
+    if not url.startswith(("http://", "https://")):
+        return {"error": "URL must start with http:// or https://"}
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.request(
+                method=method.upper(),
+                url=url,
+                headers=headers or {},
+                json=body,
+            )
+        try:
+            data = response.json()
+        except Exception:
+            data = response.text
+
+        return {
+            "status_code": response.status_code,
+            "ok": response.is_success,
+            "data": data,
+        }
+    except httpx.RequestError as e:
+        return {"error": str(e)}
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+Install the dependencies:
+```bash
+pip install httpx beautifulsoup4
+```
+
+Now Claude can fetch any webpage and call any API. You could extend this with an authenticated Slack API client, a GitHub issues fetcher, or a weather API — just add more tools in the same pattern.
+
+---
+
+## Chapter 8 — Resources and Prompts
+
+You now know how to build Tools. Let us cover the other two MCP primitives: **Resources** and **Prompts**.
+
+### Resources: exposing data
+
+Resources are like files or database records exposed through a URI scheme. The AI can read them but cannot directly modify them through the resource interface (modifications happen through tools).
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Resources Demo")
+
+# In-memory store for demo
+notes = {
+    "project-ideas": "1. MCP server for calendar\n2. AI blog writer\n3. RAG over my notes",
+    "daily-log": "Today: finished Chapter 6 of MCP course.",
+}
+
+
+@mcp.resource("notes://list")
+def list_notes() -> str:
+    """List all available notes (returns their keys)."""
+    return "\n".join(f"notes://{key}" for key in notes.keys())
+
+
+@mcp.resource("notes://{note_id}")
+def get_note(note_id: str) -> str:
+    """
+    Retrieve the content of a specific note by its ID.
+    Access via URI: notes://project-ideas
+    """
+    if note_id not in notes:
+        return f"Note not found: {note_id}"
+    return notes[note_id]
+```
+
+When the AI client supports resources, it can browse and read them. In Claude Desktop, resources show up in a file-browser-style interface.
+
+### Prompts: reusable prompt templates
+
+Prompts let you define standard ways for the AI to approach certain tasks:
+
+```python
+from mcp.server.fastmcp import FastMCP
+from mcp.types import PromptMessage, TextContent
+
+mcp = FastMCP("Prompts Demo")
+
+
+@mcp.prompt()
+def summarise_document(document: str, length: str = "short") -> list[PromptMessage]:
+    """
+    Prompt template for summarising a document.
+    length: 'short' (1 paragraph), 'medium' (3 paragraphs), 'detailed' (full breakdown)
+    """
+    length_instructions = {
+        "short": "in one concise paragraph",
+        "medium": "in three paragraphs covering main points, key details, and conclusions",
+        "detailed": "with a structured breakdown covering: overview, key points, analysis, and conclusions",
+    }.get(length, "in one paragraph")
+
+    return [
+        PromptMessage(
+            role="user",
+            content=TextContent(
+                type="text",
+                text=f"Please summarise the following document {length_instructions}:\n\n{document}"
+            )
+        )
+    ]
+
+
+@mcp.prompt()
+def code_review(code: str, language: str = "Python") -> list[PromptMessage]:
+    """
+    Prompt template for code review. Reviews for correctness, security, and clarity.
+    """
+    return [
+        PromptMessage(
+            role="user",
+            content=TextContent(
+                type="text",
+                text=f"""Please review this {language} code. Check for:
+1. Correctness — does it do what it claims?
+2. Security — any injection risks, exposed secrets, or unsafe operations?
+3. Clarity — is it readable and well-structured?
+4. Edge cases — what inputs would break it?
+
+```{language.lower()}
+{code}
+```"""
+            )
+        )
+    ]
+```
+
+Prompts are invoked from the AI client (in Claude Desktop via the `/` command menu). They are useful for standardising how the AI approaches recurring tasks.
+
+---
+
+## Chapter 9 — Security and Production Patterns
+
+Before you put your MCP server on a real machine or share it, here is what you need to think about.
+
+### The six security rules for MCP servers
+
+**1. Always validate paths** — as shown in Chapter 5, prevent directory traversal with `safe_path()`.
+
+**2. Always use parameterized queries** — as shown in Chapter 6, never build SQL from string concatenation.
+
+**3. Whitelist, not blacklist** — define what is allowed. Do not try to block bad things; there are always new bad things.
+
+**4. Never expose shell execution publicly** — a tool that runs `subprocess.run(command, shell=True)` is extremely dangerous. If you need shell access at all, it must be local-only and command-validated.
+
+**5. Log everything** — every tool call should be logged with its inputs and outputs. When something goes wrong, you need to know what happened.
+
+**6. Set resource limits** — avoid tools that could run indefinitely or consume huge amounts of memory. Set timeouts and size limits.
+
+### Logging tool calls
+
+```python
+import logging
+from functools import wraps
+from mcp.server.fastmcp import FastMCP
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("mcp-server.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+mcp = FastMCP("Production Server")
+
+
+def log_tool_call(func):
+    """Decorator that logs every tool call with inputs and outputs."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        logger.info(f"Tool called: {func.__name__} | args={args} | kwargs={kwargs}")
+        try:
+            result = func(*args, **kwargs)
+            logger.info(f"Tool success: {func.__name__} | result_length={len(str(result))}")
+            return result
+        except Exception as e:
+            logger.error(f"Tool error: {func.__name__} | error={e}")
+            raise
+    return wrapper
+
+
+@mcp.tool()
+@log_tool_call
+def read_file(path: str) -> str:
+    """Read a file from the workspace."""
+    # ... implementation
+    pass
+```
+
+### Running as a managed process
+
+In production, run your MCP server with a process manager like `supervisord` or as a systemd service so it restarts automatically if it crashes.
+
+For local development, the `claude_desktop_config.json` handles starting and stopping the server automatically.
+
+---
+
+## Chapter 10 — Hands-on Project: Personal Content Assistant
+
+Now we put everything together. You will build a single MCP server that gives Claude everything it needs to act as your personal content assistant — reading notes, searching the web, and managing a content database.
+
+### What this server does
+
+- Read and write notes from your workspace
+- Query a SQLite database of your projects and blog drafts
+- Fetch web pages to research topics
+- Log every action for audit
+
+### The complete server
+
+```python
+"""
+personal_assistant.py — A complete MCP server for personal content management.
+Run with: python personal_assistant.py
+Connect via claude_desktop_config.json
+"""
+
+import logging
+import sqlite3
+from pathlib import Path
+
+import httpx
+from bs4 import BeautifulSoup
+from mcp.server.fastmcp import FastMCP
+
+# ─── Setup ────────────────────────────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler("assistant.log"), logging.StreamHandler()],
+)
+logger = logging.getLogger(__name__)
+
+WORKSPACE = Path.home() / "ai-workspace"
+WORKSPACE.mkdir(exist_ok=True)
+DB_PATH = WORKSPACE / "content.db"
+
+mcp = FastMCP("Personal Content Assistant")
+
+
+# ─── Database setup ───────────────────────────────────────────────────────────
+
+def init_db():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS drafts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT,
+                status TEXT DEFAULT 'draft',
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS topics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                notes TEXT,
+                priority INTEGER DEFAULT 3
+            )
+        """)
+        conn.commit()
+
+init_db()
+
+
+# ─── File tools ───────────────────────────────────────────────────────────────
+
+def safe_path(relative: str) -> Path:
+    resolved = (WORKSPACE / relative).resolve()
+    if not str(resolved).startswith(str(WORKSPACE.resolve())):
+        raise ValueError("Path is outside the workspace")
+    return resolved
+
+
+@mcp.tool()
+def read_note(path: str) -> str:
+    """Read a note file from the workspace. Path is relative to workspace root."""
+    logger.info(f"read_note: {path}")
+    try:
+        return safe_path(path).read_text(encoding="utf-8")
+    except (FileNotFoundError, ValueError) as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def write_note(path: str, content: str) -> str:
+    """Write or overwrite a note file in the workspace."""
+    logger.info(f"write_note: {path} ({len(content)} chars)")
+    try:
+        p = safe_path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+        return f"Saved {len(content)} characters to {path}"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def list_notes() -> list[str]:
+    """List all note files in the workspace."""
+    return [str(p.relative_to(WORKSPACE)) for p in sorted(WORKSPACE.rglob("*.txt")) + sorted(WORKSPACE.rglob("*.md"))]
+
+
+# ─── Database tools ───────────────────────────────────────────────────────────
+
+@mcp.tool()
+def list_drafts(status: str = "all") -> list[dict]:
+    """
+    List blog drafts. Filter by status: 'draft', 'ready', 'published', or 'all'.
+    """
+    logger.info(f"list_drafts: status={status}")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        if status == "all":
+            rows = conn.execute("SELECT id, title, status, created_at FROM drafts ORDER BY updated_at DESC").fetchall()
+        else:
+            rows = conn.execute("SELECT id, title, status, created_at FROM drafts WHERE status=? ORDER BY updated_at DESC", (status,)).fetchall()
+    return [dict(r) for r in rows]
+
+
+@mcp.tool()
+def save_draft(title: str, content: str, status: str = "draft") -> str:
+    """Save a new blog draft to the database. status: 'draft', 'ready', 'published'"""
+    logger.info(f"save_draft: {title}")
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO drafts (title, content, status) VALUES (?, ?, ?)",
+            (title, content, status)
+        )
+        conn.commit()
+    return f"Saved draft: '{title}' (status: {status})"
+
+
+@mcp.tool()
+def get_draft(draft_id: int) -> dict:
+    """Get the full content of a draft by its ID."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM drafts WHERE id=?", (draft_id,)).fetchone()
+    return dict(row) if row else {"error": f"Draft {draft_id} not found"}
+
+
+# ─── Web tools ────────────────────────────────────────────────────────────────
+
+@mcp.tool()
+async def research_url(url: str) -> str:
+    """
+    Fetch and extract the readable text content from a webpage.
+    Use this to research topics from the web.
+    """
+    logger.info(f"research_url: {url}")
+    if not url.startswith(("http://", "https://")):
+        return "Error: URL must start with http:// or https://"
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer"]):
+            tag.decompose()
+        text = soup.get_text(separator="\n", strip=True)
+        return text[:8000]
+    except Exception as e:
+        return f"Error fetching {url}: {e}"
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Claude Desktop config
+
+```json
+{
+  "mcpServers": {
+    "personal-assistant": {
+      "command": "python",
+      "args": ["/absolute/path/to/personal_assistant.py"]
+    }
+  }
+}
+```
+
+### Example session with Claude
+
+Once connected, try this prompt:
+
+> *"Research the topic of AI agents from the web, summarise the key points in a note called 'research/ai-agents.md', and then create a blog draft outline called 'What are AI Agents?' ready for me to fill in."*
+
+Claude will:
+1. Call `research_url` on a relevant page
+2. Call `write_note` to save the summary
+3. Call `save_draft` with the outline it created
+
+That is a three-tool orchestration from a single natural language instruction. And you built the entire infrastructure for it.
+
+![Claude completing a multi-step research and writing task using the Personal Content Assistant MCP server](/images/courses/mcp/10-project-demo.png)
+*A complete multi-step task: research → notes → draft, all handled by Claude using your MCP server*
+
+---
+
+## What to build next
+
+You have now built a solid foundation. Here are natural extensions:
+
+- **Calendar MCP server** — connect to Google Calendar or Apple Calendar APIs
+- **Email MCP server** — read and draft emails via Gmail API
+- **GitHub MCP server** — create issues, read PRs, comment (there is already an official one)
+- **Vector search MCP server** — embed your notes and search them semantically
+- **Slack/Notion MCP server** — message your team or update your knowledge base
+
+The pattern is always the same: pick a system, wrap it in tools with good docstrings, validate inputs, log everything.
+
+---
+
+## Quick reference
+
+| Concept | What it is |
+|---|---|
+| MCP Host | The AI app the user talks to (Claude Desktop, Claude Code) |
+| MCP Client | Manages one connection inside the host |
+| MCP Server | Your Python process that exposes tools/resources/prompts |
+| Tool | A function the AI can call |
+| Resource | Data the AI can read via a URI |
+| Prompt | A reusable prompt template |
+| stdio transport | Server runs as child process, communicates via stdin/stdout |
+| FastMCP | High-level Python framework for building MCP servers |
+| `@mcp.tool()` | Decorator to register a function as a tool |
+| `safe_path()` | Pattern to prevent directory traversal attacks |
+| Parameterized query | SQL with `?` placeholders — never build SQL with f-strings |
+
+---
+
+*Questions or want to go deeper? Email hello@pranavsrivastava.com*
