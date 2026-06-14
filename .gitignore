@@ -1,0 +1,40 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js
+.next
+out
+dist
+
+# Build cache
+.turbo
+*.tsbuildinfo
+
+# Environment — never commit real keys
+.env
+.env.local
+.env.*.local
+
+# Python / agents
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+*.egg-info
+.pytest_cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea
+.vscode/settings.json
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

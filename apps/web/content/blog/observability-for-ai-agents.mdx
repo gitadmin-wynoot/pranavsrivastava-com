@@ -1,0 +1,110 @@
+---
+title: "Why observability matters for AI agents"
+slug: "observability-for-ai-agents"
+summary: "Running AI agents without observability is like running a production service without logs. Here is what to track and how to set it up."
+category: "AI Systems"
+tags: ["Observability", "LangGraph", "Langfuse", "Agents"]
+published: true
+publishedAt: "2026-06-07"
+---
+
+When you run a traditional API, you log requests, responses, errors, and latency. You set up alerts. You have a dashboard. If something breaks, you know where to look.
+
+When you run an AI agent, the same discipline applies — but most people skip it.
+
+This is a mistake.
+
+## What can go wrong without observability
+
+An AI agent is not a deterministic function. It makes decisions. It calls tools. It loops. It can:
+
+- Call the wrong tool
+- Get stuck in a loop
+- Spend 50,000 tokens on a task that should have cost 2,000
+- Fail silently and return a result that looks correct but is not
+- Hit rate limits and retry indefinitely
+
+Without observability, you will not know any of this until it causes a problem. And by then, the cost is already spent.
+
+## What to track
+
+For every agent run, at minimum you want:
+
+```typescript
+type AgentRun = {
+  id: string;
+  agentName: string;
+  task: string;
+  status: "running" | "success" | "failed" | "needs_approval";
+  modelProvider: string;       // "anthropic", "openai", "google"
+  modelName: string;           // "claude-sonnet-4-6", "gpt-4o"
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
+  latencyMs: number;
+  toolCalls: ToolCall[];
+  error?: string;
+  startedAt: string;
+  completedAt?: string;
+}
+```
+
+This gives you:
+
+- **Cost visibility**: how much did this task actually cost?
+- **Performance**: how long did it take?
+- **Debugging**: which tool calls happened, in what order?
+- **Error tracking**: what failed, and why?
+
+## Setting up Langfuse
+
+[Langfuse](https://langfuse.com) is the best open-source option for this. It supports LangGraph natively, has good dashboards, and can be self-hosted.
+
+For a personal setup on WSL2 with Docker:
+
+```bash
+# Clone the Langfuse stack
+git clone https://github.com/langfuse/langfuse
+cd langfuse
+
+# Start with Docker Compose
+docker compose up -d
+```
+
+Langfuse will be running at `http://localhost:3000`.
+
+To connect your LangGraph agents:
+
+```python
+from langfuse.callback import CallbackHandler
+
+handler = CallbackHandler(
+    public_key="your-public-key",
+    secret_key="your-secret-key",
+    host="http://localhost:3000",
+)
+
+# Pass to your LangGraph chain
+result = chain.invoke(
+    {"input": task},
+    config={"callbacks": [handler]}
+)
+```
+
+Every run will now be visible in Langfuse with full trace, token counts, and latency.
+
+## The habit to build
+
+Observability is not just a technical setup. It is a habit.
+
+Every agent task should have a name. Every tool call should log what it received and what it returned. Every run should have a budget — a maximum token count or cost before it stops and asks for approval.
+
+Start with three simple rules:
+
+1. Never run an agent without a trace ID
+2. Never let an agent spend more than $X without logging a warning
+3. Never let an agent loop more than N times without human review
+
+These are simple. But following them from the start saves a lot of pain later.
+
+The goal is a system that is observable enough that you can debug it, cheap enough that you can run it continuously, and safe enough that it does not cause problems while you are not watching.

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/*
+  Switch dark mode from media-query (prefers-color-scheme) to class-based.
+  next-themes writes class="dark" on <html>. This @custom-variant makes
+  Tailwind's dark: utilities respond to that class instead of the OS setting.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Dot grid pattern — used in hero section */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(161, 161, 170, 0.3) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* MDX prose content styles */
+.prose {
+  @apply text-zinc-700 dark:text-zinc-300 leading-relaxed;
+}
+.prose h1, .prose h2, .prose h3 {
+  @apply text-zinc-900 dark:text-zinc-100 font-semibold;
+}
+.prose h2 {
+  @apply text-2xl mt-10 mb-4;
+}
+.prose h3 {
+  @apply text-xl mt-8 mb-3;
+}
+.prose p {
+  @apply mb-5;
+}
+.prose a {
+  @apply text-blue-600 dark:text-blue-400 underline underline-offset-2;
+}
+.prose code {
+  @apply bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+.prose pre {
+  @apply bg-zinc-900 dark:bg-zinc-950 text-zinc-100 p-5 rounded-xl overflow-x-auto my-6 text-sm;
+}
+.prose pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.prose ul {
+  @apply list-disc list-inside mb-5 space-y-1;
+}
+.prose ol {
+  @apply list-decimal list-inside mb-5 space-y-1;
+}
+.prose blockquote {
+  @apply border-l-4 border-blue-500 pl-4 italic text-zinc-500 dark:text-zinc-400 my-6;
+}
+.prose hr {
+  @apply border-zinc-200 dark:border-zinc-800 my-10;
+}

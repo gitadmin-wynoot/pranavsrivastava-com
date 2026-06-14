@@ -1,0 +1,63 @@
+---
+title: "What MCP means for practical builders"
+slug: "what-mcp-means-for-builders"
+summary: "MCP (Model Context Protocol) is not just a standard for connecting AI tools. It is a new layer in how we build AI-native applications."
+category: "AI Systems"
+tags: ["MCP", "Agents", "Architecture", "Tools"]
+published: true
+publishedAt: "2026-06-10"
+---
+
+When Anthropic released the Model Context Protocol, a lot of the coverage focused on the protocol itself — the schema, the transport layer, the tool definitions. That is important, but it misses the bigger shift.
+
+MCP changes what it means to connect software to AI.
+
+## What MCP actually does
+
+MCP is a standard way to expose tools and context to a language model. A server implements the protocol and declares what tools it has. A client (an LLM, an agent, a code assistant) connects to that server and uses the tools.
+
+The key word is **standard**.
+
+Before MCP, every integration was custom. If you wanted Claude to read from your database, you wrote custom code. If you wanted it to search your docs, more custom code. If you switched from Claude to GPT, you rewrote the integrations.
+
+MCP makes integrations portable. Build an MCP server once. Any compatible client can use it.
+
+## Why this matters for builders
+
+If you are building AI-native applications or internal tooling, MCP solves three real problems:
+
+**1. You stop writing glue code**
+
+Instead of writing a custom tool for every LLM client you want to support, you write one MCP server. The server exposes the tools. The clients connect to it.
+
+**2. You can compose tools**
+
+MCP servers can be chained and composed. An agent can connect to multiple MCP servers simultaneously — one for your files, one for your database, one for your deployment system. The agent sees all the tools and decides which ones to use.
+
+**3. You get a clear security boundary**
+
+An MCP server is a defined interface. You can control exactly what an AI agent can see and do. This is much safer than giving an agent direct database access or shell access.
+
+## What I am building with MCP
+
+For my personal AI OS, I am building several local MCP servers:
+
+- **mcp-files**: controlled read/write access to my content folder — blog posts, courses, project notes
+- **mcp-ideas**: read/write access to my idea backlog — research notes, project proposals, status
+- **mcp-observability**: read access to agent run history and token usage
+
+These run locally via stdio — they never need to be publicly exposed. My coding assistant (Claude Code) connects to them. My research agents connect to them. Everything stays local and auditable.
+
+## The pattern to follow
+
+If you are thinking about adding MCP to your stack, here is the pattern I recommend:
+
+1. **Start with one server, one tool**. Do not try to build a comprehensive MCP server on day one. Pick one thing — reading a folder of files, querying a specific table — and make that work.
+
+2. **Use the Python SDK**. The Python MCP SDK is the most mature. The TypeScript SDK is also good if you prefer that.
+
+3. **Control access carefully**. Only expose what the agent actually needs. No broad filesystem access. No shell execution in public-facing servers.
+
+4. **Log everything**. Every tool call, every result, every error. This is how you debug agents and catch problems before they compound.
+
+MCP is still early. The tooling will get better. But the fundamental idea — a standard interface between AI and tools — is sound, and building on it now is worth it.

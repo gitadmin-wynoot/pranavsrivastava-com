@@ -1,0 +1,54 @@
+# LiteLLM proxy configuration
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+#
+# This file defines the model routing for the local LiteLLM proxy.
+# The proxy runs on http://localhost:4000 via docker compose.
+
+model_list:
+  # Claude (Anthropic)
+  - model_name: claude-sonnet-4-6
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5-20251001
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # OpenAI
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Google Gemini
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GOOGLE_API_KEY
+
+  # Local Ollama (runs on host at port 11434)
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: http://host.docker.internal:11434
+
+  - model_name: qwen2.5-coder
+    litellm_params:
+      model: ollama/qwen2.5-coder
+      api_base: http://host.docker.internal:11434
+
+# Default model policies
+router_settings:
+  model_group_alias:
+    default: claude-haiku-4-5    # cheap, fast — for most tasks
+    fast: claude-haiku-4-5       # optimised for latency
+    powerful: claude-sonnet-4-6  # high quality — for important tasks
+    local: llama3                # no API cost
+
+litellm_settings:
+  # Send all traces to local Langfuse
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  langfuse_host: "http://langfuse:3000"

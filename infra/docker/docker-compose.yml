@@ -1,0 +1,61 @@
+---
+# Local AI stack for development on WSL2 / Mac
+#
+# Services:
+#   - Langfuse: observability for agent runs and LLM calls
+#   - LiteLLM: LLM proxy for provider-agnostic AI calls
+#
+# Usage:
+#   docker compose up -d           Start all services
+#   docker compose up langfuse -d  Start only Langfuse
+#   docker compose down            Stop all services
+#   docker compose logs -f         Stream logs
+#
+# Access:
+#   Langfuse:  http://localhost:3001
+#   LiteLLM:   http://localhost:4000
+
+version: '3.8'
+
+services:
+  # ── Langfuse (observability) ─────────────────────────────────────────────
+  langfuse:
+    image: langfuse/langfuse:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - DATABASE_URL=postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      - NEXTAUTH_URL=http://localhost:3001
+      - NEXTAUTH_SECRET=local-dev-secret-change-in-production
+      - SALT=local-dev-salt-change-in-production
+    depends_on:
+      - langfuse-db
+    restart: unless-stopped
+
+  langfuse-db:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=langfuse
+      - POSTGRES_PASSWORD=langfuse
+      - POSTGRES_DB=langfuse
+    volumes:
+      - langfuse_postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ── LiteLLM proxy (LLM gateway) ──────────────────────────────────────────
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
+      - LITELLM_MASTER_KEY=${LITELLM_API_KEY:-sk-local-dev}
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    restart: unless-stopped
+
+volumes:
+  langfuse_postgres:

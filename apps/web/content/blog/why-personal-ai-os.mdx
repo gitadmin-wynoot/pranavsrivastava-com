@@ -1,0 +1,71 @@
+---
+title: "Why I am building a personal AI OS"
+slug: "why-personal-ai-os"
+summary: "A note on building a practical system for learning, experimenting, and publishing in the AI era — and why a portfolio is not enough."
+category: "Builder Notes"
+tags: ["AI OS", "Second Brain", "Agents", "MCP"]
+published: true
+publishedAt: "2026-06-14"
+---
+
+There is a pattern I keep seeing in how good engineers work during a period of rapid change.
+
+They do not just read about new tools. They build small things with them. They write up what they found. They make it public. And over time, the work compounds.
+
+I have been thinking about how to structure that kind of practice properly — not just as a loose habit, but as a real system. Something that scales as the AI ecosystem scales.
+
+## The problem with a traditional portfolio
+
+A portfolio is a snapshot. It shows what you have done, not how you think, not what you are learning, not where you are going.
+
+In a fast-moving field like AI systems, a snapshot gets stale quickly. The tools I used 18 months ago are already being replaced or extended. A static portfolio cannot keep up.
+
+What I want instead is something alive. A system that learns, proposes, builds, and publishes — continuously.
+
+## The concept: AI OS
+
+The idea I am building toward is a personal AI operating system.
+
+It is not a single app. It is a loop:
+
+```
+Discover → Understand → Propose → Build → Test → Publish → Observe → Improve
+```
+
+Each part of the loop feeds the next:
+
+- **Discover**: research agents scan AI news, releases, papers, and tooling
+- **Understand**: the system summarizes and categorizes by what is actually useful and buildable
+- **Propose**: it generates structured mini-project ideas — with difficulty, build time, demo potential
+- **Build**: selected ideas become repos, live demos, tutorials, or course lessons
+- **Publish**: everything goes live — as a post, a project page, or a course
+- **Observe**: every agent run, model call, and token cost is logged
+- **Improve**: each project is revisitable and gets better over time
+
+## Why now
+
+Several things have aligned that make this practical rather than theoretical:
+
+**MCP** (Model Context Protocol) makes it possible to connect AI tools to your local files, your content folder, your idea backlog — without writing custom glue code for everything.
+
+**LangGraph** gives you a proper way to build stateful agent workflows with observable steps — not just prompt chains.
+
+**LiteLLM** means I can write my LLM code once and switch between Claude, Gemini, GPT, or a local Ollama model with one config change.
+
+**Langfuse** lets me see exactly what my agents are doing — tokens spent, tool calls made, latency, errors — in a proper dashboard.
+
+These tools together make it possible to build something that was previously only feasible for companies with serious ML infrastructure.
+
+## What this site is
+
+This site is the public surface of that system.
+
+Blog posts like this one are written notes from the process. Courses are structured versions of what I learn. Projects are the live experiments. The AI Lab is where all of it surfaces.
+
+The system underneath is what makes it sustainable — agents that research, draft, and propose. A content engine that keeps everything structured and searchable. Observability that tells me when something breaks or costs too much.
+
+It is not finished. It will never be finished. That is the point.
+
+---
+
+If you are thinking about building something similar, start simple. A blog and a GitHub repo is enough to begin. The intelligence layer comes later, once the habit is established.

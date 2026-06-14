@@ -1,0 +1,55 @@
+---
+title: "AI Radar"
+slug: "ai-radar"
+summary: "A personal AI watcher that collects AI trends, converts them into structured insights, and proposes small buildable projects for the AI Lab."
+status: "building"
+category: "AI Agents"
+tags: ["Agents", "LangGraph", "MCP", "Automation", "Research"]
+liveUrl: ""
+githubUrl: ""
+featured: true
+createdAt: "2026-06-14"
+---
+
+## What it is
+
+AI Radar is a research agent that monitors the AI ecosystem and turns updates into actionable project ideas.
+
+The goal: never miss a meaningful development, and always have a clear picture of what is worth building next.
+
+## How it works
+
+1. A scheduled research agent scans AI news sources, GitHub releases, papers, and developer newsletters
+2. It categorises each update by topic, difficulty, and buildability
+3. It generates structured project ideas with title, why-now context, estimated build time, and demo potential
+4. Ideas land in a structured backlog visible in the admin dashboard
+5. Selected ideas get turned into project briefs, then repos, then tutorials
+
+## Current status
+
+Building the first version with:
+- LangGraph research agent (Python)
+- RSS and web sources
+- Langfuse for run observability
+- MCP server to write ideas to local markdown files
+
+## What a structured idea looks like
+
+```json
+{
+  "title": "Build a private MCP server for project notes",
+  "category": "MCP",
+  "difficulty": "medium",
+  "whyNow": "Remote MCP and tool-connected agents are becoming important",
+  "buildTime": "2-day demo",
+  "demoPossible": true,
+  "coursePossible": true,
+  "consultingRelevance": "Shows capability in agent-tool architecture"
+}
+```
+
+## Lessons so far
+
+- Research agents need very tight scope — broad searches return noise
+- Structuring the output matters more than gathering the input
+- Running everything through Langfuse makes tuning much faster

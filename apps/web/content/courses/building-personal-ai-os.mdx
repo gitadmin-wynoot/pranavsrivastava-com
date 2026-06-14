@@ -1,0 +1,72 @@
+---
+title: "Building a Personal AI OS"
+slug: "building-personal-ai-os"
+summary: "A practical course on designing a personal AI lab with agents, MCP servers, observability, and live projects. From idea to deployed system."
+level: "Beginner to Intermediate"
+status: "draft"
+tags: ["AI OS", "Agents", "MCP", "LangGraph", "Second Brain"]
+lessonCount: 8
+---
+
+## What you will build
+
+By the end of this course, you will have a working personal AI operating system — a monorepo containing a public website, Python agents, MCP servers, and an observability stack.
+
+This is not a theoretical course. Every lesson results in working code.
+
+## Who this is for
+
+- Developers curious about AI agents who want to go beyond prompting
+- Engineers who want to build their own AI-powered tooling
+- Anyone who wants a structured, observable system for learning and building in public
+
+You should be comfortable with Python and basic command-line usage. Some TypeScript helps for the web parts but is not required.
+
+## What you will learn
+
+By the end of this course you will understand:
+
+- How to structure a monorepo for a personal AI platform
+- How to build Python agents with LangGraph
+- How to use MCP (Model Context Protocol) to give agents controlled access to your tools
+- How to set up Langfuse for observability and cost tracking
+- How to make your system LLM-independent using LiteLLM
+- How to publish your work as a live website
+
+## Course outline
+
+### Lesson 1: Architecture and mindset
+Why a personal AI OS? The core loop. How to think about agents, tools, and content.
+
+### Lesson 2: Monorepo setup
+Setting up pnpm workspaces, Turborepo, and a clean folder structure for the long term.
+
+### Lesson 3: The public website
+Building the Next.js app with TypeScript, Tailwind, and MDX content. Getting live on Vercel.
+
+### Lesson 4: Content as files
+Why file-based content is the right choice for agent-generated output. MDX frontmatter conventions. Reading and rendering content.
+
+### Lesson 5: Your first agent
+Building a research agent with LangGraph. Tools, state, and the loop pattern. Connecting to a real source.
+
+### Lesson 6: MCP servers
+Building a local MCP server to give your agent access to your content folder. Safety boundaries. Logging.
+
+### Lesson 7: LLM gateway and observability
+Abstracting your LLM calls with LiteLLM. Setting up Langfuse. Understanding what your agents are actually doing.
+
+### Lesson 8: The full loop
+Connecting everything: agent discovers → writes MDX → website publishes. Running it. Watching it in Langfuse.
+
+## Prerequisites
+
+- Python 3.11+
+- Node.js 20+
+- Docker Desktop (for local Langfuse stack)
+- A Claude, OpenAI, or Gemini API key (or Ollama running locally)
+- Basic command line comfort
+
+---
+
+*This course is in development. Sign up for updates by sending a note to hello@pranavsrivastava.com.*

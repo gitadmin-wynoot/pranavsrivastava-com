@@ -1,0 +1,39 @@
+---
+title: "Personal MCP Lab"
+slug: "personal-mcp-lab"
+summary: "A local MCP server setup that gives AI coding tools controlled access to my content folder, idea backlog, and project notes."
+status: "idea"
+category: "MCP"
+tags: ["MCP", "Python", "Local", "Second Brain"]
+liveUrl: ""
+githubUrl: ""
+featured: true
+createdAt: "2026-06-14"
+---
+
+## What it is
+
+A collection of local MCP servers that connect AI coding assistants (Claude Code and others) to my personal content and data.
+
+These run locally via stdio — no public network exposure.
+
+## Planned servers
+
+**mcp-files**
+Controlled read/write access to the content folder. Blog post drafts, course outlines, project notes. Whitelist-only paths.
+
+**mcp-ideas**
+Read/write access to the idea backlog. The research agent writes here. I review and promote ideas to active projects.
+
+**mcp-observability**
+Read-only access to agent run history from Langfuse. Useful for reviewing what ran, what cost what, and what needs attention.
+
+## Why local-only
+
+These servers have access to real files and data. Running them as a public HTTP service would require careful authentication and is unnecessary for personal use.
+
+The stdio transport (how Claude Code connects to MCP servers) is clean, simple, and completely local.
+
+## Status
+
+Planned. Starting after AI Radar reaches a working state.
