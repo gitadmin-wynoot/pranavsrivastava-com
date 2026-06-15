@@ -1,0 +1,93 @@
+{
+  "course_id": "mcp",
+  "title": "MCP for Practical Builders",
+  "summary": "Learn Model Context Protocol from scratch — how it works, how to build servers in Python, and how to give AI assistants safe access to your files, databases, and APIs. Ends with a complete hands-on project.",
+  "level": "Beginner to Intermediate",
+  "track": "applied-ai",
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-06-16",
+  "tags": ["MCP", "Python", "Claude", "AI Tools", "FastMCP", "Security", "Agents"],
+  "modules": [
+    {
+      "id": "01-what-is-mcp",
+      "title": "The Problem MCP Solves",
+      "time_minutes": 8,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "02-how-mcp-works",
+      "title": "How MCP Works",
+      "time_minutes": 10,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "03-setting-up",
+      "title": "Setting Up Your Environment",
+      "time_minutes": 5,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "04-your-first-server",
+      "title": "Your First MCP Server",
+      "time_minutes": 15,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "05-file-system-tools",
+      "title": "File System Tools",
+      "time_minutes": 20,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "06-database-tools",
+      "title": "Database Tools",
+      "time_minutes": 20,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "07-web-and-api-tools",
+      "title": "Web and API Tools",
+      "time_minutes": 15,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "08-resources-and-prompts",
+      "title": "Resources and Prompts",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "09-security-patterns",
+      "title": "Security Patterns",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "10-hands-on-project",
+      "title": "Hands-on Project: Personal Content Assistant",
+      "time_minutes": 30,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    }
+  ]
+}

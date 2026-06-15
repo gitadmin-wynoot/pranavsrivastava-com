@@ -1,0 +1,356 @@
+---
+title: "Hands-On Project: Personal Content Assistant"
+summary: "Build a complete MCP server that combines file, web, and database tools into a single personal content assistant — and see the whole system working together."
+module: 10
+time: 30
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={10} title="Hands-On Project: Personal Content Assistant" time={30} />
+
+<LearningObjectives>
+- Build a multi-capability MCP server from scratch
+- Combine file, web, database, and prompt tools in one server
+- Run the complete server and verify each tool works end-to-end
+</LearningObjectives>
+
+### What you are building
+
+A **Personal Content Assistant** — an MCP server that helps you:
+
+- Save and retrieve notes
+- Fetch content from the web and save it to your workspace
+- Query a local database of saved articles and ideas
+- Use predefined prompts for common writing tasks
+
+This is a capstone project. You will use patterns from Modules 4 through 9: FastMCP, safe paths, async tools, databases, URL validation, audit logging, and prompt templates.
+
+<Diagram title="Personal Content Assistant — full architecture">
+
+```
+  Claude Desktop
+       |
+       v
+  MCP Server: personal-content-assistant
+  |
+  +-- Tools
+  |   +-- save_note(title, content)        [filesystem]
+  |   +-- read_note(title)                 [filesystem]
+  |   +-- list_notes()                     [filesystem]
+  |   +-- fetch_and_save(url, title)       [web + filesystem]
+  |   +-- search_saved(query)              [database]
+  |   +-- log_idea(title, body, tags)      [database]
+  |
+  +-- Prompts
+      +-- draft_post(topic)
+      +-- expand_idea(title)
+```
+
+</Diagram>
+
+### Project structure
+
+```
+personal-content-assistant/
+  server.py          <- the MCP server (all code in one file)
+  requirements.txt   <- dependencies
+```
+
+`requirements.txt`:
+
+```
+mcp
+httpx
+beautifulsoup4
+```
+
+### The complete server
+
+```python
+import json
+import sqlite3
+import functools
+import logging
+from pathlib import Path
+
+import httpx
+from bs4 import BeautifulSoup
+from mcp.server.fastmcp import FastMCP
+
+# ---- Setup ----------------------------------------------------------------
+
+mcp = FastMCP("Personal Content Assistant")
+
+WORKSPACE = Path.home() / "ai-workspace"
+NOTES_DIR = WORKSPACE / "notes"
+DB_PATH = WORKSPACE / "content.db"
+
+NOTES_DIR.mkdir(parents=True, exist_ok=True)
+LOG_PATH = WORKSPACE / "audit.log"
+logging.basicConfig(
+    filename=LOG_PATH,
+    level=logging.INFO,
+    format="%(asctime)s %(message)s",
+)
+
+
+# ---- Helpers --------------------------------------------------------------
+
+def safe_path(relative: str) -> Path:
+    resolved = (WORKSPACE / relative).resolve()
+    if not str(resolved).startswith(str(WORKSPACE.resolve())):
+        raise ValueError("Path is outside the workspace")
+    return resolved
+
+
+def audit(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            result = fn(*args, **kwargs)
+            logging.info(json.dumps({"tool": fn.__name__, "args": kwargs, "status": "ok"}))
+            return result
+        except Exception as e:
+            logging.error(json.dumps({"tool": fn.__name__, "args": kwargs, "error": str(e)}))
+            raise
+    return wrapper
+
+
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    with get_conn() as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS ideas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            body TEXT,
+            tags TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )""")
+        conn.commit()
+
+
+init_db()
+
+
+# ---- File tools -----------------------------------------------------------
+
+@mcp.tool()
+@audit
+def save_note(title: str, content: str) -> str:
+    """
+    Save a note to the workspace.
+    title: filename (without extension, letters/numbers/hyphens only)
+    content: the note body in plain text or markdown
+    """
+    if not all(c.isalnum() or c in "-_ " for c in title):
+        return "Error: title must contain only letters, numbers, hyphens, spaces, or underscores"
+    filename = title.strip().replace(" ", "-").lower() + ".md"
+    p = NOTES_DIR / filename
+    p.write_text(content, encoding="utf-8")
+    return f"Saved: notes/{filename}"
+
+
+@mcp.tool()
+@audit
+def read_note(title: str) -> str:
+    """
+    Read a saved note by its title (same as what you passed to save_note).
+    Returns the full note content.
+    """
+    filename = title.strip().replace(" ", "-").lower() + ".md"
+    p = NOTES_DIR / filename
+    if not p.exists():
+        return f"Note not found: {filename}"
+    return p.read_text(encoding="utf-8")
+
+
+@mcp.tool()
+@audit
+def list_notes() -> list[str]:
+    """Return a list of all saved note titles."""
+    return sorted(f.stem for f in NOTES_DIR.glob("*.md"))
+
+
+# ---- Web tool -------------------------------------------------------------
+
+@mcp.tool()
+@audit
+async def fetch_and_save(url: str, title: str) -> str:
+    """
+    Fetch a webpage and save its cleaned text to the workspace as a note.
+    url: full URL starting with http:// or https://
+    title: name for the saved note
+    """
+    if not url.startswith(("http://", "https://")):
+        return "Error: URL must start with http:// or https://"
+    if not all(c.isalnum() or c in "-_ " for c in title):
+        return "Error: title must contain only letters, numbers, hyphens, spaces, or underscores"
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        return f"HTTP error {e.response.status_code}"
+    except httpx.RequestError as e:
+        return f"Network error: {e}"
+
+    soup = BeautifulSoup(r.text, "html.parser")
+    for tag in soup(["script", "style", "nav", "footer", "header"]):
+        tag.decompose()
+    text = soup.get_text(separator="\n", strip=True)[:8000]
+
+    filename = title.strip().replace(" ", "-").lower() + ".md"
+    p = NOTES_DIR / filename
+    p.write_text(f"Source: {url}\n\n{text}", encoding="utf-8")
+    return f"Saved {len(text)} characters to notes/{filename}"
+
+
+# ---- Database tools -------------------------------------------------------
+
+@mcp.tool()
+@audit
+def log_idea(title: str, body: str, tags: str = "") -> str:
+    """
+    Save an idea to the local database.
+    title: short idea name
+    body: description or notes
+    tags: comma-separated list of tags (e.g. "ai,writing,product")
+    """
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO ideas (title, body, tags) VALUES (?, ?, ?)",
+            (title, body, tags),
+        )
+        conn.commit()
+    return f"Idea logged: {title}"
+
+
+@mcp.tool()
+@audit
+def search_saved(query: str) -> list[dict]:
+    """
+    Search saved ideas by title or body text (case-insensitive).
+    Returns up to 20 matching ideas.
+    """
+    pattern = f"%{query}%"
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT id, title, body, tags, created_at FROM ideas "
+            "WHERE title LIKE ? OR body LIKE ? "
+            "ORDER BY created_at DESC LIMIT 20",
+            (pattern, pattern),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ---- Prompts --------------------------------------------------------------
+
+@mcp.prompt()
+def draft_post(topic: str) -> str:
+    """
+    Prompt: draft a short blog post about a topic.
+    Returns a structured writing brief.
+    """
+    return f"""Draft a short blog post (400-600 words) about: {topic}
+
+Structure it as:
+1. A hook — one sentence that makes the reader want to continue
+2. The core idea — what you are exploring or arguing
+3. One concrete example or use case
+4. A short closing — what the reader should take away
+
+Write in first person, conversational tone. Be direct. Avoid jargon.
+Do not use phrases like "world-class", "revolutionary", or "cutting-edge"."""
+
+
+@mcp.prompt()
+def expand_idea(title: str) -> str:
+    """
+    Prompt: take a saved idea title and turn it into a structured plan.
+    """
+    idea_rows = search_saved(title)
+    if not idea_rows:
+        return f"No saved idea found matching '{title}'. Please log the idea first using log_idea."
+
+    idea = idea_rows[0]
+    return f"""Take this idea and expand it into a structured plan:
+
+Title: {idea['title']}
+Description: {idea['body']}
+Tags: {idea['tags']}
+
+Produce:
+1. What is the core problem or opportunity
+2. Who it is for
+3. What a minimal first version would look like (3 bullet points)
+4. One thing that would tell you it is working
+5. What to do in the next 7 days to move it forward"""
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Connecting to Claude Desktop
+
+Add this to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "personal-content-assistant": {
+      "command": "python",
+      "args": ["/absolute/path/to/personal-content-assistant/server.py"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop. You should see the hammer icon appear.
+
+### Testing each piece
+
+Try these conversations with Claude after connecting the server:
+
+```
+1. "Save a note called 'MCP project ideas' with these thoughts: ..."
+2. "Fetch https://docs.anthropic.com/en/docs/mcp and save it as 'anthropic-mcp-docs'"
+3. "Log an idea: title='voice notes app', body='Record voice memos, transcribe automatically, tag by topic'"
+4. "Search my saved ideas for anything about voice"
+5. Use the draft_post prompt with topic="why MCP changes how AI tools are built"
+```
+
+<Callout type="tip" title="What to check in audit.log">
+After running these commands, open `~/ai-workspace/audit.log` and review the entries. You should see every tool call logged with its arguments and status. This is the observability layer you built in Module 9.
+</Callout>
+
+### What to build next
+
+You have a working, secure, multi-capability MCP server. Here are natural extensions:
+
+- Add a `calendar://` resource that reads events from a local `.ics` file
+- Add a `send_email` tool using SMTP (with a confirmation prompt before sending)
+- Add a `search_web` tool using a search API
+- Split the server into multiple focused servers and register them all in Claude Desktop
+
+<ChapterSummary>
+- A single FastMCP server can combine filesystem, web, database, and prompt capabilities
+- All patterns from the course — safe paths, async tools, audit logging, parameterized queries — work together cleanly
+- The `@audit` decorator adds observability to every tool with one line
+- Prompt templates are reusable instruction patterns that Claude can invoke on demand
+- The next step is extending this server with capabilities specific to your workflow
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does `fetch_and_save` validate the title as well as the URL?
+2. What would happen if you removed the `@audit` decorator from `log_idea`?
+3. Name two ways you could extend this server for your own workflow.
+</Checkpoint>

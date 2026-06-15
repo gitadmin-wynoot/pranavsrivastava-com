@@ -1,0 +1,103 @@
+---
+title: "The Problem MCP Solves"
+summary: "Why AI assistants are trapped in a bubble — and how the Model Context Protocol breaks them free."
+module: 1
+time: 8
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={1} title="The Problem MCP Solves" time={8} />
+
+<LearningObjectives>
+- Understand why AI assistants are limited without external tools
+- Learn what the N×M integration problem is and how MCP fixes it
+- See two real analogies: USB-C and the Language Server Protocol
+</LearningObjectives>
+
+### AI assistants live in a bubble
+
+When you use Claude, GPT-4, or Gemini in a chat window, the AI can only work with what is inside the conversation. It cannot open files, query your database, check your calendar, or call your internal APIs. Every time you need the AI to do something with real data, you copy-paste it in manually.
+
+This feels like a minor inconvenience at first. Then it compounds:
+
+- You have 50 notes you want summarised — you cannot paste them all
+- You want the AI to check a live price from your system — it has no way in
+- You want an agent to run a multi-step workflow on your machine — it is sealed out
+
+### The old approach: N × M integrations
+
+Before MCP, every AI application had to build its own custom connections to every tool it needed.
+
+<Diagram title="The N×M Integration Problem — before MCP" caption="3 AI apps × 4 tools = 12 separate integrations, each built and maintained differently">
+
+```
+  ┌──────────────┐     custom code     ┌─────────────┐
+  │  AI App 1    │────────────────────►│  File System│
+  │              │────────────────────►│  Database   │
+  │              │────────────────────►│  Slack      │
+  └──────────────┘                     │  Calendar   │
+                                       └─────────────┘
+  ┌──────────────┐     custom code
+  │  AI App 2    │────────────────────► (rebuilds all 4)
+  └──────────────┘
+
+  ┌──────────────┐     custom code
+  │  AI App 3    │────────────────────► (rebuilds all 4)
+  └──────────────┘
+
+  Total: 3 apps × 4 tools = 12 separate custom integrations
+```
+
+</Diagram>
+
+If you have 3 AI apps and 4 tools, you need 12 custom integrations. Every new tool means updating every app. Every new app means wiring up every tool.
+
+### MCP: N + M instead of N × M
+
+MCP fixes this by defining a single protocol that any AI client can use to talk to any MCP server.
+
+<Diagram title="With MCP — one protocol connects everything" caption="Each tool is wrapped once. Every MCP-compatible AI client can use it instantly.">
+
+```
+  ┌──────────────┐                     ┌──────────────────┐
+  │  Claude      │  MCP protocol       │  File Server     │
+  │  Desktop     │◄───────────────────►│  (your Python)   │
+  └──────────────┘                     └──────────────────┘
+                                       ┌──────────────────┐
+  ┌──────────────┐                     │  DB Server       │
+  │  Claude Code │◄───────────────────►│  (your Python)   │
+  └──────────────┘  MCP protocol       └──────────────────┘
+                                       ┌──────────────────┐
+  ┌──────────────┐                     │  Slack Server    │
+  │  Your App    │◄───────────────────►│  (any language)  │
+  └──────────────┘                     └──────────────────┘
+
+  Any MCP client ↔ Any MCP server. Build once, use everywhere.
+```
+
+</Diagram>
+
+<Callout type="tip" title="Two useful analogies">
+**USB-C** unified physical connectors — one port, every device. MCP does the same for AI tool connections.
+
+**The Language Server Protocol (LSP)** unified how code editors connect to language intelligence. Before LSP, every editor had to implement language support itself. After LSP, you write a language server once and every editor uses it. MCP applies the same idea to AI tools.
+</Callout>
+
+### Who made MCP and who uses it?
+
+MCP was created by Anthropic and released as an open standard in November 2024. It is now supported by Claude Desktop, Claude Code, and many third-party AI applications. There are already MCP servers for GitHub, Google Drive, Notion, Slack, databases, web browsers, and hundreds of other tools.
+
+<ChapterSummary>
+- AI assistants cannot access your local files, databases, or APIs without extra setup
+- Before MCP, each AI app needed custom code for each tool — the N×M problem
+- MCP defines one protocol: write a server once, any compatible AI can use it
+- MCP was created by Anthropic in 2024 and is an open standard
+</ChapterSummary>
+
+<Checkpoint>
+1. What is the N×M integration problem, and why does it matter?
+2. Name one real-world analogy for what MCP does and explain why it fits.
+3. Who created MCP, and in what year was it released?
+</Checkpoint>

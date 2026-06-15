@@ -1,0 +1,88 @@
+---
+title: "Setting Up Your Environment"
+summary: "Install the Python MCP SDK, get Claude Desktop ready, and verify your setup with a minimal working server."
+module: 3
+time: 5
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={3} title="Setting Up Your Environment" time={5} />
+
+<LearningObjectives>
+- Install the Python MCP SDK using pip or uv
+- Install Claude Desktop for testing your servers locally
+- Verify your setup works with a minimal "hello" server
+</LearningObjectives>
+
+### What you need
+
+Before writing any code, make sure you have these three things:
+
+- **Python 3.10 or newer** — run `python --version` to check
+- **pip or uv** — either package manager works
+- **Claude Desktop (free)** — this is your MCP client for local testing
+
+### Install the MCP SDK
+
+With pip:
+
+```bash
+pip install mcp
+```
+
+With uv (faster, recommended if you use it):
+
+```bash
+uv add mcp
+```
+
+### Verify with a minimal server
+
+Create a file called `hello_mcp.py` anywhere on your machine:
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Hello Server")
+
+@mcp.tool()
+def greet(name: str) -> str:
+    """Say hello to someone by name."""
+    return f"Hello, {name}! MCP is working."
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+Run it:
+
+```bash
+python hello_mcp.py
+```
+
+If the server starts and waits silently — no output, no error — your setup is correct. Press `Ctrl+C` to stop.
+
+<Callout type="info" title="What is FastMCP?">
+`FastMCP` is a high-level framework built on top of the raw MCP Python SDK. It removes boilerplate — you define tools and resources with Python decorators, similar to how FastAPI works for web servers. We use FastMCP throughout this course.
+</Callout>
+
+### Install Claude Desktop
+
+Download it from claude.ai/download. Once installed, it will be your MCP host — the application that connects to your servers and lets Claude use your tools.
+
+You do not need a paid Claude plan to use Claude Desktop with local MCP servers.
+
+<ChapterSummary>
+- Python 3.10+, pip or uv, and Claude Desktop are all you need to get started
+- `pip install mcp` installs the SDK with FastMCP included
+- A server that starts silently and waits is working correctly
+- Claude Desktop is your free, local MCP host for testing
+</ChapterSummary>
+
+<Checkpoint>
+1. How do you verify that Python 3.10+ is installed?
+2. What does it mean when your MCP server starts and produces no output?
+3. What is the difference between the raw MCP SDK and FastMCP?
+</Checkpoint>

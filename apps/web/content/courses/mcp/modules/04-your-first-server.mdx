@@ -1,0 +1,142 @@
+---
+title: "Your First MCP Server"
+summary: "Build a real multi-tool server, connect it to Claude Desktop, and understand the complete request-to-response flow."
+module: 4
+time: 15
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={4} title="Your First MCP Server" time={15} />
+
+<LearningObjectives>
+- Build a real MCP server with multiple tools
+- Connect it to Claude Desktop via its config file
+- Understand the anatomy of a well-written tool description
+</LearningObjectives>
+
+### Build a simple multi-tool server
+
+Create `my_first_server.py`:
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("My First Server")
+
+
+@mcp.tool()
+def add_numbers(a: float, b: float) -> float:
+    """Add two numbers and return the result."""
+    return a + b
+
+
+@mcp.tool()
+def reverse_text(text: str) -> str:
+    """Reverse a piece of text character by character."""
+    return text[::-1]
+
+
+@mcp.tool()
+def word_count(text: str) -> dict:
+    """
+    Count words, characters, and lines in a piece of text.
+    Returns a dict with keys: words, characters, lines.
+    """
+    return {
+        "words": len(text.split()),
+        "characters": len(text),
+        "lines": len(text.splitlines()),
+    }
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Connect it to Claude Desktop
+
+Open Claude Desktop → Settings → Developer → Edit Config. This opens `claude_desktop_config.json`. Add your server:
+
+```json
+{
+  "mcpServers": {
+    "my-first-server": {
+      "command": "python",
+      "args": ["/absolute/path/to/my_first_server.py"]
+    }
+  }
+}
+```
+
+<Callout type="warning">
+Use the **full absolute path** to your file. A path like `~/Desktop/server.py` will not work — write it out completely: `/Users/pranav/code/server.py` on Mac/Linux, or `C:\Users\pranav\code\server.py` on Windows.
+</Callout>
+
+Restart Claude Desktop. You should see a hammer icon (🔨) near the chat input — this means your MCP server is connected and its tools are available.
+
+Try asking Claude: *"Add 17 and 25"* or *"How many words are in 'The quick brown fox'?"*
+
+### How it works end to end
+
+<Diagram title="What happens when Claude uses your tool">
+
+```
+  You type: "Add 17 and 25"
+       |
+       v
+  Claude thinks:  I should use the add_numbers tool
+       |
+       v
+  Claude sends:   tools/call -> add_numbers({a: 17, b: 25})
+       |
+       v
+  Your server:    runs add_numbers(17, 25) -> returns 42
+       |
+       v
+  Claude replies: "17 + 25 = 42"
+
+  Claude never runs the code. It only requests it.
+  YOU run it. This is by design — you stay in control.
+```
+
+</Diagram>
+
+### The anatomy of a tool
+
+The docstring is what Claude reads. This is the single most important thing to get right.
+
+```python
+@mcp.tool()
+def your_tool(
+    param: str,          # type annotation is required
+    optional: int = 10,  # defaults work
+) -> dict:               # return type helps the AI understand the output
+    """
+    This description is what Claude reads to decide when to use this tool.
+    Be specific. Say what the inputs are and what it returns.
+
+    Bad:  "Does something with text"
+    Good: "Count words and characters in a string.
+           Returns a dict with 'words' and 'characters' keys."
+    """
+    return {"words": len(param.split()), "characters": len(param)}
+```
+
+<Callout type="tip">
+The docstring **is** your tool's interface. Claude only knows what you write there. Vague descriptions lead to wrong calls. Specific descriptions lead to reliable, accurate use.
+</Callout>
+
+<ChapterSummary>
+- FastMCP tools are just Python functions decorated with `@mcp.tool()`
+- Claude Desktop picks up servers from `claude_desktop_config.json` — always use absolute paths
+- Claude requests tool calls — your server runs the code — Claude sees the result
+- The docstring is everything: write exactly what the tool does, what goes in, and what comes out
+</ChapterSummary>
+
+<Checkpoint>
+1. Where does Claude read to decide when and how to use a tool?
+2. What file tells Claude Desktop which MCP servers to connect to?
+3. Does Claude run your tool code directly? Who does?
+</Checkpoint>

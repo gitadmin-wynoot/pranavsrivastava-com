@@ -1,0 +1,148 @@
+---
+title: "Resources and Prompt Templates"
+summary: "Expose structured data as MCP resources with URI patterns, and define reusable prompt templates that give Claude consistent starting points."
+module: 8
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={8} title="Resources and Prompt Templates" time={12} />
+
+<LearningObjectives>
+- Understand what MCP resources are and when to use them instead of tools
+- Build resources with static and dynamic URI patterns
+- Define prompt templates that give Claude consistent, reusable starting points
+</LearningObjectives>
+
+### Tools vs resources — when to use which
+
+So far you have only built tools. MCP also has two other primitives: **resources** and **prompts**.
+
+| Primitive | What it is | When to use |
+|---|---|---|
+| Tool | A callable function | Agent needs to take an action or fetch data on demand |
+| Resource | A readable data endpoint with a URI | Structured content the host app wants to display or provide |
+| Prompt | A template for a task | Reusable instruction patterns, slash-command style |
+
+Resources work like files on a server — they have URIs and MIME types, and a client can list and read them. A file server, a notes app, or a calendar app would expose its data as resources rather than (or in addition to) tools.
+
+Prompts are predefined instruction templates that users can invoke. They let you encode your best prompts into the server itself, so they are always available consistently.
+
+### Exposing data as resources
+
+```python
+import json
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Notes App")
+
+WORKSPACE = Path.home() / "ai-workspace" / "notes"
+WORKSPACE.mkdir(parents=True, exist_ok=True)
+
+
+@mcp.resource("notes://list")
+def list_notes() -> str:
+    """
+    Resource: returns a JSON list of all note filenames.
+    URI: notes://list
+    """
+    files = [f.name for f in WORKSPACE.glob("*.txt")]
+    return json.dumps(sorted(files))
+
+
+@mcp.resource("notes://{filename}")
+def get_note(filename: str) -> str:
+    """
+    Resource: returns the content of a specific note.
+    URI: notes://my-note.txt
+    """
+    path = WORKSPACE / filename
+    if not path.exists():
+        return f"Note not found: {filename}"
+    return path.read_text(encoding="utf-8")
+```
+
+The `{filename}` in the URI pattern is a path parameter — FastMCP extracts it and passes it as a function argument.
+
+### Defining prompt templates
+
+```python
+@mcp.prompt()
+def summarize_note(filename: str) -> str:
+    """
+    Prompt template: summarize a note from the workspace.
+    The user provides a filename and gets a task description back.
+    """
+    content = get_note(filename)
+    return f"""Please summarize the following note in 3-5 bullet points.
+Focus on the key ideas. Keep it concise.
+
+Note content:
+{content}"""
+
+
+@mcp.prompt()
+def compare_notes(filename_a: str, filename_b: str) -> str:
+    """
+    Prompt template: compare two notes and find key differences.
+    """
+    note_a = get_note(filename_a)
+    note_b = get_note(filename_b)
+    return f"""Compare these two notes and identify:
+1. Key ideas they share
+2. Where they differ
+3. Which one you would prioritize acting on and why
+
+Note A ({filename_a}):
+{note_a}
+
+Note B ({filename_b}):
+{note_b}"""
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### How clients use resources and prompts
+
+<Diagram title="Resources and Prompts in the MCP flow">
+
+```
+  MCP Client (Claude Desktop)
+  |
+  |-- resources/list     ->  server returns list of URIs
+  |-- resources/read     ->  server returns content at URI
+  |-- prompts/list       ->  server returns available prompt templates
+  |-- prompts/get        ->  server returns rendered prompt for given args
+  |
+  Tools:   called by the AI when it decides to act
+  Resources: called by the host app to display or provide context
+  Prompts: invoked by the user (slash commands, menus, etc.)
+```
+
+</Diagram>
+
+<Callout type="info">
+In Claude Desktop, defined prompts appear as slash commands in the chat interface. If you define a `summarize_note` prompt in your server, users can invoke it directly as a command and Claude will receive the rendered template.
+</Callout>
+
+### When resources are better than tools
+
+If you are building an app that shows content (a file browser, a notes list, a calendar view), expose that content as resources. The host application can display resources directly — they do not need to be requested by Claude, and they are not "actions." Use tools only for things that require computation or have side effects.
+
+<ChapterSummary>
+- Resources have URIs and MIME types — they are readable data endpoints, not actions
+- Dynamic URI patterns use `{param}` syntax — FastMCP extracts them as function args
+- Prompts encode reusable instruction templates directly in your server
+- Tools = actions; Resources = data; Prompts = instruction patterns
+</ChapterSummary>
+
+<Checkpoint>
+1. What is the main difference between a tool and a resource in MCP?
+2. How does FastMCP extract path parameters from a resource URI?
+3. How do users typically invoke prompt templates in Claude Desktop?
+</Checkpoint>

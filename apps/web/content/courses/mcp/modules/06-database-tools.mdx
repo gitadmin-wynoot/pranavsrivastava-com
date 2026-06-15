@@ -1,0 +1,170 @@
+---
+title: "Database Tools"
+summary: "Build a SQLite MCP server with safe query and insert tools — and learn why parameterized queries are non-negotiable."
+module: 6
+time: 20
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={6} title="Database Tools" time={20} />
+
+<LearningObjectives>
+- Build a SQLite MCP server with query and insert tools
+- Understand SQL injection and why parameterized queries prevent it
+- Know how to give Claude read-only vs read-write access
+</LearningObjectives>
+
+### SQL injection — the one thing you must understand
+
+Never build SQL queries by joining strings:
+
+```python
+# NEVER DO THIS — SQL injection vulnerability
+query = f"SELECT * FROM users WHERE name = '{name}'"
+```
+
+If `name` is `'; DROP TABLE users; --`, your entire database is gone. Always use parameterized queries — the database driver handles the escaping:
+
+```python
+# ALWAYS DO THIS — safe
+cursor.execute("SELECT * FROM users WHERE name = ?", (name,))
+```
+
+### The full database server
+
+```python
+import sqlite3
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Database Server")
+
+DB_PATH = Path.home() / "ai-workspace" / "data.db"
+
+
+def get_conn():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # returns dicts instead of tuples
+    return conn
+
+
+@mcp.tool()
+def list_tables() -> list[str]:
+    """List all tables in the database."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        ).fetchall()
+    return [row["name"] for row in rows]
+
+
+@mcp.tool()
+def describe_table(table_name: str) -> list[dict]:
+    """Return column names and types for a table."""
+    if not table_name.replace("_", "").isalnum():
+        return [{"error": "Invalid table name"}]
+    with get_conn() as conn:
+        rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    return [{"column": r["name"], "type": r["type"]} for r in rows]
+
+
+@mcp.tool()
+def query_database(sql: str, limit: int = 50) -> list[dict]:
+    """
+    Run a SELECT query and return up to `limit` rows.
+    Only SELECT statements are allowed — no INSERT, UPDATE, DELETE, or DROP.
+    Example: query_database("SELECT * FROM notes WHERE title LIKE '%MCP%'")
+    """
+    clean = sql.strip().upper()
+    if not clean.startswith("SELECT"):
+        return [{"error": "Only SELECT queries are allowed"}]
+    if ";" in sql:
+        return [{"error": "Multiple statements not allowed"}]
+
+    with get_conn() as conn:
+        try:
+            rows = conn.execute(sql).fetchmany(limit)
+            return [dict(r) for r in rows]
+        except sqlite3.Error as e:
+            return [{"error": str(e)}]
+
+
+@mcp.tool()
+def insert_record(table_name: str, data: dict) -> str:
+    """
+    Insert a new record into a table.
+    Example: insert_record("notes", {"title": "My note", "content": "Hello"})
+    """
+    if not table_name.replace("_", "").isalnum():
+        return "Error: Invalid table name"
+
+    cols = ", ".join(data.keys())
+    placeholders = ", ".join(["?" for _ in data])
+    with get_conn() as conn:
+        try:
+            conn.execute(
+                f"INSERT INTO {table_name} ({cols}) VALUES ({placeholders})",
+                list(data.values())
+            )
+            conn.commit()
+            return f"Inserted 1 record into {table_name}"
+        except sqlite3.Error as e:
+            return f"Error: {e}"
+
+
+def seed():
+    with get_conn() as conn:
+        conn.execute("""CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )""")
+        if conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0] == 0:
+            conn.executemany(
+                "INSERT INTO notes (title, content) VALUES (?, ?)",
+                [("MCP Idea", "Build a calendar MCP server"),
+                 ("Blog post", "Write about AI observability"),
+                 ("Project idea", "Multi-agent pipeline")]
+            )
+            conn.commit()
+
+seed()
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Controlling read vs write access
+
+The `query_database` tool explicitly checks that the SQL starts with `SELECT`. The `insert_record` tool allows writes. If you want Claude to have read-only access, simply don't include `insert_record` in your server. **Claude can only use tools that exist.**
+
+<Callout type="important" title="Read-only vs read-write access">
+Giving Claude write access to a database is a significant trust decision. If your use case only needs reading, start with `query_database` alone and add write tools only when you have a clear reason and a clear scope.
+</Callout>
+
+### Why validate table names manually?
+
+Table names cannot be parameterized in SQL — only values can. So `describe_table` and `insert_record` must validate the table name themselves:
+
+```python
+if not table_name.replace("_", "").isalnum():
+    return [{"error": "Invalid table name"}]
+```
+
+This only allows letters, numbers, and underscores — the standard for safe table names.
+
+<ChapterSummary>
+- Always use parameterized queries — `cursor.execute("... WHERE x = ?", (val,))`
+- Validate table names manually since SQL parameters cannot cover them
+- Check the SQL verb (SELECT vs INSERT) to enforce read-only or read-write policies
+- `row_factory = sqlite3.Row` makes results return as dicts, not raw tuples
+</ChapterSummary>
+
+<Checkpoint>
+1. What would happen without parameterized queries if a user sent `'; DROP TABLE notes; --` as a name?
+2. How does `query_database` prevent write operations?
+3. Why does `describe_table` validate the table name manually before using it in SQL?
+</Checkpoint>

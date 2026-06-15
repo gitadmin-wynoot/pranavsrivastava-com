@@ -1,0 +1,121 @@
+---
+title: "How MCP Works"
+summary: "The three-part architecture, three primitives, and the JSON-RPC communication model that makes MCP tick."
+module: 2
+time: 10
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={2} title="How MCP Works" time={10} />
+
+<LearningObjectives>
+- Understand the three-part architecture: Host, Client, Server
+- Learn the three MCP primitives: Tools, Resources, Prompts
+- Understand JSON-RPC communication and the two transport options
+</LearningObjectives>
+
+### The three components
+
+Every MCP setup has three distinct pieces. Understanding which is which will prevent a lot of confusion.
+
+<Diagram title="MCP Architecture — Host, Client, Server" caption="One host can have multiple clients, each connected to one server">
+
+```
+  ┌────────────────────────────────────────────────────┐
+  │  Host (e.g. Claude Desktop)                        │
+  │                                                    │
+  │  ┌────────────────┐    ┌────────────────┐          │
+  │  │  MCP Client 1  │    │  MCP Client 2  │  ...     │
+  │  └───────┬────────┘    └───────┬────────┘          │
+  └──────────┼─────────────────────┼───────────────────┘
+             │  MCP protocol       │  MCP protocol
+             ▼                     ▼
+  ┌──────────────────┐   ┌──────────────────┐
+  │  Your File       │   │  Your Database   │
+  │  MCP Server      │   │  MCP Server      │
+  │  (Python)        │   │  (Python)        │
+  └──────────────────┘   └──────────────────┘
+```
+
+</Diagram>
+
+**Host** — the AI application the user interacts with. Examples: Claude Desktop, Claude Code, a custom AI app you build.
+
+**Client** — the MCP client lives inside the host. It manages the connection to exactly one MCP server. If you have three MCP servers connected, the host creates three clients.
+
+**Server** — the thing you build. A separate process (Python, TypeScript, or any language) that exposes tools, resources, and prompts to the AI.
+
+### The three primitives
+
+Every MCP server can expose up to three types of things:
+
+<Diagram title="The Three MCP Primitives" caption="Tools are the most important — start there">
+
+```
+  +-----------------------------------------------------+
+  |  Primitive   |  What it is         |  When to use   |
+  +-----------------------------------------------------+
+  |  Tools       |  Functions the AI   |  When you want |
+  |              |  can call           |  the AI to DO  |
+  |              |  e.g. read_file()   |  something     |
+  +-----------------------------------------------------+
+  |  Resources   |  Data sources the   |  When you want |
+  |              |  AI can read        |  the AI to READ|
+  |              |  e.g. notes://list  |  something     |
+  +-----------------------------------------------------+
+  |  Prompts     |  Reusable prompt    |  When you want |
+  |              |  templates          |  standard ways |
+  |              |  e.g. /summarise    |  to ask things |
+  +-----------------------------------------------------+
+```
+
+</Diagram>
+
+<Callout type="note">
+**Quick rule:** Use **Tools** when you want the AI to *do* something (write, query, send). Use **Resources** when you want the AI to *read* something (fetch content, list items). Use **Prompts** when you want a reusable instruction template. Most servers only need Tools.
+</Callout>
+
+### How communication works
+
+MCP uses **JSON-RPC 2.0** — a simple message format. Every message is JSON. The AI sends a request, the server sends a response.
+
+<Diagram title="MCP Communication Flow — request / response pairs">
+
+```
+  AI Client                           MCP Server
+      |                                    |
+      |-- initialize ──────────────────────►|
+      |◄─ capabilities (tools list) ────────|
+      |                                    |
+      |-- tools/list ──────────────────────►|
+      |◄─ [{name, description, schema}] ───|
+      |                                    |
+      |-- tools/call {read_file, args} ────►|
+      |◄─ {content: "file contents..."} ───|
+      |                                    |
+      |-- tools/call {save_note, args} ────►|
+      |◄─ {content: "Saved."} ─────────────|
+```
+
+</Diagram>
+
+### Transport: how they connect
+
+**stdio** — the host launches your MCP server as a child process and communicates through stdin/stdout. Fast, simple, no network needed. This is how local MCP servers work and what you will use in this course.
+
+**Streamable HTTP** — the server runs as an HTTP endpoint. Used for remote MCP servers deployed to the cloud.
+
+<ChapterSummary>
+- A Host contains one Client per connected MCP Server
+- Three primitives: Tools (actions), Resources (data), Prompts (templates)
+- Communication uses JSON-RPC 2.0 — simple request/response pairs
+- Local servers use stdio transport; remote servers use Streamable HTTP
+</ChapterSummary>
+
+<Checkpoint>
+1. What is the difference between a Host, a Client, and a Server in MCP?
+2. You want to give Claude the ability to send an email — which primitive do you use, and why?
+3. What does stdio transport mean, and why is it the right choice for local servers?
+</Checkpoint>

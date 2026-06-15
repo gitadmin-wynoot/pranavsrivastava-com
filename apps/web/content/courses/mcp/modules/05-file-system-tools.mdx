@@ -1,0 +1,157 @@
+---
+title: "File System Tools"
+summary: "Build a safe file server with read, write, list, and delete tools — and learn why safe_path() is the most important function you will write."
+module: 5
+time: 20
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={5} title="File System Tools" time={20} />
+
+<LearningObjectives>
+- Build a file server with read, write, list, and delete tools
+- Understand and implement path traversal prevention
+- Know why `safe_path()` is the most important function in any file server
+</LearningObjectives>
+
+### Why you need safety controls first
+
+Without them, a poorly designed file server could allow Claude — or a prompt injection attack — to read your passwords, SSH keys, or system files. The fix is simple: confine all file operations to a specific allowed directory and verify every path before touching it.
+
+```python
+import os
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("File Server")
+
+WORKSPACE = Path.home() / "ai-workspace"
+WORKSPACE.mkdir(exist_ok=True)
+
+
+def safe_path(relative: str) -> Path:
+    """
+    Resolve a path and verify it is inside WORKSPACE.
+    Raises ValueError if the path tries to escape (e.g. using ../).
+    """
+    resolved = (WORKSPACE / relative).resolve()
+    if not str(resolved).startswith(str(WORKSPACE.resolve())):
+        raise ValueError("Access denied: path is outside the workspace")
+    return resolved
+
+
+@mcp.tool()
+def read_file(path: str) -> str:
+    """
+    Read a file from the workspace. Path is relative to the workspace root.
+    Example: read_file("notes/todo.txt")
+    """
+    try:
+        return safe_path(path).read_text(encoding="utf-8")
+    except ValueError as e:
+        return f"Error: {e}"
+    except FileNotFoundError:
+        return f"Error: File not found — {path}"
+
+
+@mcp.tool()
+def write_file(path: str, content: str) -> str:
+    """
+    Write content to a file, creating the file and any missing directories.
+    Path is relative to the workspace root.
+    """
+    try:
+        p = safe_path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+        return f"Written {len(content)} characters to {path}"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
+@mcp.tool()
+def list_files(directory: str = "") -> list[str]:
+    """
+    List files in a workspace directory. Leave empty for the workspace root.
+    Returns relative paths from the workspace root.
+    """
+    try:
+        target = safe_path(directory) if directory else WORKSPACE
+        if not target.is_dir():
+            return [f"Error: {directory} is not a directory"]
+        return sorted(
+            str(p.relative_to(WORKSPACE))
+            for p in target.rglob("*")
+            if p.is_file()
+        )
+    except ValueError as e:
+        return [f"Error: {e}"]
+
+
+@mcp.tool()
+def delete_file(path: str) -> str:
+    """Delete a file from the workspace. Cannot delete directories."""
+    try:
+        p = safe_path(path)
+        if not p.exists():
+            return f"Error: Not found — {path}"
+        if p.is_dir():
+            return "Error: Cannot delete a directory with this tool"
+        p.unlink()
+        return f"Deleted: {path}"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+### Why safe_path works — and why you cannot skip it
+
+<Diagram title="Path Traversal Attack — without safe_path">
+
+```
+  User (or prompt injection) sends:   path = "../../etc/passwd"
+       |
+       v
+  Without safe_path:
+  WORKSPACE / "../../etc/passwd"
+    resolves to: /etc/passwd    <- system file! reads passwords
+
+  With safe_path:
+  resolved = /etc/passwd
+  starts_with(WORKSPACE)?   NO
+  -> raises ValueError("Access denied")   OK protected
+```
+
+</Diagram>
+
+The `.resolve()` call expands all `../` segments before we check. That is why it works. Without `.resolve()`, a string comparison would miss encoded or relative path tricks.
+
+<Callout type="important" title="Never skip path validation">
+Every file tool must call `safe_path()` before touching anything. If you add a new file tool later and forget, that tool becomes an attack surface. Make `safe_path` a habit, not an afterthought.
+</Callout>
+
+### Good practices for file tools
+
+**Return error strings, not exceptions.** When `read_file` catches a `ValueError`, it returns `"Error: ..."` instead of raising. Claude can read that error and decide what to do next. A raised exception stops the agent cold.
+
+**Create missing directories.** Use `p.parent.mkdir(parents=True, exist_ok=True)` before writing. This lets Claude create nested paths like `projects/mcp/notes.md` without extra tool calls.
+
+**Set a file size limit.** For read operations, consider adding `content[:100_000]` to prevent accidentally loading huge files into the context window.
+
+<ChapterSummary>
+- Always confine file operations to a dedicated `WORKSPACE` directory
+- `safe_path()` resolves and checks every path before use — never skip this
+- Return `"Error: ..."` strings from tools instead of raising exceptions
+- Create missing directories automatically with `p.parent.mkdir(parents=True, exist_ok=True)`
+</ChapterSummary>
+
+<Checkpoint>
+1. What is a path traversal attack, and give an example of what it looks like?
+2. Why does `safe_path` use `.resolve()` before comparing paths?
+3. Why should tools return error strings rather than raise exceptions?
+</Checkpoint>

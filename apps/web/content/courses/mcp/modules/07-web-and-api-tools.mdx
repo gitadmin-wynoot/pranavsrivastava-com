@@ -1,0 +1,127 @@
+---
+title: "Web and API Tools"
+summary: "Build async tools that fetch webpage content and call REST APIs — with URL validation, timeouts, and content size limits built in."
+module: 7
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={7} title="Web and API Tools" time={15} />
+
+<LearningObjectives>
+- Build tools that fetch webpage content and call REST APIs
+- Validate URLs before making requests
+- Handle timeouts, errors, and content size limits safely
+</LearningObjectives>
+
+### The full web tools server
+
+```python
+import httpx
+from bs4 import BeautifulSoup
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("Web Tools")
+
+
+@mcp.tool()
+async def fetch_webpage(url: str) -> str:
+    """
+    Fetch the readable text content of a webpage.
+    Returns cleaned text (no HTML tags, scripts, or styles).
+    Works best on public pages. Does not work behind login walls.
+    """
+    if not url.startswith(("http://", "https://")):
+        return "Error: URL must start with http:// or https://"
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            r.raise_for_status()
+
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
+        text = soup.get_text(separator="\n", strip=True)
+        return text[:8000]  # prevent context overflow
+
+    except httpx.HTTPStatusError as e:
+        return f"HTTP {e.response.status_code}: {url}"
+    except httpx.RequestError as e:
+        return f"Network error: {e}"
+
+
+@mcp.tool()
+async def call_api(
+    url: str,
+    method: str = "GET",
+    headers: dict | None = None,
+    body: dict | None = None,
+) -> dict:
+    """
+    Make an HTTP API request. Returns status code and response body.
+    method: GET, POST, PUT, PATCH, DELETE
+    headers: optional dict (for auth tokens, content-type, etc.)
+    body: optional dict sent as JSON (for POST/PUT/PATCH)
+    """
+    allowed = {"GET", "POST", "PUT", "PATCH", "DELETE"}
+    if method.upper() not in allowed:
+        return {"error": f"method must be one of {allowed}"}
+    if not url.startswith(("http://", "https://")):
+        return {"error": "URL must start with http:// or https://"}
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.request(
+                method.upper(), url, headers=headers or {}, json=body
+            )
+        try:
+            data = r.json()
+        except Exception:
+            data = r.text
+        return {"status_code": r.status_code, "ok": r.is_success, "data": data}
+    except httpx.RequestError as e:
+        return {"error": str(e)}
+
+
+if __name__ == "__main__":
+    mcp.run()
+```
+
+Install the dependencies:
+
+```bash
+pip install httpx beautifulsoup4
+```
+
+### Why async tools?
+
+<Callout type="tip">
+FastMCP supports async tools — just mark them `async def`. The framework handles the event loop automatically. This is important for web tools: while one request is waiting for a response, the server can do other things instead of blocking.
+</Callout>
+
+### Design decisions worth noting
+
+**URL validation is first.** Both tools check that the URL starts with `http://` or `https://` before making any network call. This prevents tools from being used to hit internal localhost services or file:// URLs.
+
+**Content size limit on `fetch_webpage`.** The `text[:8000]` limit prevents a huge webpage from flooding the context window. 8,000 characters is enough for most articles and documentation pages.
+
+**`call_api` returns structured data.** The response includes `status_code`, `ok` (boolean), and `data` (parsed JSON or raw text). Claude can check `ok` and decide what to do if the call failed — rather than treating every response as success.
+
+**Timeouts on every request.** `timeout=15.0` means any call that takes longer than 15 seconds raises an error. Without this, a slow server could hang your agent indefinitely.
+
+<ChapterSummary>
+- Use `httpx` for all HTTP requests — it supports async natively and has good error handling
+- Validate URLs before making any request
+- Always set a timeout
+- Cap response sizes to protect the context window
+- FastMCP handles the async event loop — just mark your tools `async def`
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does `fetch_webpage` strip `script`, `style`, and `nav` tags before returning text?
+2. What does the `text[:8000]` limit protect against?
+3. What happens if you call `call_api` with `method="DELETE"` and there is no explicit check?
+</Checkpoint>

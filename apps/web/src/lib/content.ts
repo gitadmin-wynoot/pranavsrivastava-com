@@ -18,6 +18,39 @@ function getContentDir(...segments: string[]) {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface CourseModuleMeta {
+  id: string;
+  title: string;
+  time_minutes: number;
+  level: string;
+  status: "draft" | "published";
+  last_updated: string;
+}
+
+export interface CourseManifest {
+  course_id: string;
+  title: string;
+  summary: string;
+  level: "Beginner" | "Intermediate" | "Advanced" | "Beginner to Intermediate";
+  track: string;
+  status: "draft" | "published";
+  version: string;
+  last_reviewed: string;
+  tags: string[];
+  modules: CourseModuleMeta[];
+}
+
+export interface CourseModule {
+  id: string;
+  title: string;
+  summary: string;
+  module: number;
+  time: number;
+  level: string;
+  status: string;
+  content: string;
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -149,11 +182,95 @@ export function getBlogPost(slug: string): BlogPost | null {
 
 // ─── Courses ──────────────────────────────────────────────────────────────────
 
+export function isMultiModuleCourse(slug: string): boolean {
+  const manifestPath = getContentDir("courses", slug, "course.manifest.json");
+  return fs.existsSync(manifestPath);
+}
+
+export function getCourseManifest(slug: string): CourseManifest | null {
+  const manifestPath = getContentDir("courses", slug, "course.manifest.json");
+  if (!fs.existsSync(manifestPath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(manifestPath, "utf-8")) as CourseManifest;
+  } catch {
+    return null;
+  }
+}
+
+export function getCourseModules(slug: string): CourseModule[] {
+  const manifest = getCourseManifest(slug);
+  if (!manifest) return [];
+
+  const modulesDir = getContentDir("courses", slug, "modules");
+  if (!fs.existsSync(modulesDir)) return [];
+
+  return manifest.modules
+    .map((meta, index) => {
+      const mdxPath = path.join(modulesDir, `${meta.id}.mdx`);
+      const mdPath = path.join(modulesDir, `${meta.id}.md`);
+      const filePath = fs.existsSync(mdxPath)
+        ? mdxPath
+        : fs.existsSync(mdPath)
+          ? mdPath
+          : null;
+      if (!filePath) return null;
+
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const { data, content } = matter(raw);
+      return {
+        id: meta.id,
+        title: data.title ?? meta.title,
+        summary: data.summary ?? "",
+        module: data.module ?? index + 1,
+        time: data.time ?? meta.time_minutes,
+        level: data.level ?? meta.level,
+        status: data.status ?? meta.status,
+        content,
+      } satisfies CourseModule;
+    })
+    .filter((m): m is CourseModule => m !== null);
+}
+
+export function getCourseModule(
+  courseSlug: string,
+  moduleId: string
+): CourseModule | null {
+  const manifest = getCourseManifest(courseSlug);
+  if (!manifest) return null;
+
+  const modulesDir = getContentDir("courses", courseSlug, "modules");
+  const mdxPath = path.join(modulesDir, `${moduleId}.mdx`);
+  const mdPath = path.join(modulesDir, `${moduleId}.md`);
+  const filePath = fs.existsSync(mdxPath)
+    ? mdxPath
+    : fs.existsSync(mdPath)
+      ? mdPath
+      : null;
+  if (!filePath) return null;
+
+  const metaIndex = manifest.modules.findIndex((m) => m.id === moduleId);
+  const meta = manifest.modules[metaIndex];
+  if (!meta) return null;
+
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const { data, content } = matter(raw);
+  return {
+    id: moduleId,
+    title: data.title ?? meta.title,
+    summary: data.summary ?? "",
+    module: data.module ?? metaIndex + 1,
+    time: data.time ?? meta.time_minutes,
+    level: data.level ?? meta.level,
+    status: data.status ?? meta.status,
+    content,
+  };
+}
+
 export function getCourses(): Course[] {
   const dir = getContentDir("courses");
-  const files = readMdxFiles(dir);
 
-  return files.map((file) => {
+  // Single-file courses (top-level .mdx files)
+  const singleFileCourses = readMdxFiles(dir).map((file) => {
     const slug = file.replace(/\.mdx?$/, "");
     const raw = fs.readFileSync(path.join(dir, file), "utf-8");
     const { data, content } = matter(raw);
@@ -170,6 +287,39 @@ export function getCourses(): Course[] {
       content,
     } satisfies Course;
   });
+
+  // Multi-module courses (subdirectories with course.manifest.json)
+  const subDirs = fs.existsSync(dir)
+    ? fs
+        .readdirSync(dir, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name)
+    : [];
+
+  const multiModuleCourses = subDirs
+    .map((dirName): Course | null => {
+      const manifest = getCourseManifest(dirName);
+      if (!manifest) return null;
+      const totalMinutes = manifest.modules.reduce(
+        (sum, m) => sum + m.time_minutes,
+        0
+      );
+      return {
+        slug: manifest.course_id,
+        title: manifest.title,
+        summary: manifest.summary,
+        level: manifest.level,
+        status: manifest.status,
+        track: manifest.track ?? "uncategorised",
+        prereqs: [],
+        tags: manifest.tags ?? [],
+        lessonCount: manifest.modules.length,
+        content: `<!-- multi-module:${manifest.course_id} totalMinutes:${totalMinutes} -->`,
+      };
+    })
+    .filter((c): c is Course => c !== null);
+
+  return [...singleFileCourses, ...multiModuleCourses];
 }
 
 export function getCoursesByTrack(trackSlug: string): Course[] {
@@ -177,6 +327,29 @@ export function getCoursesByTrack(trackSlug: string): Course[] {
 }
 
 export function getCourse(slug: string): Course | null {
+  // Check multi-module first
+  if (isMultiModuleCourse(slug)) {
+    const manifest = getCourseManifest(slug);
+    if (!manifest) return null;
+    const totalMinutes = manifest.modules.reduce(
+      (sum, m) => sum + m.time_minutes,
+      0
+    );
+    return {
+      slug: manifest.course_id,
+      title: manifest.title,
+      summary: manifest.summary,
+      level: manifest.level,
+      status: manifest.status,
+      track: manifest.track ?? "uncategorised",
+      prereqs: [],
+      tags: manifest.tags ?? [],
+      lessonCount: manifest.modules.length,
+      content: `<!-- multi-module:${manifest.course_id} totalMinutes:${totalMinutes} -->`,
+    };
+  }
+
+  // Fall back to single-file
   const dir = getContentDir("courses");
   const mdxPath = path.join(dir, `${slug}.mdx`);
   const mdPath = path.join(dir, `${slug}.md`);
