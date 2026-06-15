@@ -1,0 +1,112 @@
+---
+title: "What is an AI Agent?"
+summary: "Understand the key difference between a chatbot and an agent, and learn the four components every agent is built from."
+module: 1
+time: 10
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={1} title="What is an AI Agent?" time={10} />
+
+<LearningObjectives>
+- Understand the key difference between a chatbot and an agent
+- Know when agents are the right tool and when they are not
+- Recognise the components that make up an agent: LLM, tools, memory, loop
+</LearningObjectives>
+
+### The simplest definition
+
+An AI agent is a system where a language model controls a loop — it takes in information, decides what to do next, acts (usually by calling a tool), observes the result, and repeats. It keeps going until the task is done or it runs out of options.
+
+<Diagram title="Chatbot vs Agent — the fundamental difference" caption="A chatbot does one round trip. An agent loops until the task is complete.">
+
+```
+  CHATBOT
+  +------------------------------------------------+
+  |  User: "What is the weather?"                  |
+  |    |                                           |
+  |    v                                           |
+  |  LLM: "I don't have real-time weather data."  |
+  |  (done -- one round trip)                      |
+  +------------------------------------------------+
+
+  AGENT
+  +------------------------------------------------+
+  |  User: "What is the weather in Amsterdam?"     |
+  |    |                                           |
+  |    v                                           |
+  |  Think: I should call the weather tool         |
+  |    |                                           |
+  |    v                                           |
+  |  Act:   weather_api("Amsterdam")               |
+  |    |                                           |
+  |    v                                           |
+  |  Observe: {"temp": 14, "cond": "cloudy"}      |
+  |    |                                           |
+  |    v                                           |
+  |  Think: I have the data. I can answer now.     |
+  |    |                                           |
+  |    v                                           |
+  |  Answer: "It's 14 deg C and cloudy today."    |
+  +------------------------------------------------+
+```
+
+</Diagram>
+
+### The four components of an agent
+
+```
+Agent = LLM + Tools + Memory + Loop
+```
+
+**LLM** — the reasoning engine. Decides what to do at each step.
+
+**Tools** — functions the LLM can request (search, write, query, send). The LLM does not run them — you do. It just asks.
+
+**Memory** — what the agent knows: the current conversation, past runs, or a knowledge base.
+
+**Loop** — the cycle of Think → Act → Observe that repeats until the task is done.
+
+### Chatbot vs Agent: key differences
+
+| | Chatbot | Agent |
+|---|---|---|
+| Input | A message | A goal |
+| Output | A text response | A result (file, action, decision) |
+| Steps | One | Many |
+| Tools | None | Many |
+| Autonomy | You drive | It drives (with guardrails) |
+| Reliability | High, predictable | Needs observability |
+
+### When to use an agent
+
+**Use an agent when:**
+- The task has multiple steps that cannot be hardcoded
+- The task needs real tools (search, write, query, send)
+- The task can fail partway and needs to retry or adjust
+- The steps are not known in advance
+
+**Do not use an agent when:**
+- A single LLM call is enough
+- The steps are fixed — just chain prompts in code instead
+- Low latency is critical (agents do multiple round trips)
+- Errors are unrecoverable (agents can make wrong decisions)
+
+<Callout type="tip">
+If you can write the steps as a fixed Python function, do that instead of an agent. Agents add power but also add unpredictability. Use them when the flexibility is worth it.
+</Callout>
+
+<ChapterSummary>
+- An agent is an LLM + tools + memory + loop
+- A chatbot does one response; an agent loops until the task is done
+- The LLM never runs tools directly — it requests them, and your code runs them
+- Use agents for multi-step, dynamic tasks; use direct LLM calls for simple ones
+</ChapterSummary>
+
+<Checkpoint>
+1. What are the four components of an agent?
+2. Name one scenario where you should NOT use an agent.
+3. Who actually runs the tool code — the LLM or your Python code?
+</Checkpoint>

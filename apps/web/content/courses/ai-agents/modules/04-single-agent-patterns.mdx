@@ -1,0 +1,141 @@
+---
+title: "Single-Agent Patterns"
+summary: "Build three single-agent patterns using LangGraph and learn when each one is appropriate."
+module: 4
+time: 20
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={4} title="Single-Agent Patterns" time={20} />
+
+<LearningObjectives>
+- Build three single-agent patterns using LangGraph
+- Understand when each pattern is appropriate
+- Run a working research agent that searches and writes a file
+</LearningObjectives>
+
+### Using LangGraph's built-in agent
+
+`create_react_agent` gives you a full ReAct loop without writing it from scratch:
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langgraph.prebuilt import create_react_agent
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.tools import tool
+
+search = DuckDuckGoSearchRun()
+
+@tool
+def save_file(filename: str, content: str) -> str:
+    """Save content to a file in the current directory."""
+    with open(filename, "w") as f:
+        f.write(content)
+    return f"Saved {len(content)} chars to {filename}"
+
+model = ChatAnthropic(model="claude-sonnet-4-6")
+agent = create_react_agent(model, tools=[search, save_file])
+
+result = agent.invoke({
+    "messages": [("human",
+        "Research what MCP (Model Context Protocol) is, write a 300-word summary, "
+        "and save it to mcp-summary.txt")]
+})
+print(result["messages"][-1].content)
+```
+
+Install: `pip install langgraph langchain-anthropic langchain-community duckduckgo-search`
+
+### Pattern 1: The Research Agent
+
+The research agent searches for information, reads it, and synthesises it. This is the most common single-agent use case.
+
+<Diagram title="Research Agent — tool flow">
+
+```
+  Goal: "Research LangGraph and write a summary"
+       |
+       v
+  Think: I'll search for LangGraph
+  Act:   search("LangGraph framework")
+  Observe: [3 search results with titles and snippets]
+       |
+       v
+  Think: The first result looks most relevant. I'll read it.
+  Act:   fetch_page("https://...")
+  Observe: [article text, 2000 chars]
+       |
+       v
+  Think: I have enough. I'll write the summary and save it.
+  Act:   save_file("summary.txt", "LangGraph is...")
+  Observe: "Saved 450 chars to summary.txt"
+       |
+       v
+  Answer: "I've saved a summary about LangGraph to summary.txt"
+```
+
+</Diagram>
+
+### Pattern 2: The Router Agent
+
+A router agent receives a message and decides which specialised handler to use. This is useful when you have multiple types of requests.
+
+```python
+from langchain_core.tools import tool
+
+@tool
+def handle_writing(topic: str, length: str) -> str:
+    """Handle a content writing request -- blog post, email, or summary."""
+    return f"[Writing handler]: {length} piece about {topic}"
+
+@tool
+def handle_code(language: str, task: str) -> str:
+    """Handle a code writing or explanation request."""
+    return f"[Code handler]: {language} -- {task}"
+
+@tool
+def handle_research(query: str) -> str:
+    """Handle a research or fact-finding request."""
+    return f"[Research handler]: {query}"
+
+router = create_react_agent(model, tools=[handle_writing, handle_code, handle_research])
+```
+
+Each handler could be a full sub-agent in a more complex system.
+
+### Pattern 3: The Code Execution Agent
+
+```python
+import subprocess
+
+@tool
+def run_python(code: str) -> str:
+    """
+    Execute a Python code snippet and return its stdout output.
+    Safe, non-destructive operations only. No file writes or network calls.
+    Times out after 10 seconds.
+    """
+    result = subprocess.run(
+        ["python3", "-c", code],
+        capture_output=True, text=True, timeout=10
+    )
+    return result.stdout if result.returncode == 0 else f"Error:\n{result.stderr}"
+```
+
+<Callout type="warning">
+Code execution is powerful but risky. Always sandbox it — use a container, a VM, or a service like E2B. Never run agent-generated code on your host machine without isolation.
+</Callout>
+
+<ChapterSummary>
+- `create_react_agent` builds the ReAct loop automatically — use it unless you need custom control
+- Research → Router → Code Execution are the three most common single-agent patterns
+- Each pattern fits a different type of task — choose based on what the agent needs to decide at runtime
+</ChapterSummary>
+
+<Checkpoint>
+1. What does `create_react_agent` save you from having to write yourself?
+2. When would you choose a router agent pattern over a research agent pattern?
+3. Why should code execution always be sandboxed?
+</Checkpoint>

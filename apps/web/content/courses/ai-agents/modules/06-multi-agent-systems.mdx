@@ -1,0 +1,175 @@
+---
+title: "Multi-Agent Systems"
+summary: "Why multiple specialised agents outperform one generalist, and how to build the three core multi-agent patterns with LangGraph."
+module: 6
+time: 18
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={6} title="Multi-Agent Systems" time={18} />
+
+<LearningObjectives>
+- Understand why multiple agents outperform a single agent on complex tasks
+- Know the three core multi-agent patterns
+- Build a 3-agent pipeline using LangGraph StateGraph
+</LearningObjectives>
+
+### Why multiple agents?
+
+A single agent handling everything has real limits:
+- **Context window** — very long tasks overflow the context
+- **Specialisation** — a generalist agent writes worse than one focused only on writing
+- **Reliability** — independent agents checking each other catch more errors
+- **Parallelism** — multiple agents can work on different parts simultaneously
+
+### The three patterns
+
+<Diagram title="Three Multi-Agent Patterns">
+
+```
+  PATTERN 1: ORCHESTRATOR + SUBAGENTS
+  -------------------------------------
+  User -> Orchestrator -+-> Researcher -> result
+                        +-> Writer    -> result
+                        +-> Editor    -> result
+                             |
+                             v
+                        Final output
+  Best for: tasks where subtasks are known and can be delegated clearly
+
+  PATTERN 2: PIPELINE (fixed sequence)
+  -------------------------------------
+  User -> Researcher -> Summariser -> Writer -> Editor -> Output
+  Best for: tasks with a clear, fixed sequence of steps
+
+  PATTERN 3: SWARM (peer-to-peer)
+  -------------------------------------
+  User -> Agent A <-> Agent B <-> Agent C -> Output
+                       |
+                     Agent D
+  Best for: emergent, exploratory tasks with unknown path
+```
+
+</Diagram>
+
+### Building a 3-agent pipeline with LangGraph
+
+```python
+from typing import TypedDict, Annotated
+import operator
+from langgraph.graph import StateGraph, START, END
+from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import HumanMessage, BaseMessage
+
+class PipelineState(TypedDict):
+    topic: str
+    research: str
+    draft: str
+    messages: Annotated[list[BaseMessage], operator.add]
+
+model = ChatAnthropic(model="claude-sonnet-4-6")
+
+
+def researcher(state: PipelineState) -> PipelineState:
+    print("[Researcher] Working...")
+    response = model.invoke([HumanMessage(content=
+        f"Research '{state['topic']}'. Write structured notes covering key concepts, "
+        f"recent developments, and important examples. Be specific and factual."
+    )])
+    return {"research": response.content}
+
+
+def writer(state: PipelineState) -> PipelineState:
+    print("[Writer] Drafting...")
+    response = model.invoke([HumanMessage(content=
+        f"Using these research notes, write a 400-600 word blog post about '{state['topic']}'.\n"
+        f"Include a clear title, 3-4 paragraphs, and a practical conclusion.\n\n"
+        f"Research:\n{state['research']}"
+    )])
+    return {"draft": response.content}
+
+
+def editor(state: PipelineState) -> PipelineState:
+    print("[Editor] Reviewing...")
+    response = model.invoke([HumanMessage(content=
+        f"Edit this draft. Check for clarity, accuracy, and tone. "
+        f"Return the improved version at the same length.\n\nDraft:\n{state['draft']}"
+    )])
+    return {"draft": response.content}
+
+
+# Build the graph
+builder = StateGraph(PipelineState)
+builder.add_node("researcher", researcher)
+builder.add_node("writer", writer)
+builder.add_node("editor", editor)
+builder.add_edge(START, "researcher")
+builder.add_edge("researcher", "writer")
+builder.add_edge("writer", "editor")
+builder.add_edge("editor", END)
+
+pipeline = builder.compile()
+
+result = pipeline.invoke({
+    "topic": "Why MCP changes how AI agents connect to tools",
+    "research": "", "draft": "", "messages": []
+})
+print(result["draft"])
+```
+
+<Diagram title="LangGraph Pipeline Graph — nodes and edges">
+
+```
+  START
+    |
+    v
+  +--------------+
+  |  researcher  |  <- node (your Python function)
+  +------+-------+
+         |  edge (data flows through)
+         v
+  +--------------+
+  |    writer    |
+  +------+-------+
+         |
+         v
+  +--------------+
+  |    editor    |
+  +------+-------+
+         |
+         v
+        END
+```
+
+</Diagram>
+
+### Adding conditional routing
+
+```python
+def needs_revision(state: PipelineState) -> str:
+    """Return 'researcher' to loop back, or 'end' to finish."""
+    if "INSUFFICIENT_DATA" in state["draft"]:
+        return "researcher"
+    return END
+
+builder.add_conditional_edges("editor", needs_revision, {
+    "researcher": "researcher",
+    END: END,
+})
+```
+
+<ChapterSummary>
+- Multiple agents beat single agents on complex tasks via specialisation and parallelism
+- Orchestrator: one coordinator delegates to specialists
+- Pipeline: fixed sequence, each agent hands off to the next
+- Swarm: peer-to-peer, no central coordinator
+- LangGraph makes the flow explicit — nodes are agents, edges are connections
+</ChapterSummary>
+
+<Checkpoint>
+1. Give one reason why a multi-agent system might outperform a single agent.
+2. Which pattern would you use for a task with a fixed 4-step workflow?
+3. What is the difference between `add_edge` and `add_conditional_edges` in LangGraph?
+</Checkpoint>

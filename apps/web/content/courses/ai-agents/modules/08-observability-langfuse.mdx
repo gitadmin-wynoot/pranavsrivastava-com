@@ -1,0 +1,134 @@
+---
+title: "Observability with Langfuse"
+summary: "Set up Langfuse, wire it to a LangGraph agent in one line, and learn exactly what to track in every agent run."
+module: 8
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={8} title="Observability with Langfuse" time={15} />
+
+<LearningObjectives>
+- Understand why observability is essential for agent systems
+- Set up Langfuse and connect it to a LangGraph agent
+- Know what to track in every agent run
+</LearningObjectives>
+
+### Why observability matters
+
+Without tracing, when your agent produces a wrong answer or costs $2 more than expected, you have no way to know what went wrong.
+
+<Diagram title="What Langfuse captures for every agent run">
+
+```
+  Agent Run Trace
+  |-- Input message: "Research AI agents and write a post"
+  |-- Step 1: LLM call
+  |   |-- Input tokens: 312
+  |   |-- Output tokens: 89
+  |   +-- Model decided: call search tool
+  |-- Step 2: Tool call -> search("AI agents 2025")
+  |   +-- Result: [3 search results]
+  |-- Step 3: LLM call
+  |   |-- Input tokens: 890
+  |   |-- Output tokens: 412
+  |   +-- Model decided: write the draft, done
+  +-- Summary
+      |-- Total tokens: 1,703
+      |-- Total cost: $0.009
+      +-- Duration: 4.2 seconds
+```
+
+</Diagram>
+
+### Setting up Langfuse
+
+Self-host with Docker (see `infra/docker/docker-compose.yml` in this repo) or use langfuse.com (free tier):
+
+```bash
+pip install langfuse
+```
+
+```bash
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_HOST="http://localhost:3000"
+```
+
+### Adding Langfuse to a LangGraph agent
+
+```python
+from langfuse.callback import CallbackHandler
+from langgraph.prebuilt import create_react_agent
+from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+
+langfuse = CallbackHandler()
+
+@tool
+def search_web(query: str) -> str:
+    """Search the web for information."""
+    return f"[Results for: {query}]"
+
+agent = create_react_agent(
+    ChatAnthropic(model="claude-sonnet-4-6"),
+    tools=[search_web]
+)
+
+result = agent.invoke(
+    {"messages": [("human", "What is MCP?")]},
+    config={"callbacks": [langfuse]}   # <- one line adds full tracing
+)
+```
+
+Open Langfuse and you will see every LLM call, every tool call, token counts, costs, and duration — all from one line of code.
+
+### Adding a cost budget guard
+
+```python
+from langchain_core.callbacks import BaseCallbackHandler
+
+class CostGuard(BaseCallbackHandler):
+    def __init__(self, max_usd: float):
+        self.max_usd = max_usd
+        self.total = 0.0
+
+    def on_llm_end(self, response, **kwargs):
+        usage = response.llm_output.get("usage", {})
+        # Rough estimate for claude-sonnet-4-6
+        cost = (usage.get("input_tokens", 0) * 3 + usage.get("output_tokens", 0) * 15) / 1_000_000
+        self.total += cost
+        print(f"  Cost so far: ${self.total:.4f}")
+        if self.total > self.max_usd:
+            raise RuntimeError(f"Budget exceeded: ${self.total:.4f} > ${self.max_usd}")
+
+guard = CostGuard(max_usd=0.50)
+# config={"callbacks": [langfuse, guard]}
+```
+
+### What to track in every run
+
+| What | Why |
+|---|---|
+| Input message | Understand what triggered the run |
+| Each tool call + inputs | Debug wrong decisions |
+| Each tool result | Spot tool failures |
+| Token count per step | Find expensive steps |
+| Total cost | Monitor spend |
+| Final output | Evaluate quality |
+| Errors | Catch and fix failures |
+
+<ChapterSummary>
+- Without observability, debugging agent failures is guesswork
+- Langfuse traces every LLM call, tool call, token count, and cost
+- One line adds full tracing: `config={"callbacks": [CallbackHandler()]}`
+- Always set a cost guard on any long-running or production agent
+</ChapterSummary>
+
+<Checkpoint>
+1. What does Langfuse capture automatically once you add the callback?
+2. Where do you see the trace after a run — what URL or UI?
+3. What does the `CostGuard` do when the budget is exceeded?
+</Checkpoint>

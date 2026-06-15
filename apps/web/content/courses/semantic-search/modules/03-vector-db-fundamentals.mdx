@@ -1,0 +1,107 @@
+---
+title: "Vector Database Fundamentals — HNSW and IVF"
+summary: "How approximate nearest neighbour algorithms work under the hood, and what trade-offs to expect from HNSW vs IVF in production."
+module: 3
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={3} title="Vector Database Fundamentals — HNSW and IVF" time={15} />
+
+<LearningObjectives>
+- Understand why exact nearest neighbour search does not scale
+- Trace how HNSW and IVF find approximate matches
+- Know the key parameters to tune for your workload
+</LearningObjectives>
+
+### Why not just compare every vector?
+
+With 1 million 1024-dimensional vectors, a brute-force search computes 1 billion cosine similarities per query. At a few nanoseconds each, that is seconds per query — too slow for a production system. The solution is **ANN (Approximate Nearest Neighbour)** indexing: trade a small accuracy loss for a massive speed gain.
+
+### HNSW — Hierarchical Navigable Small Worlds
+
+HNSW builds a layered graph. Higher layers are sparse (long-range connections); lower layers are dense (local connections). A query starts at the top and navigates down, getting closer to the answer at each layer.
+
+<Diagram title="HNSW Graph — layered navigation">
+
+```
+  Layer 2 (sparse):   [A]--------[B]--------[C]
+                       |                     |
+  Layer 1 (medium):   [A]--[D]--[B]--[E]--[C]
+                       |    |    |    |    |
+  Layer 0 (dense):   [A][F][D][G][B][H][E][I][C]...
+
+  Query starts at top layer -> navigate to nearest ->
+  drop to next layer -> refine -> repeat to Layer 0
+  Result: approximate nearest neighbour in ~O(log n)
+```
+
+</Diagram>
+
+**Key HNSW parameters:**
+
+| Parameter | What it does | Trade-off |
+|---|---|---|
+| `M` (connections per node) | Higher = better recall, more memory | M=16 is a common default |
+| `ef_construction` | Higher = better index quality, slower build | ef=200 for good quality |
+| `ef` (search ef) | Higher = better recall, slower search | ef=100 is typical |
+
+HNSW is **in-memory** — the full index must fit in RAM. It has excellent query speed (~1ms) and recall (~98%+) but is slow to update (each new vector requires graph reconnection).
+
+### IVF — Inverted File Index
+
+IVF divides the vector space into clusters using k-means. At query time, only the closest N clusters are searched.
+
+<Diagram title="IVF Clustering — partition then search">
+
+```
+  Training phase:
+  All vectors -> k-means -> N cluster centroids
+
+  Search phase:
+  1. Find the M closest centroids to the query
+  2. Only search vectors in those M clusters
+  3. Return the top k from those clusters
+
+  N=1000 clusters, M=10 probes:
+  Search 1% of the index -> ~100x speedup
+```
+
+</Diagram>
+
+**Key IVF parameters:**
+
+| Parameter | What it does |
+|---|---|
+| `nlist` | Number of clusters. More = faster search but needs more training data |
+| `nprobe` | Clusters to search. Higher = better recall, slower |
+
+IVF is **disk-friendly** — clusters can be loaded on demand. Good for huge datasets that do not fit in RAM. Slower to build than HNSW but faster to update.
+
+### Choosing an algorithm
+
+| | HNSW | IVF |
+|---|---|---|
+| Dataset size | Up to ~50M vectors in RAM | Billions of vectors on disk |
+| Query speed | Sub-millisecond | Slightly slower |
+| Build speed | Slow | Fast |
+| Update speed | Slow (graph reconnection) | Fast |
+| Memory | High (in-memory only) | Low (disk-backed) |
+| Use case | Real-time search, small-medium datasets | Large-scale batch systems |
+
+Most managed vector databases (Qdrant, Pinecone) use HNSW or a variant by default. Use IVF (or IVF-PQ) when you exceed available RAM.
+
+<ChapterSummary>
+- Brute-force search does not scale — ANN indexes trade a small accuracy loss for speed
+- HNSW: layered graph, in-memory, sub-millisecond queries, slow updates — best default
+- IVF: cluster-based, disk-friendly, fast updates — for very large datasets
+- Key knobs: HNSW `M` and `ef`; IVF `nlist` and `nprobe`
+</ChapterSummary>
+
+<Checkpoint>
+1. Why is brute-force vector search not practical at 1M+ vectors?
+2. What does increasing `nprobe` in IVF do to recall and speed?
+3. You have 500M vectors and limited RAM — which algorithm family would you use?
+</Checkpoint>

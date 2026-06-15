@@ -1,0 +1,102 @@
+---
+title: "How Dense Embeddings Represent Meaning"
+summary: "From word vectors to sentence transformers — what embeddings actually are, how cosine similarity works, and why they enable semantic search."
+module: 1
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={1} title="How Dense Embeddings Represent Meaning" time={12} />
+
+<LearningObjectives>
+- Understand what an embedding is and why it captures meaning
+- Follow how a sentence becomes a point in vector space
+- Calculate cosine similarity by hand (conceptually)
+</LearningObjectives>
+
+### The problem with keywords
+
+Keyword search is exact. If you search for "automobile", it finds "automobile" — not "car", not "vehicle", not "EV". Semantic search finds the meaning, regardless of the exact words used.
+
+The mechanism that makes this possible is **dense embeddings** — fixed-length numeric vectors that represent the meaning of text.
+
+### What an embedding is
+
+An embedding model takes text as input and outputs a vector of floating-point numbers, typically 384 to 3,072 dimensions depending on the model. Two pieces of text with similar meaning produce vectors that are geometrically close to each other.
+
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+
+sentences = [
+    "How do I fix a flat tyre?",
+    "My bicycle tyre has a puncture",
+    "The stock market fell today",
+]
+embeddings = model.encode(sentences)
+
+print(embeddings.shape)   # (3, 384)
+print(type(embeddings[0][0]))  # float32
+```
+
+Each sentence becomes a 384-number vector. The first two are about the same topic; their vectors will be close. The third is unrelated; its vector will be far away.
+
+### Cosine similarity
+
+The standard distance metric for embeddings is **cosine similarity** — the cosine of the angle between two vectors. It ranges from -1 (opposite) to 1 (identical).
+
+```python
+import numpy as np
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+
+sim_01 = cosine_similarity(embeddings[0], embeddings[1])  # high -- similar topic
+sim_02 = cosine_similarity(embeddings[0], embeddings[2])  # low -- different topic
+
+print(f"Tyre vs puncture: {sim_01:.3f}")   # e.g. 0.87
+print(f"Tyre vs stocks:   {sim_02:.3f}")   # e.g. 0.21
+```
+
+<Diagram title="Vectors in 2D (simplified) — similar meaning = closer together">
+
+```
+  high dimension space (384D)
+  simplified to 2D for illustration:
+
+  0.9 |          [tyre fix]
+      |         /
+  0.7 |        / <- small angle, high cosine sim
+      |       /
+  0.5 |      [flat tyre]       [stocks fell]
+      |                       /
+      +-----------------------> dimension 2
+```
+
+</Diagram>
+
+### Why this works
+
+Embedding models are trained on massive text corpora to place semantically similar text close together in vector space. They learn that "automobile" and "car" appear in similar contexts — so they end up near each other.
+
+Modern sentence transformers (BAAI/bge, E5, OpenAI ada-002) are trained with contrastive learning: similar pairs are pulled together, dissimilar pairs are pushed apart. The result is a geometry where meaning = proximity.
+
+<Callout type="info">
+The number of dimensions is a trade-off: more dimensions = more expressiveness and accuracy, but higher storage, slower indexing, and higher retrieval cost. 768 dimensions is a common sweet spot for general-purpose use.
+</Callout>
+
+<ChapterSummary>
+- Embeddings are fixed-length float vectors representing the meaning of text
+- Cosine similarity measures how close two meanings are (0 to 1 for positive similarity)
+- Similar meaning → small angle → high cosine similarity
+- Models are trained so semantically related text lands near each other in vector space
+</ChapterSummary>
+
+<Checkpoint>
+1. What does cosine similarity of 0.9 between two vectors tell you?
+2. Why does keyword search fail to find "car" when you search for "automobile"?
+3. What is the typical output shape of encoding 3 sentences with a 384-dim model?
+</Checkpoint>

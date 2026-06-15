@@ -1,0 +1,108 @@
+---
+title: "Choosing and Comparing Embedding Models"
+summary: "BGE, E5, OpenAI, Cohere — how they differ, how to benchmark them for your use case, and what to look for in MTEB scores."
+module: 2
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={2} title="Choosing and Comparing Embedding Models" time={15} />
+
+<LearningObjectives>
+- Know the main embedding model families and their trade-offs
+- Read MTEB leaderboard scores and interpret what they mean for your use case
+- Run a simple head-to-head comparison on your own data
+</LearningObjectives>
+
+### The main model families
+
+| Model | Dims | Open source | Best for |
+|---|---|---|---|
+| `BAAI/bge-small-en-v1.5` | 384 | Yes | Speed-sensitive local use |
+| `BAAI/bge-large-en-v1.5` | 1024 | Yes | Higher accuracy, more storage |
+| `intfloat/e5-large-v2` | 1024 | Yes | Strong general retrieval |
+| `text-embedding-3-small` | 1536 | No (OpenAI API) | Easy integration, good balance |
+| `text-embedding-3-large` | 3072 | No (OpenAI API) | Highest OpenAI accuracy |
+| `embed-english-v3.0` | 1024 | No (Cohere API) | Best for RAG, supports int8 |
+
+<Callout type="tip">
+Start with `bge-small-en-v1.5` locally and `text-embedding-3-small` via API. Only upgrade to larger models if your retrieval quality is visibly poor.
+</Callout>
+
+### Reading MTEB scores
+
+MTEB (Massive Text Embedding Benchmark) is the standard leaderboard for embedding models. Key tasks:
+
+- **Retrieval** — given a query, find relevant passages. This is what most RAG pipelines use.
+- **STS (Semantic Textual Similarity)** — are two sentences similar? Good for deduplication.
+- **Classification** — can the embedding distinguish categories?
+
+For RAG pipelines, sort MTEB by **Retrieval** score, not the average across all tasks.
+
+```python
+# Quick sanity check -- run against your own data before committing to a model
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.evaluation import InformationRetrievalEvaluator
+
+queries = {
+    "q1": "How does MCP handle authentication?",
+    "q2": "What is the difference between tools and resources?",
+}
+corpus = {
+    "d1": "MCP servers can implement OAuth 2.0 for authentication.",
+    "d2": "Tools are callable functions; resources are readable data endpoints with URIs.",
+    "d3": "The weather today is sunny in Amsterdam.",
+}
+relevant = {"q1": {"d1"}, "q2": {"d2"}}
+
+evaluator = InformationRetrievalEvaluator(queries, corpus, relevant)
+
+for model_name in ["BAAI/bge-small-en-v1.5", "intfloat/e5-large-v2"]:
+    model = SentenceTransformer(model_name)
+    results = evaluator(model)
+    print(f"{model_name}: NDCG@10 = {results['cos_sim']['ndcg@10']:.3f}")
+```
+
+Install: `pip install sentence-transformers`
+
+### API-based vs local models
+
+| Consideration | Local (bge, e5) | API (OpenAI, Cohere) |
+|---|---|---|
+| Cost | Free (compute only) | Per-token cost |
+| Privacy | Data stays local | Data leaves your machine |
+| Speed | Depends on GPU | Fast, managed |
+| Versioning | You control | Provider can deprecate |
+| Offline | Yes | No |
+
+For production systems that handle sensitive data (medical, legal, financial), local models are strongly preferred because data never leaves your infrastructure.
+
+### Normalising embeddings
+
+Most vector databases and similarity functions expect **unit-normalised** embeddings (length = 1). If your model does not normalise by default, do it yourself:
+
+```python
+import numpy as np
+
+def normalise(v: np.ndarray) -> np.ndarray:
+    return v / np.linalg.norm(v)
+
+embeddings = model.encode(sentences, normalize_embeddings=True)
+# sentence-transformers does this with the flag above
+# for raw numpy arrays: normalise(embedding)
+```
+
+<ChapterSummary>
+- For RAG retrieval, sort MTEB by the Retrieval column, not overall average
+- `bge-small-en-v1.5` is the best local starting point for speed; `bge-large` or `e5-large` for accuracy
+- Local models keep data on your machine — important for sensitive data
+- Always normalise embeddings before storing — most databases expect unit vectors
+</ChapterSummary>
+
+<Checkpoint>
+1. You are building a legal document RAG system. Should you use a local or API-based model? Why?
+2. Why should you look at the Retrieval score on MTEB rather than the average?
+3. What does normalising an embedding vector mean and why does it matter?
+</Checkpoint>

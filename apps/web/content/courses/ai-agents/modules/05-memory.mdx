@@ -1,0 +1,123 @@
+---
+title: "Memory — What Agents Remember"
+summary: "The four types of agent memory and how to choose the right one for your use case."
+module: 5
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={5} title="Memory — What Agents Remember" time={15} />
+
+<LearningObjectives>
+- Understand the four types of agent memory
+- Know which type to use for which scenario
+- Implement persistent key-value memory in Python
+</LearningObjectives>
+
+<Diagram title="Four Types of Agent Memory">
+
+```
+  +--------------------------------------------------------------+
+  |  Type             | Persists? | Retrieval | Best for         |
+  +--------------------------------------------------------------+
+  |  In-context       |   No      | Automatic | Current session  |
+  |  (conversation)   |           |           |                  |
+  +--------------------------------------------------------------+
+  |  Key-value        |   Yes     | Exact key | User prefs,      |
+  |  (dict/JSON/Redis)|           |           | entity facts     |
+  +--------------------------------------------------------------+
+  |  Vector           |   Yes     | Semantic  | Large knowledge  |
+  |  (embeddings)     |           | similarity| bases, past runs |
+  +--------------------------------------------------------------+
+  |  Episodic         |   Yes     | By task   | Learning from    |
+  |  (run log)        |           | or date   | past outcomes    |
+  +--------------------------------------------------------------+
+```
+
+</Diagram>
+
+### Type 1 — In-context memory
+
+This is simply the conversation history passed to the model. LangGraph manages this automatically in the `messages` state key. It disappears when the session ends.
+
+### Type 2 — Key-value memory (persistent)
+
+```python
+import json
+from pathlib import Path
+
+MEMORY = Path("agent_memory.json")
+
+def save_fact(key: str, value: str):
+    """Save a fact to persistent memory."""
+    facts = json.loads(MEMORY.read_text()) if MEMORY.exists() else {}
+    facts[key] = value
+    MEMORY.write_text(json.dumps(facts, indent=2))
+
+def recall_fact(key: str) -> str | None:
+    """Recall a saved fact."""
+    if not MEMORY.exists():
+        return None
+    return json.loads(MEMORY.read_text()).get(key)
+
+# Usage examples:
+save_fact("user_timezone", "Europe/Amsterdam")
+save_fact("user_language", "English")
+recall_fact("user_timezone")  # -> "Europe/Amsterdam"
+```
+
+### Type 3 — Vector (semantic) memory
+
+Useful when you have too many facts to fit in context and need to retrieve the most *relevant* ones by meaning rather than exact key.
+
+```python
+# Simplified example -- in production use Qdrant or pgvector
+import chromadb
+
+chroma = chromadb.Client()
+collection = chroma.create_collection("agent_memory")
+
+def store_memory(text: str, doc_id: str):
+    collection.add(documents=[text], ids=[doc_id])
+
+def recall_similar(query: str, n: int = 3) -> list[str]:
+    results = collection.query(query_texts=[query], n_results=n)
+    return results["documents"][0]
+```
+
+### Type 4 — Episodic memory
+
+A log of past agent runs — what task was given, what steps were taken, what the outcome was. Useful for:
+- Detecting when an agent keeps failing the same way
+- Providing context to future runs ("last time you tried X, it failed because Y")
+- Analytics on agent behaviour over time
+
+```python
+import json, datetime
+
+def log_episode(task: str, steps: list[str], outcome: str, cost_usd: float):
+    episode = {
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "task": task,
+        "steps": steps,
+        "outcome": outcome,
+        "cost_usd": cost_usd,
+    }
+    with open("episodes.jsonl", "a") as f:
+        f.write(json.dumps(episode) + "\n")
+```
+
+<ChapterSummary>
+- In-context memory: automatic, disappears at session end
+- Key-value memory: persistent, fast, exact lookup — for user preferences and facts
+- Vector memory: persistent, semantic retrieval — for large knowledge bases
+- Episodic memory: a run log — for learning from past outcomes
+</ChapterSummary>
+
+<Checkpoint>
+1. Which type of memory would you use to store a user's preferred language setting?
+2. What is the difference between key-value and vector memory retrieval?
+3. What makes episodic memory useful across multiple agent runs?
+</Checkpoint>

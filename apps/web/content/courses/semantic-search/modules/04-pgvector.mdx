@@ -1,0 +1,148 @@
+---
+title: "pgvector — Vector Search Inside PostgreSQL"
+summary: "Add a vector column to PostgreSQL, create an HNSW index, run similarity queries, and filter by metadata — all in SQL."
+module: 4
+time: 18
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={4} title="pgvector — Vector Search Inside PostgreSQL" time={18} />
+
+<LearningObjectives>
+- Install pgvector and add a vector column to an existing table
+- Create an HNSW index and run cosine similarity queries
+- Combine vector search with metadata filters
+</LearningObjectives>
+
+### Why pgvector?
+
+If you already have PostgreSQL, pgvector lets you add vector search without running a separate service. You get ACID guarantees, joins, full-text search, and vector search in one database — and you already know how to back it up and monitor it.
+
+### Setup
+
+```bash
+# Docker (easiest for local dev)
+docker run -d --name pgvector -e POSTGRES_PASSWORD=pass -p 5432:5432 pgvector/pgvector:pg16
+
+# Or enable the extension on an existing PG instance (needs pg16+)
+# psql -c "CREATE EXTENSION IF NOT EXISTS vector;"
+```
+
+```python
+pip install psycopg2-binary sentence-transformers
+```
+
+### Creating a table with a vector column
+
+```python
+import psycopg2
+from sentence_transformers import SentenceTransformer
+
+conn = psycopg2.connect("postgresql://postgres:pass@localhost:5432/postgres")
+cur = conn.cursor()
+
+# Enable the extension
+cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+
+# Create a table with a 384-dim vector column
+cur.execute("""
+    CREATE TABLE IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        body TEXT NOT NULL,
+        category TEXT,
+        embedding vector(384)
+    )
+""")
+conn.commit()
+```
+
+### Inserting documents with embeddings
+
+```python
+model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+
+docs = [
+    ("MCP Authentication", "MCP servers can implement OAuth 2.0.", "security"),
+    ("MCP Tools vs Resources", "Tools are callable; resources are readable URIs.", "concepts"),
+    ("LangGraph StateGraph", "LangGraph builds agent flows as explicit graphs.", "agents"),
+    ("Vector Databases", "HNSW enables sub-millisecond similarity search.", "infrastructure"),
+]
+
+for title, body, category in docs:
+    embedding = model.encode(body, normalize_embeddings=True).tolist()
+    cur.execute(
+        "INSERT INTO documents (title, body, category, embedding) VALUES (%s, %s, %s, %s)",
+        (title, body, category, embedding)
+    )
+conn.commit()
+```
+
+### Creating an HNSW index
+
+Without an index, pgvector performs exact (brute-force) search. The HNSW index makes it approximate and fast:
+
+```sql
+-- Cosine distance index (use for normalised embeddings)
+CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)
+WITH (m = 16, ef_construction = 64);
+```
+
+For small tables (under 100k rows), the index is not needed — exact search is fast enough. Add it when you start seeing slow queries.
+
+### Running a similarity query
+
+```python
+def search(query: str, top_k: int = 3, category: str | None = None) -> list[dict]:
+    q_embedding = model.encode(query, normalize_embeddings=True).tolist()
+
+    if category:
+        cur.execute("""
+            SELECT title, body, category,
+                   1 - (embedding <=> %s::vector) AS score
+            FROM documents
+            WHERE category = %s
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+        """, (q_embedding, category, q_embedding, top_k))
+    else:
+        cur.execute("""
+            SELECT title, body, category,
+                   1 - (embedding <=> %s::vector) AS score
+            FROM documents
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+        """, (q_embedding, q_embedding, top_k))
+
+    return [{"title": r[0], "body": r[1], "cat": r[2], "score": r[3]} for r in cur.fetchall()]
+
+
+results = search("how does authentication work in MCP?")
+for r in results:
+    print(f"[{r['score']:.3f}] {r['title']}")
+```
+
+### Distance operators in pgvector
+
+| Operator | Distance type | When to use |
+|---|---|---|
+| `<=>` | Cosine distance | Default for normalised embeddings |
+| `<->` | Euclidean (L2) | When magnitude matters |
+| `<#>` | Negative inner product | Equivalent to cosine for unit vectors |
+
+Use `<=>` (cosine) unless you have a specific reason not to.
+
+<ChapterSummary>
+- pgvector adds a `vector(N)` column type and ANN index to PostgreSQL
+- `<=>` is the cosine distance operator — ORDER BY ascending returns closest first
+- HNSW index makes search fast at scale; exact search is fine for small tables
+- Combine with `WHERE` clauses to filter by metadata before or after vector search
+</ChapterSummary>
+
+<Checkpoint>
+1. What does `1 - (embedding <=> query_vec)` return, and why do we subtract from 1?
+2. When should you add an HNSW index and when is it unnecessary?
+3. How do you filter results to a specific category while still using vector search?
+</Checkpoint>

@@ -1,0 +1,126 @@
+---
+title: "Human-in-the-Loop"
+summary: "Classify actions by risk, implement LangGraph's interrupt pattern, and build a trust level system that pauses before any irreversible action."
+module: 9
+time: 15
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={9} title="Human-in-the-Loop" time={15} />
+
+<LearningObjectives>
+- Know which actions require human approval and which do not
+- Implement LangGraph's interrupt pattern
+- Build a trust level system for agent actions
+</LearningObjectives>
+
+### Actions that need a human
+
+Not every action should be automated. Irreversible or high-visibility actions need a human to approve first.
+
+<Diagram title="Action Trust Levels — what needs approval">
+
+```
+  READ ONLY         -> Auto-approve (no risk)
+  -----------------------------------------
+  search_web()        [ok] automatic
+  read_file()         [ok] automatic
+  query_database()    [ok] automatic
+
+  LOW RISK          -> Log but auto-approve
+  -----------------------------------------
+  write_file()        [ok] automatic + logged
+  create_draft()      [ok] automatic + logged
+
+  HIGH RISK         -> Block until human approves
+  -----------------------------------------
+  send_email()        [!!] human approval required
+  post_to_social()    [!!] human approval required
+  delete_records()    [!!] human approval required
+  deploy_code()       [!!] human approval required
+```
+
+</Diagram>
+
+<Callout type="important">
+**Simple rule:** If the action is reversible, you can automate it. If it is irreversible (sending, publishing, deleting), require human approval first.
+</Callout>
+
+### LangGraph interrupt pattern
+
+```python
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.types import interrupt, Command
+from typing import TypedDict
+
+class State(TypedDict):
+    task: str
+    plan: str
+    approved: bool
+    result: str
+
+
+def planner(state: State) -> State:
+    plan = f"1. Research '{state['task']}'\n2. Write a 300-word post\n3. Save to drafts/"
+    print(f"[Planner] Plan created:\n{plan}")
+    return {"plan": plan}
+
+
+def approval_gate(state: State) -> State:
+    # interrupt() pauses the graph here and returns control to the caller
+    decision = interrupt({
+        "message": "Please review the plan and approve or reject:",
+        "plan": state["plan"],
+    })
+    return {"approved": decision.get("approved", False)}
+
+
+def executor(state: State) -> State:
+    if not state["approved"]:
+        return {"result": "Cancelled by reviewer."}
+    return {"result": f"Completed: {state['plan']}"}
+
+
+# Build with memory (required for interrupt)
+memory = MemorySaver()
+builder = StateGraph(State)
+builder.add_node("planner", planner)
+builder.add_node("approval", approval_gate)
+builder.add_node("executor", executor)
+builder.add_edge(START, "planner")
+builder.add_edge("planner", "approval")
+builder.add_edge("approval", "executor")
+builder.add_edge("executor", END)
+app = builder.compile(checkpointer=memory)
+
+# -- Run 1: starts and pauses at approval_gate --
+thread = {"configurable": {"thread_id": "run-001"}}
+for _ in app.stream(
+    {"task": "AI agent observability", "plan": "", "approved": False, "result": ""},
+    config=thread
+):
+    pass
+
+print("\n--- Agent paused. Human reviewing... ---")
+
+# -- Run 2: resume with human decision --
+for event in app.stream(Command(resume={"approved": True}), config=thread):
+    if "executor" in event:
+        print("Result:", event["executor"]["result"])
+```
+
+<ChapterSummary>
+- Classify tools by risk: read-only (auto), low-risk (log), high-risk (approve)
+- `interrupt()` pauses a LangGraph workflow and returns control to the caller
+- Resume with `Command(resume=data)` — the agent continues from where it stopped
+- State is preserved between pause and resume via `MemorySaver`
+</ChapterSummary>
+
+<Checkpoint>
+1. Should `write_file()` require human approval? What about `send_email()`? Why different?
+2. What happens to the agent's state while it is paused waiting for approval?
+3. How do you resume a paused LangGraph graph?
+</Checkpoint>

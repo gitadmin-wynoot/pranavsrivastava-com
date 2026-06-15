@@ -1,0 +1,86 @@
+---
+title: "The Agent Loop — ReAct"
+summary: "Follow a complete agent trace through the ReAct pattern and understand how stopping conditions prevent agents from running forever."
+module: 2
+time: 12
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={2} title="The Agent Loop — ReAct" time={12} />
+
+<LearningObjectives>
+- Understand the ReAct pattern (Reason + Act)
+- Follow a complete agent trace step by step
+- Know what a stopping condition is and why it matters
+</LearningObjectives>
+
+### ReAct: Reason + Act
+
+The most common agent pattern is **ReAct**, introduced in a 2022 research paper. The model alternates between reasoning (what should I do?) and acting (call a tool or give a final answer).
+
+<Diagram title="The ReAct Loop — annotated trace">
+
+```
+  User: "What is the weather in Amsterdam today?"
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 1 - THINK                                   |
+  |  "I need current weather data. I'll call the      |
+  |   weather tool with city=Amsterdam."              |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 2 - ACT                                     |
+  |  tools/call: weather(city="Amsterdam")            |
+  |  [your code runs the API call]                    |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 3 - OBSERVE                                 |
+  |  Result: {"temp_c": 14, "condition": "cloudy"}   |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 4 - THINK                                   |
+  |  "I have the data. I can now answer the user."   |
+  +---------------------------------------------------+
+       |
+       v
+  Answer: "It's 14 deg C and cloudy in Amsterdam today."
+  STOP: no more tool calls needed
+```
+
+</Diagram>
+
+### Stopping conditions
+
+An agent stops when:
+1. The model produces a **final text answer** instead of a tool call
+2. The model explicitly says the task is done
+3. You hit a **maximum step limit** (important safety measure)
+4. A **budget limit** is reached (token or cost cap)
+
+Always set a step limit. Without one, a misbehaving agent can loop forever.
+
+### Inline reasoning ("extended thinking")
+
+Some models (Claude 3.7+) support extended thinking — the model produces visible reasoning tokens before deciding what to do. These are not shown to the user but are visible in the API response and in observability tools. Extended thinking improves complex reasoning but costs more tokens.
+
+<ChapterSummary>
+- ReAct = Reason + Act — the standard agent loop pattern
+- The loop repeats until the model gives a final answer or you hit a limit
+- Always set a maximum step limit to prevent runaway agents
+- Extended thinking lets you see the model's reasoning process in the API
+</ChapterSummary>
+
+<Checkpoint>
+1. What does ReAct stand for and what are its two alternating phases?
+2. What happens if you do not set a maximum step limit on an agent?
+3. At what step does the ReAct loop stop in the weather example above?
+</Checkpoint>

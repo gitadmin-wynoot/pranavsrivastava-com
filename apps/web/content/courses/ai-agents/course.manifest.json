@@ -1,0 +1,93 @@
+{
+  "course_id": "ai-agents",
+  "title": "AI Agents — From Basics to Multi-Agent Systems",
+  "summary": "Build AI agents from scratch — single-agent patterns, multi-agent pipelines, memory, observability with Langfuse, and a complete hands-on project. Covers LangGraph, CrewAI, AutoGen, and Agno with real code examples.",
+  "level": "Beginner to Intermediate",
+  "track": "applied-ai",
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-06-16",
+  "tags": ["AI Agents", "LangGraph", "CrewAI", "AutoGen", "Agno", "Multi-Agent", "Langfuse", "Observability", "Python"],
+  "modules": [
+    {
+      "id": "01-what-is-an-agent",
+      "title": "What is an AI Agent?",
+      "time_minutes": 10,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "02-react-agent-loop",
+      "title": "The Agent Loop — ReAct",
+      "time_minutes": 12,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "03-tools-and-function-calling",
+      "title": "Tools and Function Calling",
+      "time_minutes": 20,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "04-single-agent-patterns",
+      "title": "Single-Agent Patterns",
+      "time_minutes": 20,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "05-memory",
+      "title": "Memory — What Agents Remember",
+      "time_minutes": 15,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "06-multi-agent-systems",
+      "title": "Multi-Agent Systems",
+      "time_minutes": 18,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "07-agent-frameworks",
+      "title": "Agent Frameworks",
+      "time_minutes": 25,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "08-observability-langfuse",
+      "title": "Observability with Langfuse",
+      "time_minutes": 15,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "09-human-in-the-loop",
+      "title": "Human-in-the-Loop",
+      "time_minutes": 15,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    },
+    {
+      "id": "10-hands-on-project",
+      "title": "Hands-on Project: Multi-Agent Research Pipeline",
+      "time_minutes": 40,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-06-16"
+    }
+  ]
+}

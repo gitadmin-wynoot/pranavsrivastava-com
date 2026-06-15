@@ -1,0 +1,175 @@
+---
+title: "Production RAG — Evaluation, Caching, and Drift"
+summary: "Measure RAG quality with RAGAS, protect against embedding model updates with drift detection, add caching to cut costs, and know what breaks in production."
+module: 8
+time: 20
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={8} title="Production RAG — Evaluation, Caching, and Drift" time={20} />
+
+<LearningObjectives>
+- Evaluate RAG quality with RAGAS faithfulness and relevance scores
+- Detect and handle embedding model drift
+- Add query caching to cut repeated retrieval costs
+- Know the three things that most often break RAG in production
+</LearningObjectives>
+
+### Evaluating RAG quality
+
+You cannot improve what you cannot measure. The RAGAS framework provides automated metrics for RAG pipelines using only your question-answer pairs and retrieved context — no labelled ground truth needed.
+
+```python
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_recall
+from datasets import Dataset
+
+# Collect a test set: questions, answers, retrieved contexts
+test_data = {
+    "question": [
+        "How does MCP handle authentication?",
+        "What is the difference between tools and resources in MCP?",
+    ],
+    "answer": [
+        "MCP servers can implement OAuth 2.0 according to the spec.",
+        "Tools are callable functions; resources are readable URI-based data.",
+    ],
+    "contexts": [
+        ["MCP servers implement OAuth 2.0 for authentication.", "Auth is optional for local servers."],
+        ["Tools are callable; resources expose data via URIs.", "Prompts are reusable templates."],
+    ],
+    "ground_truth": [
+        "MCP uses OAuth 2.0 for authentication.",
+        "Tools are callable functions and resources are readable data endpoints.",
+    ],
+}
+
+dataset = Dataset.from_dict(test_data)
+result = evaluate(dataset, metrics=[faithfulness, answer_relevancy, context_recall])
+print(result)
+# {'faithfulness': 0.94, 'answer_relevancy': 0.89, 'context_recall': 0.91}
+```
+
+Install: `pip install ragas datasets`
+
+### What RAGAS scores mean
+
+| Metric | What it measures | Target |
+|---|---|---|
+| Faithfulness | Does the answer only use what was in the context? | > 0.9 |
+| Answer Relevancy | Does the answer address the question? | > 0.85 |
+| Context Recall | Did retrieval find all necessary information? | > 0.8 |
+| Context Precision | Were the retrieved chunks all relevant? | > 0.8 |
+
+Low faithfulness = hallucination. Low context recall = retrieval missing relevant chunks.
+
+### Embedding drift
+
+When your embedding model provider releases a new version, old embeddings become incompatible. A query encoded with model v3 will not retrieve documents encoded with model v2.
+
+```python
+def detect_embedding_drift(
+    new_model_name: str,
+    old_model_name: str,
+    test_sentences: list[str],
+    threshold: float = 0.95,
+) -> bool:
+    """Return True if models are compatible (drift < threshold)."""
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+
+    old_model = SentenceTransformer(old_model_name)
+    new_model = SentenceTransformer(new_model_name)
+
+    old_vecs = old_model.encode(test_sentences, normalize_embeddings=True)
+    new_vecs = new_model.encode(test_sentences, normalize_embeddings=True)
+
+    similarities = np.sum(old_vecs * new_vecs, axis=1)
+    avg_sim = float(np.mean(similarities))
+
+    print(f"Average cosine similarity old vs new: {avg_sim:.3f}")
+    return avg_sim >= threshold
+```
+
+If drift is detected:
+1. Re-embed the full corpus with the new model before switching
+2. Run both models in parallel until the re-index is complete
+3. Never mix embeddings from different model versions in the same index
+
+### Query caching
+
+Identical or near-identical queries should not hit the vector database every time. A simple cache saves cost and latency.
+
+```python
+import json
+import hashlib
+from pathlib import Path
+
+CACHE_FILE = Path("query_cache.json")
+
+
+def load_cache() -> dict:
+    return json.loads(CACHE_FILE.read_text()) if CACHE_FILE.exists() else {}
+
+
+def save_cache(cache: dict):
+    CACHE_FILE.write_text(json.dumps(cache, indent=2))
+
+
+def cached_rag(question: str, retrieve_fn, generate_fn) -> str:
+    cache = load_cache()
+    key = hashlib.md5(question.strip().lower().encode()).hexdigest()
+
+    if key in cache:
+        print("[cache hit]")
+        return cache[key]
+
+    chunks = retrieve_fn(question)
+    answer = generate_fn(question, chunks)
+
+    cache[key] = answer
+    save_cache(cache)
+    return answer
+```
+
+For production use Redis with a TTL instead of a flat JSON file:
+
+```python
+import redis, hashlib
+
+r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+def redis_cached_rag(question: str, retrieve_fn, generate_fn, ttl_seconds: int = 3600) -> str:
+    key = "rag:" + hashlib.md5(question.strip().lower().encode()).hexdigest()
+    cached = r.get(key)
+    if cached:
+        return cached
+
+    chunks = retrieve_fn(question)
+    answer = generate_fn(question, chunks)
+    r.setex(key, ttl_seconds, answer)
+    return answer
+```
+
+### The three things that most often break RAG
+
+**1. Chunk size mismatch.** Chunks too small lack context; chunks too large add noise. The right size depends on your document type — test with 256, 512, and 1024 character chunks and measure context recall with RAGAS.
+
+**2. Retrieval missing the answer.** If the model says "I don't have information about X" but you know X is in your documents, the problem is retrieval — not generation. Increase `top_k`, try hybrid search, or rewrite the query before retrieving.
+
+**3. Prompt over-constraining.** If you tell the LLM "only answer from context" but the context is incomplete, it will refuse to answer rather than admit uncertainty. Give it a fallback: "If the context does not contain enough information, say so and give the best answer you can from your training."
+
+<ChapterSummary>
+- RAGAS measures faithfulness, relevance, and recall without labelled ground truth
+- Never mix embeddings from different model versions — re-embed the full corpus on model update
+- Cache frequent queries in Redis with a TTL to cut retrieval cost
+- Most RAG failures are retrieval failures, not generation failures — measure both separately
+</ChapterSummary>
+
+<Checkpoint>
+1. What does a faithfulness score of 0.6 tell you about your RAG system?
+2. Why is it dangerous to upgrade your embedding model without re-indexing?
+3. Your RAG system says "I don't have information" but the answer is definitely in the documents. What is the likely problem?
+</Checkpoint>

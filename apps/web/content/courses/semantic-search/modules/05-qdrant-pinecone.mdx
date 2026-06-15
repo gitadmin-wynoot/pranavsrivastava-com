@@ -1,0 +1,166 @@
+---
+title: "Dedicated Vector Stores — Qdrant and Pinecone"
+summary: "Upsert, query, and filter vectors with payload metadata in Qdrant (local Docker) and Pinecone (managed cloud)."
+module: 5
+time: 20
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={5} title="Dedicated Vector Stores — Qdrant and Pinecone" time={20} />
+
+<LearningObjectives>
+- Upsert and search vectors in Qdrant running locally in Docker
+- Use payload filters to combine vector search with metadata conditions
+- Understand when to use Qdrant vs Pinecone vs pgvector
+</LearningObjectives>
+
+### When you need a dedicated vector store
+
+pgvector is the right answer when you already have PostgreSQL and your vector data belongs with your relational data. Dedicated vector stores (Qdrant, Pinecone, Weaviate) are the right answer when:
+
+- Vector search is the primary workload — performance is critical
+- You need advanced payload filtering (multiple conditions, nested objects)
+- You want built-in replication, sharding, and a managed service
+- You are storing tens of millions of vectors or more
+
+### Qdrant — local first
+
+Qdrant is open-source, runs in Docker with a single command, and has a clean Python client. It uses HNSW by default.
+
+```bash
+docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
+```
+
+```bash
+pip install qdrant-client sentence-transformers
+```
+
+```python
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+from sentence_transformers import SentenceTransformer
+import uuid
+
+client = QdrantClient(host="localhost", port=6333)
+model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+
+# Create a collection
+client.recreate_collection(
+    collection_name="docs",
+    vectors_config=VectorParams(size=384, distance=Distance.COSINE),
+)
+
+# Upsert documents with payload metadata
+docs = [
+    {"text": "MCP servers implement OAuth for authentication.", "category": "security", "level": "intermediate"},
+    {"text": "Tools are callable; resources are readable URIs.", "category": "concepts", "level": "beginner"},
+    {"text": "LangGraph builds agent flows as explicit graphs.", "category": "agents", "level": "intermediate"},
+    {"text": "HNSW enables sub-millisecond similarity search.", "category": "infrastructure", "level": "advanced"},
+]
+
+points = []
+for doc in docs:
+    embedding = model.encode(doc["text"], normalize_embeddings=True).tolist()
+    points.append(PointStruct(
+        id=str(uuid.uuid4()),
+        vector=embedding,
+        payload={"text": doc["text"], "category": doc["category"], "level": doc["level"]},
+    ))
+
+client.upsert(collection_name="docs", points=points)
+```
+
+### Searching with payload filters
+
+```python
+def search_qdrant(query: str, category: str | None = None, top_k: int = 3) -> list[dict]:
+    q_vec = model.encode(query, normalize_embeddings=True).tolist()
+
+    search_filter = None
+    if category:
+        search_filter = Filter(
+            must=[FieldCondition(key="category", match=MatchValue(value=category))]
+        )
+
+    results = client.search(
+        collection_name="docs",
+        query_vector=q_vec,
+        query_filter=search_filter,
+        limit=top_k,
+        with_payload=True,
+    )
+
+    return [{"text": r.payload["text"], "score": r.score, "category": r.payload["category"]}
+            for r in results]
+
+
+# Semantic search across all docs
+for r in search_qdrant("how does authentication work"):
+    print(f"[{r['score']:.3f}] ({r['category']}) {r['text']}")
+
+# Filtered to agents category only
+for r in search_qdrant("graph-based workflows", category="agents"):
+    print(f"[{r['score']:.3f}] {r['text']}")
+```
+
+### Pinecone — managed cloud
+
+Pinecone has no infrastructure to manage — create an index from the dashboard or API, upsert, query.
+
+```python
+from pinecone import Pinecone, ServerlessSpec
+
+pc = Pinecone(api_key="your-pinecone-key")
+
+pc.create_index(
+    name="docs",
+    dimension=384,
+    metric="cosine",
+    spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+)
+
+index = pc.Index("docs")
+
+# Upsert
+vectors = []
+for doc in docs:
+    embedding = model.encode(doc["text"], normalize_embeddings=True).tolist()
+    vectors.append({"id": str(uuid.uuid4()), "values": embedding, "metadata": doc})
+
+index.upsert(vectors=vectors)
+
+# Query
+q_vec = model.encode("authentication in MCP", normalize_embeddings=True).tolist()
+results = index.query(vector=q_vec, top_k=3, include_metadata=True)
+
+for match in results["matches"]:
+    print(f"[{match['score']:.3f}] {match['metadata']['text']}")
+```
+
+Install: `pip install pinecone`
+
+### Choosing between them
+
+| | Qdrant | Pinecone | pgvector |
+|---|---|---|---|
+| Hosting | Self-host or cloud | Managed only | Self-host (Postgres) |
+| Data privacy | Local option available | Cloud only | Local option available |
+| Payload filtering | Very rich | Good | Full SQL |
+| Ease of start | Medium (Docker) | Easy (API key) | Easy (if using PG) |
+| Cost | Free local | Pay per usage | Storage cost only |
+| Best for | Production local-first | No-ops managed | Existing Postgres users |
+
+<ChapterSummary>
+- Qdrant runs locally in Docker — one command to start, clean Python client
+- Payload metadata (category, date, tags) enables filtering within vector search
+- Pinecone is the easiest managed option — no infrastructure to run
+- Choose based on data privacy needs, existing stack, and operational preference
+</ChapterSummary>
+
+<Checkpoint>
+1. What is a payload in Qdrant and how does it enable filtered search?
+2. You are building a system that must keep all data on-premises. Which option do you choose?
+3. What is the Pinecone equivalent of a Qdrant collection?
+</Checkpoint>

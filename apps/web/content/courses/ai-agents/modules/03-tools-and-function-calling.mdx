@@ -1,0 +1,148 @@
+---
+title: "Tools and Function Calling"
+summary: "Define tools with the Anthropic API, build the minimal agent loop from scratch, and apply the four principles that make tools reliable."
+module: 3
+time: 20
+level: "Beginner"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={3} title="Tools and Function Calling" time={20} />
+
+<LearningObjectives>
+- Define tools using the Anthropic API format
+- Build the minimal agent loop from scratch in Python
+- Apply the four principles of good tool design
+</LearningObjectives>
+
+### How tool calling works
+
+Every tool has three parts:
+- A **name** the model uses to request it
+- A **description** that tells the model when and why to use it
+- A **JSON schema** describing what inputs it takes
+
+<Diagram title="Tool calling flow — step by step">
+
+```
+  1. You define tools + send user message to the API
+       |
+       v
+  2. Model responds with a tool call request:
+     { "name": "get_weather", "input": { "city": "Amsterdam" } }
+       |
+       v
+  3. You run the actual function:
+     result = get_weather("Amsterdam")  -> {"temp": 14, ...}
+       |
+       v
+  4. You send the result back to the model
+       |
+       v
+  5. Model produces next thought or final answer
+       |
+       v
+  Repeat from step 2 until final answer
+```
+
+</Diagram>
+
+### The minimal agent loop
+
+```python
+import anthropic
+import json
+
+client = anthropic.Anthropic()
+
+# The actual function -- runs on YOUR machine
+def get_weather(city: str) -> dict:
+    mock = {
+        "Amsterdam": {"temp_c": 14, "condition": "Partly cloudy"},
+        "London":    {"temp_c": 11, "condition": "Rainy"},
+    }
+    return mock.get(city, {"error": "City not found"})
+
+
+# Tool definition -- what the model reads
+tools = [{
+    "name": "get_weather",
+    "description": "Get current weather for a city. Returns temp in Celsius and weather condition.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "city": {"type": "string", "description": "City name, e.g. 'Amsterdam'"}
+        },
+        "required": ["city"]
+    }
+}]
+
+
+def run_agent(user_message: str) -> str:
+    messages = [{"role": "user", "content": user_message}]
+
+    while True:
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            tools=tools,
+            messages=messages,
+        )
+
+        # Model wants to call a tool
+        if response.stop_reason == "tool_use":
+            tool_block = next(b for b in response.content if b.type == "tool_use")
+            name, args = tool_block.name, tool_block.input
+
+            print(f"  -> Tool: {name}({args})")
+            result = get_weather(**args) if name == "get_weather" else {"error": "unknown tool"}
+            print(f"  <- Result: {result}")
+
+            # Add exchange to conversation and loop
+            messages.append({"role": "assistant", "content": response.content})
+            messages.append({
+                "role": "user",
+                "content": [{"type": "tool_result", "tool_use_id": tool_block.id, "content": json.dumps(result)}]
+            })
+
+        else:
+            # Model gave a final answer -- we are done
+            return next(b.text for b in response.content if hasattr(b, "text"))
+
+
+print(run_agent("What is the weather in Amsterdam right now?"))
+```
+
+### Good tool design — four principles
+
+<Callout type="important" title="Tool design makes or breaks your agent">
+The model can only use a tool as well as you describe it. A bad description leads to the wrong tool being called, wrong arguments being passed, or the agent giving up and hallucinating.
+</Callout>
+
+**1. Be specific in descriptions**
+
+| Bad | Good |
+|---|---|
+| "Gets files" | "List all files in /workspace and return names and sizes" |
+| "Database thing" | "Run a SELECT query. Returns up to 50 rows. Only SELECT allowed." |
+| "Search the web" | "Search DuckDuckGo and return the top 5 result titles and URLs" |
+
+**2. Return structured data** — dicts and lists, not free-form strings. The model handles JSON-like data more reliably.
+
+**3. Handle errors gracefully** — return `{"error": "message"}` instead of raising exceptions. The model can read the error and try a different approach.
+
+**4. Keep tools focused** — one tool, one job. A tool that does five things is hard to use correctly.
+
+<ChapterSummary>
+- Every tool needs a name, description, and JSON schema
+- The minimal agent loop: call API → handle tool request → run function → send result → repeat
+- Good descriptions are the most important factor in reliable agent behaviour
+- Return structured data and errors as dicts, not exceptions or plain strings
+</ChapterSummary>
+
+<Checkpoint>
+1. Write a description for a tool that searches a product database by price range.
+2. What should a tool return when it fails — an exception or an error dict? Why?
+3. What happens after the model returns a `stop_reason` of `"end_turn"` instead of `"tool_use"`?
+</Checkpoint>

@@ -1,0 +1,236 @@
+---
+title: "Agent Frameworks"
+summary: "LangGraph, CrewAI, AutoGen, Agno, Swarm, and Smolagents — strengths, trade-offs, and a working code example for each."
+module: 7
+time: 25
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={7} title="Agent Frameworks" time={25} />
+
+<LearningObjectives>
+- Understand the strengths and trade-offs of six agent frameworks
+- Run a code example for each major framework
+- Know which framework to reach for based on your use case
+</LearningObjectives>
+
+### Framework overview
+
+<Diagram title="Agent Framework Decision Guide">
+
+```
+  Need quick experiment?         -> Agno (cleanest API, fast setup)
+  Need role-based team?          -> CrewAI (researcher + writer + reviewer roles)
+  Need code generation + exec?   -> AutoGen (conversation + code runner built in)
+  Need reliable production flow? -> LangGraph (explicit graph, full control)
+  Learning how handoffs work?    -> OpenAI Swarm (educational, not production)
+  Using open-source models?      -> Smolagents (HuggingFace, code-first)
+```
+
+</Diagram>
+
+### LangGraph
+
+**What it is:** Graph-based framework where you define nodes (agents/functions) and edges (connections). Explicit, stateful, full control.
+
+**Best for:** Production systems. Complex flows. Any use case needing human approval or exact control.
+
+```python
+from langgraph.prebuilt import create_react_agent
+from langchain_anthropic import ChatAnthropic
+from langchain_core.tools import tool
+
+@tool
+def search(query: str) -> str:
+    """Search the web and return a summary of results."""
+    return f"[Search results for: {query}]"
+
+agent = create_react_agent(
+    ChatAnthropic(model="claude-sonnet-4-6"),
+    tools=[search]
+)
+result = agent.invoke({"messages": [("human", "What is LangGraph?")]})
+print(result["messages"][-1].content)
+```
+
+---
+
+### CrewAI
+
+**What it is:** High-level framework where agents have roles, goals, and backstories — like job descriptions for a team.
+
+**Best for:** Business process automation with clear roles (researcher, writer, reviewer, manager).
+
+```python
+from crewai import Agent, Task, Crew, Process
+
+researcher = Agent(
+    role="Research Analyst",
+    goal="Find accurate, up-to-date information on any topic",
+    backstory="Expert at synthesising information from multiple sources.",
+    llm="claude-sonnet-4-6",
+    verbose=True,
+)
+
+writer = Agent(
+    role="Technical Writer",
+    goal="Write clear, engaging content about technical topics",
+    backstory="Turns complex ideas into readable prose.",
+    llm="claude-sonnet-4-6",
+)
+
+research_task = Task(
+    description="Research AI agents. Find 5 key capabilities with examples.",
+    expected_output="Structured list of 5 capabilities with real examples.",
+    agent=researcher,
+)
+
+write_task = Task(
+    description="Write a 400-word blog post using the research.",
+    expected_output="Complete blog post with title and 3 paragraphs.",
+    agent=writer,
+)
+
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, write_task],
+    process=Process.sequential,
+)
+
+result = crew.kickoff()
+print(result.raw)
+```
+
+Install: `pip install crewai`
+
+---
+
+### AutoGen (Microsoft)
+
+**What it is:** Conversation-based multi-agent framework. Agents talk to each other. A `UserProxyAgent` can run code locally.
+
+**Best for:** Code generation + execution. Debate/verification patterns. Multi-agent conversations.
+
+```python
+import autogen
+
+config_list = [{"model": "claude-sonnet-4-6", "api_key": "your-key", "api_type": "anthropic"}]
+
+assistant = autogen.AssistantAgent(
+    name="assistant",
+    llm_config={"config_list": config_list},
+    system_message="Write clean, well-documented Python code.",
+)
+
+user_proxy = autogen.UserProxyAgent(
+    name="user_proxy",
+    human_input_mode="NEVER",
+    code_execution_config={"work_dir": "output", "use_docker": False},
+    max_consecutive_auto_reply=5,
+)
+
+user_proxy.initiate_chat(
+    assistant,
+    message="Write a function to calculate Fibonacci numbers, then test it with n=10."
+)
+```
+
+Install: `pip install pyautogen`
+
+---
+
+### Agno
+
+**What it is:** Lightweight, Pythonic agent framework with minimal boilerplate and a large built-in tool ecosystem.
+
+**Best for:** Quick prototypes. Clean code. When you want an agent running in under 10 lines.
+
+```python
+from agno.agent import Agent
+from agno.models.anthropic import Claude
+from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.file import FileTools
+
+agent = Agent(
+    model=Claude(id="claude-sonnet-4-6"),
+    tools=[DuckDuckGoTools(), FileTools()],
+    description="Research assistant that finds information and saves summaries.",
+    markdown=True,
+)
+
+agent.print_response(
+    "Search for AI agent frameworks in 2025, summarise the top 3, and save to research.md",
+    stream=True,
+)
+```
+
+Install: `pip install agno`
+
+---
+
+### OpenAI Swarm
+
+**What it is:** Lightweight educational framework showing how handoffs between agents work at a low level. Not intended for production.
+
+**Best for:** Learning. Understanding the handoff pattern before using heavier frameworks.
+
+```python
+from swarm import Swarm, Agent
+
+client = Swarm()
+
+writer = Agent(name="Writer", instructions="Write clear, structured content on any topic.")
+
+def transfer_to_writer():
+    return writer
+
+router = Agent(
+    name="Router",
+    instructions="Decide if the request needs research or writing, then transfer to the right agent.",
+    functions=[transfer_to_writer],
+)
+
+response = client.run(
+    agent=router,
+    messages=[{"role": "user", "content": "Write a short intro to AI agents"}]
+)
+print(response.messages[-1]["content"])
+```
+
+---
+
+### Smolagents (HuggingFace)
+
+**What it is:** Code-first agents — instead of calling discrete tools, agents write and run Python code as their action. Works well with open-source models.
+
+**Best for:** Data analysis, numerical tasks, workflows that map naturally to Python scripts. Open-source model use.
+
+```python
+from smolagents import CodeAgent, DuckDuckGoSearchTool, HfApiModel
+
+agent = CodeAgent(
+    tools=[DuckDuckGoSearchTool()],
+    model=HfApiModel("Qwen/Qwen2.5-72B-Instruct"),
+)
+
+agent.run("Search for Python best practices in 2025 and list the top 5.")
+```
+
+Install: `pip install smolagents`
+
+<ChapterSummary>
+- LangGraph: most control, best for production — explicit graph-based flow
+- CrewAI: fastest for role-based teams — researcher + writer + reviewer pattern
+- AutoGen: conversation-based, great for code gen + execution workflows
+- Agno: cleanest API, best for quick experiments and prototypes
+- Swarm: educational only — learn handoffs, not for production
+- Smolagents: code-first actions, best for open-source models and data tasks
+</ChapterSummary>
+
+<Checkpoint>
+1. You are building a production pipeline that needs human approval before publishing — which framework would you use?
+2. You want to experiment quickly with a simple research agent in under 15 minutes — which framework?
+3. What is unique about how Smolagents differs from the other frameworks?
+</Checkpoint>

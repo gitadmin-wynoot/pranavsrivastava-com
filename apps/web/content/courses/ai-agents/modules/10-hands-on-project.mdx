@@ -1,0 +1,222 @@
+---
+title: "Hands-on Project: Multi-Agent Research Pipeline"
+summary: "Build a complete Researcher → Writer → Publisher pipeline with Langfuse observability and a human approval gate before anything is published."
+module: 10
+time: 40
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-06-16"
+---
+
+<ChapterHeader number={10} title="Hands-on Project: Multi-Agent Research Pipeline" time={40} />
+
+<LearningObjectives>
+- Build a complete 3-agent pipeline (Researcher → Writer → Publisher)
+- Add Langfuse observability from the start
+- Add a human approval gate before publishing
+- Run the full pipeline end to end
+</LearningObjectives>
+
+### Architecture
+
+<Diagram title="Complete Research Pipeline — 3 agents + approval gate">
+
+```
+  User gives a topic
+       |
+       v
+  +-------------------+
+  |  Researcher Agent |  <- searches web, compiles notes
+  +--------+----------+
+           | research notes
+           v
+  +-------------------+
+  |  Writer Agent     |  <- writes blog draft from notes
+  +--------+----------+
+           | draft
+           v
+  +-------------------+
+  |  [Approval Gate]  |  <- human reviews, approves/rejects
+  +--------+----------+
+           | approved = True/False
+           v
+  +-------------------+
+  |  Publisher Agent  |  <- saves to file
+  +-------------------+
+```
+
+</Diagram>
+
+### The complete pipeline
+
+```python
+"""
+research_pipeline.py -- Complete multi-agent research and writing pipeline.
+
+Install:
+    pip install langgraph langchain-anthropic langfuse duckduckgo-search
+
+Run:
+    python research_pipeline.py
+"""
+
+import operator
+from pathlib import Path
+from typing import TypedDict, Annotated
+
+from langchain_anthropic import ChatAnthropic
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.messages import HumanMessage, BaseMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import interrupt, Command
+from langfuse.callback import CallbackHandler
+
+# -- State --
+
+class State(TypedDict):
+    topic: str
+    research: str
+    draft: str
+    approved: bool
+    saved_to: str
+    messages: Annotated[list[BaseMessage], operator.add]
+
+
+# -- Setup --
+
+model = ChatAnthropic(model="claude-sonnet-4-6")
+search = DuckDuckGoSearchRun()
+langfuse = CallbackHandler()
+OUTPUT_DIR = Path.home() / "ai-workspace" / "published"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+CALLBACKS = {"callbacks": [langfuse]}
+
+
+# -- Nodes --
+
+def researcher_node(state: State) -> State:
+    print(f"\n[Researcher] Researching: {state['topic']}")
+    raw = search.run(state["topic"])
+    response = model.invoke([
+        HumanMessage(content=
+            f"Synthesise these search results about '{state['topic']}' into structured notes:\n\n{raw}\n\n"
+            f"Cover: key concepts, recent developments, practical examples, limitations."
+        )
+    ], config=CALLBACKS)
+    return {"research": response.content}
+
+
+def writer_node(state: State) -> State:
+    print("[Writer] Writing draft...")
+    response = model.invoke([
+        HumanMessage(content=
+            f"Write a 500-word blog post about '{state['topic']}' using these notes:\n\n{state['research']}\n\n"
+            f"Requirements: specific title, hook opening, 3-4 body paragraphs, actionable conclusion. "
+            f"Tone: practical and honest, no hype words."
+        )
+    ], config=CALLBACKS)
+    return {"draft": response.content}
+
+
+def approval_node(state: State) -> State:
+    print("\n[Approval Gate] Pausing for human review...")
+    print("-" * 50)
+    print(state["draft"][:400], "\n...[truncated]")
+    print("-" * 50)
+
+    decision = interrupt({
+        "message": "Review the draft above. Approve to publish?",
+        "preview": state["draft"][:400],
+    })
+    return {"approved": decision.get("approved", False)}
+
+
+def publisher_node(state: State) -> State:
+    slug = state["topic"].lower().replace(" ", "-")[:50]
+    path = OUTPUT_DIR / f"{slug}.md"
+    path.write_text(state["draft"], encoding="utf-8")
+    status = "published" if state["approved"] else "rejected"
+    print(f"[Publisher] Saved ({status}) -> {path}")
+    return {"saved_to": str(path)}
+
+
+# -- Graph --
+
+def build_pipeline():
+    memory = MemorySaver()
+    g = StateGraph(State)
+    g.add_node("researcher", researcher_node)
+    g.add_node("writer", writer_node)
+    g.add_node("approval", approval_node)
+    g.add_node("publisher", publisher_node)
+    g.add_edge(START, "researcher")
+    g.add_edge("researcher", "writer")
+    g.add_edge("writer", "approval")
+    g.add_edge("approval", "publisher")
+    g.add_edge("publisher", END)
+    return g.compile(checkpointer=memory)
+
+
+# -- Run --
+
+def run(topic: str):
+    app = build_pipeline()
+    thread = {"configurable": {"thread_id": f"run-{topic[:20].replace(' ', '-')}"}}
+    initial = {"topic": topic, "research": "", "draft": "", "approved": False, "saved_to": "", "messages": []}
+
+    print(f"\n{'='*50}")
+    print(f"Topic: {topic}")
+    print(f"{'='*50}")
+
+    for _ in app.stream(initial, config=thread):
+        pass
+
+    print("\n>>> Human reviewing (auto-approving for demo)...")
+    for event in app.stream(Command(resume={"approved": True}), config=thread):
+        pass
+
+    print("\n>>> Done. Check Langfuse for full traces.")
+
+
+if __name__ == "__main__":
+    run("How AI agents work and why they matter in 2025")
+```
+
+### Running it
+
+```bash
+export ANTHROPIC_API_KEY="your-key"
+export LANGFUSE_SECRET_KEY="sk-lf-..."
+export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+
+python research_pipeline.py
+```
+
+After it runs, open Langfuse at `localhost:3000`. You will see a trace for the full run, sub-spans for the researcher and writer model calls, token counts, and cost per step.
+
+### Agent building checklist
+
+Before shipping any agent:
+- [ ] Tools have clear, specific descriptions
+- [ ] Tools return structured data (dicts/lists), not free-form strings
+- [ ] Tool errors return `{"error": "..."}`, not exceptions
+- [ ] Every tool call is logged
+- [ ] A token/cost budget is set
+- [ ] Langfuse tracing is added from the start
+- [ ] High-risk actions require human approval
+- [ ] A maximum step limit is set
+
+<ChapterSummary>
+- A 3-agent pipeline (Researcher → Writer → Publisher) takes ~100 lines with LangGraph
+- Langfuse is added with one line and captures every step automatically
+- `interrupt()` pauses before publishing and waits for human input
+- `Command(resume=data)` resumes the graph with the human's decision
+</ChapterSummary>
+
+<Checkpoint>
+1. What does the Researcher node return that the Writer node uses?
+2. How does the publisher node know whether to mark the file as "published" or "rejected"?
+3. Where do you see the full trace after running this pipeline?
+</Checkpoint>
