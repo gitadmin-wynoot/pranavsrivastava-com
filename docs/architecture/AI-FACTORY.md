@@ -51,13 +51,13 @@ Orchestrator Agent (daily trigger, WSL2)
 
 ## The two machines and how they work together
 
-You develop on your **Mac**. The agents run on your **PC behind WSL2**. Git is the bridge.
+You develop on your **Mac**. The agents run on your **PC behind WSL2**. Git is the bridge. **OpenClaw** is the conversational interface that connects everything.
 
 ```
 Mac (development)
   ├── VS Code / Claude Code CLI
   ├── Writing MDX content
-  ├── Reviewing draft PRs from agents
+  ├── Reviewing and merging draft PRs
   ├── Pushing approved content to GitHub
   └── Running the website in dev mode
 
@@ -66,7 +66,11 @@ PC / WSL2 (agent runtime)
   ├── LangGraph agent processes
   ├── MCP servers (stdio, local only)
   ├── Scheduled cron triggers (Orchestrator Agent)
+  ├── OpenClaw — local AI assistant, messaging interface
   └── Cloned from the same GitHub repo
+
+Your phone / Mac (control surface)
+  └── WhatsApp / Signal / Telegram → OpenClaw → agents
 ```
 
 You push changes from Mac → GitHub. On the PC, `git pull` brings those changes in. Agents on the PC write drafts → open PRs → you review on Mac and merge. Vercel picks up the merge and deploys.
@@ -76,8 +80,49 @@ You push changes from Mac → GitHub. On the PC, `git pull` brings those changes
 2. Install Docker Desktop for Windows (or Docker Engine in WSL2)
 3. `cd infra/docker && docker compose up -d` (starts Qdrant, Langfuse, PostgreSQL)
 4. `pip install -r agents/requirements.txt`
-5. Copy `.env.example` to `.env.local` and fill in your keys
-6. Done — agents can run
+5. Install and configure OpenClaw (see below)
+6. Copy `.env.example` to `.env.local` and fill in your keys
+7. Done — agents can run
+
+---
+
+## OpenClaw — the conversational interface
+
+OpenClaw (https://openclaw.ai) is a local-first, open-source personal AI assistant that runs on your PC/WSL2 and connects to messaging apps — WhatsApp, Telegram, Signal, Discord, iMessage. It can execute shell commands, read and write files, control the browser, and run scripts. It has persistent memory and supports custom skills.
+
+In this factory, OpenClaw plays four roles:
+
+**1. Conversational trigger**
+Instead of SSH-ing into your PC to start an agent run, you send a message:
+> "Run the MCP curriculum update"
+
+OpenClaw receives it on the PC, shells out to the Orchestrator Agent, and starts the workflow.
+
+**2. Mobile approval gate**
+When the MCP Agent opens a draft PR, OpenClaw sends you a notification on your phone:
+> "MCP Curriculum Agent has 2 proposed module updates. Draft PR #12 is open. Want to review?"
+
+You can reply to get a summary, ask questions about the changes, or confirm you've reviewed it — all from WhatsApp or Signal.
+
+**3. Factory cockpit from anywhere**
+You're away from your desk. You ask via Telegram:
+> "What did the agents do this week?"
+
+OpenClaw reads the Langfuse run logs and the changelog files, and gives you a plain-language summary. No laptop needed.
+
+**4. Skill sharing**
+OpenClaw's plugin/skill concept mirrors the skill files in this factory. Over time, the same instruction conventions can be used in both — skills that define tone, approach, and quality standards.
+
+### OpenClaw setup on WSL2
+
+```bash
+# Install OpenClaw (check openclaw.ai for current install instructions)
+# Connect it to your preferred messaging app (WhatsApp or Signal recommended)
+# Point it at the repo and agent paths
+# Configure it with access to: agents/ directory, run logs, Langfuse endpoint
+```
+
+OpenClaw should have read access to agent run logs and the ability to trigger agent scripts. It should NOT have write access to course content — that is reserved for the agents themselves, which go through git and PR review.
 
 ---
 
