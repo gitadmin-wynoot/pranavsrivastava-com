@@ -35,7 +35,8 @@ This course takes you from zero to a working multi-agent system, with full obser
 An AI agent is a system where a language model controls a loop — it takes in information, decides what to do next, acts (usually by calling a tool), observes the result, and repeats. It keeps going until the task is done or it runs out of options.
 
 <Diagram title="Chatbot vs Agent — the fundamental difference" caption="A chatbot does one round trip. An agent loops until the task is complete.">
-{`
+
+```
   CHATBOT
   ┌────────────────────────────────────────────────┐
   │  User: "What is the weather?"                  │
@@ -47,23 +48,25 @@ An AI agent is a system where a language model controls a loop — it takes in i
 
   AGENT
   ┌────────────────────────────────────────────────┐
-  │  User: "What is the weather in Amsterdam?"    │
+  │  User: "What is the weather in Amsterdam?"     │
   │    │                                           │
   │    ▼                                           │
-  │  Think: I should call the weather tool        │
+  │  Think: I should call the weather tool         │
   │    │                                           │
   │    ▼                                           │
-  │  Act:   weather_api("Amsterdam")              │
+  │  Act:   weather_api("Amsterdam")               │
   │    │                                           │
   │    ▼                                           │
-  │  Observe: {"temp": 14, "cond": "cloudy"}     │
+  │  Observe: {"temp": 14, "cond": "cloudy"}      │
   │    │                                           │
   │    ▼                                           │
-  │  Think: I have the data. I can answer now.    │
+  │  Think: I have the data. I can answer now.     │
   │    │                                           │
   │    ▼                                           │
-  │  Answer: "It's 14°C and cloudy today."       │
-  └────────────────────────────────────────────────┘`}
+  │  Answer: "It's 14 deg C and cloudy today."    │
+  └────────────────────────────────────────────────┘
+```
+
 </Diagram>
 
 ### The four components of an agent
@@ -137,38 +140,41 @@ If you can write the steps as a fixed Python function, do that instead of an age
 The most common agent pattern is **ReAct**, introduced in a 2022 research paper. The model alternates between reasoning (what should I do?) and acting (call a tool or give a final answer).
 
 <Diagram title="The ReAct Loop — annotated trace">
-{`
+
+```
   User:        "What is the weather in Amsterdam today?"
-       │
-       ▼
-  ┌───────────────────────────────────────────────────┐
-  │  Step 1 — THINK                                   │
-  │  "I need current weather data. I'll call the     │
-  │   weather tool with city=Amsterdam."              │
-  └───────────────────────────────────────────────────┘
-       │
-       ▼
-  ┌───────────────────────────────────────────────────┐
-  │  Step 2 — ACT                                     │
-  │  tools/call: weather(city="Amsterdam")            │
-  │  [your code runs the API call]                   │
-  └───────────────────────────────────────────────────┘
-       │
-       ▼
-  ┌───────────────────────────────────────────────────┐
-  │  Step 3 — OBSERVE                                 │
-  │  Result: {"temp_c": 14, "condition": "cloudy"}   │
-  └───────────────────────────────────────────────────┘
-       │
-       ▼
-  ┌───────────────────────────────────────────────────┐
-  │  Step 4 — THINK                                   │
-  │  "I have the data. I can now answer the user."   │
-  └───────────────────────────────────────────────────┘
-       │
-       ▼
-  Answer: "It's 14°C and cloudy in Amsterdam today."
-  STOP: no more tool calls needed`}
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 1 - THINK                                   |
+  |  "I need current weather data. I'll call the      |
+  |   weather tool with city=Amsterdam."              |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 2 - ACT                                     |
+  |  tools/call: weather(city="Amsterdam")            |
+  |  [your code runs the API call]                    |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 3 - OBSERVE                                 |
+  |  Result: {"temp_c": 14, "condition": "cloudy"}   |
+  +---------------------------------------------------+
+       |
+       v
+  +---------------------------------------------------+
+  |  Step 4 - THINK                                   |
+  |  "I have the data. I can now answer the user."   |
+  +---------------------------------------------------+
+       |
+       v
+  Answer: "It's 14 deg C and cloudy in Amsterdam today."
+  STOP: no more tool calls needed
+```
+
 </Diagram>
 
 ### Stopping conditions
@@ -210,25 +216,28 @@ Every tool has three parts:
 - A **JSON schema** describing what inputs it takes
 
 <Diagram title="Tool calling flow — step by step">
-{`
+
+```
   1. You define tools + send user message to the API
-       │
-       ▼
+       |
+       v
   2. Model responds with a tool call request:
      { "name": "get_weather", "input": { "city": "Amsterdam" } }
-       │
-       ▼
+       |
+       v
   3. You run the actual function:
-     result = get_weather("Amsterdam")  → {"temp": 14, ...}
-       │
-       ▼
+     result = get_weather("Amsterdam")  -> {"temp": 14, ...}
+       |
+       v
   4. You send the result back to the model
-       │
-       ▼
+       |
+       v
   5. Model produces next thought or final answer
-       │
-       ▼
-  Repeat from step 2 until final answer`}
+       |
+       v
+  Repeat from step 2 until final answer
+```
+
 </Diagram>
 
 ### The minimal agent loop
@@ -377,26 +386,29 @@ Install: `pip install langgraph langchain-anthropic langchain-community duckduck
 The research agent searches for information, reads it, and synthesises it. This is the most common single-agent use case.
 
 <Diagram title="Research Agent — tool flow">
-{`
+
+```
   Goal: "Research LangGraph and write a summary"
-       │
-       ▼
+       |
+       v
   Think: I'll search for LangGraph
   Act:   search("LangGraph framework")
   Observe: [3 search results with titles and snippets]
-       │
-       ▼
+       |
+       v
   Think: The first result looks most relevant. I'll read it.
   Act:   fetch_page("https://...")
   Observe: [article text, 2000 chars]
-       │
-       ▼
+       |
+       v
   Think: I have enough. I'll write the summary and save it.
   Act:   save_file("summary.txt", "LangGraph is...")
   Observe: "Saved 450 chars to summary.txt"
-       │
-       ▼
-  Answer: "I've saved a summary about LangGraph to summary.txt"`}
+       |
+       v
+  Answer: "I've saved a summary about LangGraph to summary.txt"
+```
+
 </Diagram>
 
 ### Pattern 2: The Router Agent
@@ -466,22 +478,25 @@ Code execution is powerful but risky. Always sandbox it — use a container, a V
 </LearningObjectives>
 
 <Diagram title="Four Types of Agent Memory" caption="Each type has different characteristics for speed, persistence, and what it can store">
-{`
-  ┌──────────────────────────────────────────────────────────────┐
-  │  Type             │ Persists? │ Retrieval │ Best for         │
-  ├──────────────────────────────────────────────────────────────┤
-  │  In-context       │   No      │ Automatic │ Current session  │
-  │  (conversation)   │           │           │                  │
-  ├──────────────────────────────────────────────────────────────┤
-  │  Key-value        │   Yes     │ Exact key │ User prefs,      │
-  │  (dict/JSON/Redis)│           │           │ entity facts     │
-  ├──────────────────────────────────────────────────────────────┤
-  │  Vector           │   Yes     │ Semantic  │ Large knowledge  │
-  │  (embeddings)     │           │ similarity│ bases, past runs │
-  ├──────────────────────────────────────────────────────────────┤
-  │  Episodic         │   Yes     │ By task   │ Learning from    │
-  │  (run log)        │           │ or date   │ past outcomes    │
-  └──────────────────────────────────────────────────────────────┘`}
+
+```
+  +--------------------------------------------------------------+
+  |  Type             | Persists? | Retrieval | Best for         |
+  +--------------------------------------------------------------+
+  |  In-context       |   No      | Automatic | Current session  |
+  |  (conversation)   |           |           |                  |
+  +--------------------------------------------------------------+
+  |  Key-value        |   Yes     | Exact key | User prefs,      |
+  |  (dict/JSON/Redis)|           |           | entity facts     |
+  +--------------------------------------------------------------+
+  |  Vector           |   Yes     | Semantic  | Large knowledge  |
+  |  (embeddings)     |           | similarity| bases, past runs |
+  +--------------------------------------------------------------+
+  |  Episodic         |   Yes     | By task   | Learning from    |
+  |  (run log)        |           | or date   | past outcomes    |
+  +--------------------------------------------------------------+
+```
+
 </Diagram>
 
 ### Type 1 — In-context memory
@@ -583,28 +598,31 @@ A single agent handling everything has real limits:
 ### The three patterns
 
 <Diagram title="Three Multi-Agent Patterns" caption="Choose based on how much the workflow structure is known in advance">
-{`
+
+```
   PATTERN 1: ORCHESTRATOR + SUBAGENTS
-  ─────────────────────────────────────
-  User → Orchestrator ─┬─► Researcher → result
-                       ├─► Writer    → result
-                       └─► Editor    → result
-                            │
-                            ▼
-                       Final output
+  -------------------------------------
+  User -> Orchestrator -+-> Researcher -> result
+                        +-> Writer    -> result
+                        +-> Editor    -> result
+                             |
+                             v
+                        Final output
   Best for: tasks where subtasks are known, can be delegated clearly
 
   PATTERN 2: PIPELINE (fixed sequence)
-  ─────────────────────────────────────
-  User → Researcher → Summariser → Writer → Editor → Output
+  -------------------------------------
+  User -> Researcher -> Summariser -> Writer -> Editor -> Output
   Best for: tasks with a clear, fixed sequence of steps
 
   PATTERN 3: SWARM (peer-to-peer)
-  ─────────────────────────────────────
-  User → Agent A ↔ Agent B ↔ Agent C → Output
-                    ↕
-                  Agent D
-  Best for: emergent, exploratory tasks with unknown path`}
+  -------------------------------------
+  User -> Agent A <-> Agent B <-> Agent C -> Output
+                       |
+                     Agent D
+  Best for: emergent, exploratory tasks with unknown path
+```
+
 </Diagram>
 
 ### Building a 3-agent pipeline with LangGraph
@@ -673,26 +691,29 @@ print(result["draft"])
 ```
 
 <Diagram title="LangGraph Pipeline Graph — nodes and edges" caption="LangGraph makes the flow explicit — you can see exactly what will happen before you run it">
-{`
+
+```
   START
-    │
-    ▼
-  ┌──────────────┐
-  │  researcher  │  ← node (your Python function)
-  └──────┬───────┘
-         │  edge (data flows through)
-         ▼
-  ┌──────────────┐
-  │    writer    │
-  └──────┬───────┘
-         │
-         ▼
-  ┌──────────────┐
-  │    editor    │
-  └──────┬───────┘
-         │
-         ▼
-        END`}
+    |
+    v
+  +--------------+
+  |  researcher  |  <- node (your Python function)
+  +------+-------+
+         |  edge (data flows through)
+         v
+  +--------------+
+  |    writer    |
+  +------+-------+
+         |
+         v
+  +--------------+
+  |    editor    |
+  +------+-------+
+         |
+         v
+        END
+```
+
 </Diagram>
 
 ### Adding conditional routing
@@ -737,13 +758,16 @@ builder.add_conditional_edges("editor", needs_revision, {
 ### Framework overview
 
 <Diagram title="Agent Framework Decision Guide" caption="Match the framework to your use case — not the other way around">
-{`
-  Need quick experiment?         → Agno (cleanest API, fast setup)
-  Need role-based team?          → CrewAI (researcher + writer + reviewer roles)
-  Need code generation + exec?   → AutoGen (conversation + code runner built in)
-  Need reliable production flow? → LangGraph (explicit graph, full control)
-  Learning how handoffs work?    → OpenAI Swarm (educational, not production)
-  Using open-source models?      → Smolagents (HuggingFace, code-first)`}
+
+```
+  Need quick experiment?         -> Agno (cleanest API, fast setup)
+  Need role-based team?          -> CrewAI (researcher + writer + reviewer roles)
+  Need code generation + exec?   -> AutoGen (conversation + code runner built in)
+  Need reliable production flow? -> LangGraph (explicit graph, full control)
+  Learning how handoffs work?    -> OpenAI Swarm (educational, not production)
+  Using open-source models?      -> Smolagents (HuggingFace, code-first)
+```
+
 </Diagram>
 
 ### LangGraph
@@ -965,23 +989,26 @@ Install: `pip install smolagents`
 Without tracing, when your agent produces a wrong answer or costs $2 more than expected, you have no way to know what went wrong.
 
 <Diagram title="What Langfuse captures for every agent run">
-{`
+
+```
   Agent Run Trace
-  ├── Input message: "Research AI agents and write a post"
-  ├── Step 1: LLM call
-  │   ├── Input tokens: 312
-  │   ├── Output tokens: 89
-  │   └── Model decided: call search tool
-  ├── Step 2: Tool call → search("AI agents 2025")
-  │   └── Result: [3 search results]
-  ├── Step 3: LLM call
-  │   ├── Input tokens: 890
-  │   ├── Output tokens: 412
-  │   └── Model decided: write the draft, done
-  └── Summary
-      ├── Total tokens: 1,703
-      ├── Total cost: $0.009
-      └── Duration: 4.2 seconds`}
+  |-- Input message: "Research AI agents and write a post"
+  |-- Step 1: LLM call
+  |   |-- Input tokens: 312
+  |   |-- Output tokens: 89
+  |   +-- Model decided: call search tool
+  |-- Step 2: Tool call -> search("AI agents 2025")
+  |   +-- Result: [3 search results]
+  |-- Step 3: LLM call
+  |   |-- Input tokens: 890
+  |   |-- Output tokens: 412
+  |   +-- Model decided: write the draft, done
+  +-- Summary
+      |-- Total tokens: 1,703
+      |-- Total cost: $0.009
+      +-- Duration: 4.2 seconds
+```
+
 </Diagram>
 
 ### Setting up Langfuse
@@ -1083,24 +1110,27 @@ guard = CostGuard(max_usd=0.50)
 Not every action should be automated. Irreversible or high-visibility actions need a human to approve first.
 
 <Diagram title="Action Trust Levels — what needs approval">
-{`
-  READ ONLY         ─► Auto-approve (no risk)
-  ─────────────────────────────────────────
-  search_web()        ✓ automatic
-  read_file()         ✓ automatic
-  query_database()    ✓ automatic
 
-  LOW RISK          ─► Log but auto-approve
-  ─────────────────────────────────────────
-  write_file()        ✓ automatic + logged
-  create_draft()      ✓ automatic + logged
+```
+  READ ONLY         -> Auto-approve (no risk)
+  -----------------------------------------
+  search_web()        [ok] automatic
+  read_file()         [ok] automatic
+  query_database()    [ok] automatic
 
-  HIGH RISK         ─► Block until human approves
-  ─────────────────────────────────────────
-  send_email()        ⚠ human approval required
-  post_to_social()    ⚠ human approval required
-  delete_records()    ⚠ human approval required
-  deploy_code()       ⚠ human approval required`}
+  LOW RISK          -> Log but auto-approve
+  -----------------------------------------
+  write_file()        [ok] automatic + logged
+  create_draft()      [ok] automatic + logged
+
+  HIGH RISK         -> Block until human approves
+  -----------------------------------------
+  send_email()        [!!] human approval required
+  post_to_social()    [!!] human approval required
+  delete_records()    [!!] human approval required
+  deploy_code()       [!!] human approval required
+```
+
 </Diagram>
 
 <Callout type="important">
@@ -1192,28 +1222,31 @@ for event in app.stream(Command(resume={"approved": True}), config=thread):
 ### Architecture
 
 <Diagram title="Complete Research Pipeline — 3 agents + approval gate">
-{`
+
+```
   User gives a topic
-       │
-       ▼
-  ┌───────────────────┐
-  │  Researcher Agent │  ← searches web, compiles notes
-  └────────┬──────────┘
-           │ research notes
-           ▼
-  ┌───────────────────┐
-  │  Writer Agent     │  ← writes blog draft from notes
-  └────────┬──────────┘
-           │ draft
-           ▼
-  ┌───────────────────┐
-  │  [Approval Gate]  │  ← human reviews, approves/rejects
-  └────────┬──────────┘
-           │ approved = True/False
-           ▼
-  ┌───────────────────┐
-  │  Publisher Agent  │  ← saves to file + database
-  └───────────────────┘`}
+       |
+       v
+  +-------------------+
+  |  Researcher Agent |  <- searches web, compiles notes
+  +--------+----------+
+           | research notes
+           v
+  +-------------------+
+  |  Writer Agent     |  <- writes blog draft from notes
+  +--------+----------+
+           | draft
+           v
+  +-------------------+
+  |  [Approval Gate]  |  <- human reviews, approves/rejects
+  +--------+----------+
+           | approved = True/False
+           v
+  +-------------------+
+  |  Publisher Agent  |  <- saves to file + database
+  +-------------------+
+```
+
 </Diagram>
 
 ```python

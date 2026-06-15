@@ -107,6 +107,7 @@ export function Diagram({ title, caption, children }: DiagramProps) {
   return (
     <figure className="my-8 not-prose">
       <div className="rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 overflow-hidden bg-white dark:bg-zinc-950">
+        {/* Window chrome bar */}
         <div className="flex items-center gap-2 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
           <span className="w-2.5 h-2.5 rounded-full bg-rose-300 dark:bg-rose-600" />
           <span className="w-2.5 h-2.5 rounded-full bg-amber-300 dark:bg-amber-600" />
@@ -115,9 +116,14 @@ export function Diagram({ title, caption, children }: DiagramProps) {
             {title}
           </span>
         </div>
-        <pre className="px-6 py-5 text-[11px] sm:text-xs font-mono text-zinc-600 dark:text-zinc-400 leading-relaxed overflow-x-auto whitespace-pre">
+        {/*
+          Children come from a fenced code block in MDX, which compiles to
+          <pre><code>...</code></pre>. We override the .prose pre styles
+          so the diagram renders with the right colours and no dark background.
+        */}
+        <div className="overflow-x-auto [&_pre]:!bg-transparent [&_pre]:!m-0 [&_pre]:!p-5 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!shadow-none [&_pre]:!text-xs [&_pre]:!leading-relaxed [&_code]:!bg-transparent [&_code]:!p-0 [&_code]:!text-zinc-600 dark:[&_code]:!text-zinc-400 [&_code]:!font-mono [&_code]:!text-xs [&_code]:!leading-relaxed">
           {children}
-        </pre>
+        </div>
       </div>
       {caption && (
         <figcaption className="mt-2 text-center text-xs text-zinc-400 dark:text-zinc-500 italic">

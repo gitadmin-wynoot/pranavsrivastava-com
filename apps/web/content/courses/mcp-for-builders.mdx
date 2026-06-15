@@ -45,22 +45,25 @@ This feels like a minor inconvenience at first. Then it compounds:
 Before MCP, every AI application had to build its own custom connections to every tool it needed.
 
 <Diagram title="The N×M Integration Problem — before MCP" caption="3 AI apps × 4 tools = 12 separate integrations, each built and maintained differently">
-{`
+
+```
   ┌──────────────┐     custom code     ┌─────────────┐
   │  AI App 1    │────────────────────►│  File System│
   │              │────────────────────►│  Database   │
   │              │────────────────────►│  Slack      │
   └──────────────┘                     │  Calendar   │
                                        └─────────────┘
-  ┌──────────────┐     custom code     
+  ┌──────────────┐     custom code
   │  AI App 2    │────────────────────► (rebuilds all 4)
-  └──────────────┘                     
+  └──────────────┘
 
   ┌──────────────┐     custom code
   │  AI App 3    │────────────────────► (rebuilds all 4)
   └──────────────┘
 
-  Total: 3 apps × 4 tools = 12 separate custom integrations`}
+  Total: 3 apps × 4 tools = 12 separate custom integrations
+```
+
 </Diagram>
 
 If you have 3 AI apps and 4 tools, you need 12 custom integrations. Every new tool means updating every app. Every new app means wiring up every tool.
@@ -70,7 +73,8 @@ If you have 3 AI apps and 4 tools, you need 12 custom integrations. Every new to
 MCP fixes this by defining a single protocol that any AI client can use to talk to any MCP server.
 
 <Diagram title="With MCP — one protocol connects everything" caption="Each tool is wrapped once. Every MCP-compatible AI client can use it instantly.">
-{`
+
+```
   ┌──────────────┐                     ┌──────────────────┐
   │  Claude      │  MCP protocol       │  File Server     │
   │  Desktop     │◄───────────────────►│  (your Python)   │
@@ -84,7 +88,9 @@ MCP fixes this by defining a single protocol that any AI client can use to talk 
   │  Your App    │◄───────────────────►│  (any language)  │
   └──────────────┘                     └──────────────────┘
 
-  Any MCP client ↔ Any MCP server. Build once, use everywhere.`}
+  Any MCP client ↔ Any MCP server. Build once, use everywhere.
+```
+
 </Diagram>
 
 <Callout type="tip" title="Two useful analogies">
@@ -123,21 +129,24 @@ MCP was created by Anthropic and released as an open standard in November 2024. 
 ### The three components
 
 <Diagram title="MCP Architecture — Host, Client, Server" caption="One host can have multiple clients, each connected to one server">
-{`
+
+```
   ┌────────────────────────────────────────────────────┐
   │  Host (e.g. Claude Desktop)                        │
   │                                                    │
   │  ┌────────────────┐    ┌────────────────┐          │
   │  │  MCP Client 1  │    │  MCP Client 2  │  ...     │
   │  └───────┬────────┘    └───────┬────────┘          │
-  └──────────┼─────────────────────┼──────────────────-┘
+  └──────────┼─────────────────────┼───────────────────┘
              │  MCP protocol       │  MCP protocol
              ▼                     ▼
   ┌──────────────────┐   ┌──────────────────┐
   │  Your File       │   │  Your Database   │
   │  MCP Server      │   │  MCP Server      │
   │  (Python)        │   │  (Python)        │
-  └──────────────────┘   └──────────────────┘`}
+  └──────────────────┘   └──────────────────┘
+```
+
 </Diagram>
 
 **Host** — the AI application the user interacts with. Examples: Claude Desktop, Claude Code, a custom AI app you build.
@@ -151,7 +160,8 @@ MCP was created by Anthropic and released as an open standard in November 2024. 
 Every MCP server can expose up to three types of things:
 
 <Diagram title="The Three MCP Primitives" caption="Tools are the most important — start there">
-{`
+
+```
   ┌─────────────────────────────────────────────────────┐
   │  Primitive   │  What it is         │  When to use   │
   ├─────────────────────────────────────────────────────┤
@@ -166,7 +176,9 @@ Every MCP server can expose up to three types of things:
   │  Prompts     │  Reusable prompt    │  When you want │
   │              │  templates          │  standard ways │
   │              │  e.g. /summarise    │  to ask things │
-  └─────────────────────────────────────────────────────┘`}
+  └─────────────────────────────────────────────────────┘
+```
+
 </Diagram>
 
 <Callout type="note">
@@ -178,7 +190,8 @@ Every MCP server can expose up to three types of things:
 MCP uses **JSON-RPC 2.0** — a simple message format. Every message is JSON. The AI sends a request, the server sends a response.
 
 <Diagram title="MCP Communication Flow — request / response pairs">
-{`
+
+```
   AI Client                           MCP Server
       │                                    │
       │── initialize ──────────────────────►│
@@ -191,7 +204,9 @@ MCP uses **JSON-RPC 2.0** — a simple message format. Every message is JSON. Th
       │◄─ {content: "file contents..."} ───│
       │                                    │
       │── tools/call {save_note, args} ────►│
-      │◄─ {content: "Saved."} ─────────────│`}
+      │◄─ {content: "Saved."} ─────────────│
+```
+
 </Diagram>
 
 ### Transport: how they connect
@@ -343,7 +358,8 @@ Try asking Claude: *"Add 17 and 25"* or *"How many words are in 'The quick brown
 ### How it works end to end
 
 <Diagram title="What happens when Claude uses your tool">
-{`
+
+```
   You type: "Add 17 and 25"
        │
        ▼
@@ -359,7 +375,9 @@ Try asking Claude: *"Add 17 and 25"* or *"How many words are in 'The quick brown
   Claude replies: "17 + 25 = 42"
 
   Claude never runs the code. It only requests it.
-  YOU run it. This is by design — you stay in control.`}
+  YOU run it. This is by design — you stay in control.
+```
+
 </Diagram>
 
 ### The anatomy of a tool
@@ -504,7 +522,8 @@ if __name__ == "__main__":
 ### The path traversal attack — and how safe_path stops it
 
 <Diagram title="Path Traversal Attack — without safe_path">
-{`
+
+```
   User (or prompt injection) sends:   path = "../../etc/passwd"
        │
        ▼
@@ -515,7 +534,9 @@ if __name__ == "__main__":
   With safe_path:
   resolved = /etc/passwd
   starts_with(WORKSPACE)?   NO
-  → raises ValueError("Access denied")   ✓ protected`}
+  → raises ValueError("Access denied")   ✓ protected
+```
+
 </Diagram>
 
 The `.resolve()` call expands all `../` segments before we check. That is why it works. Without `.resolve()`, a string comparison would miss encoded or relative path tricks.
