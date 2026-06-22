@@ -21,21 +21,23 @@ export default function HomePage() {
           {/* Label */}
           <div className="flex items-center gap-2 mb-6">
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
-              AI · Cloud · APIs · Second Brain
+              Software Architect · Netherlands · AI + Cloud + APIs
             </span>
           </div>
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl">
-            I build practical AI, cloud and API systems — and document the
-            journey.
+            I went from a thesis on deep learning in Cork to building AI systems
+            from the Netherlands. This is where the work lives.
           </h1>
 
           {/* Subheading */}
           <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
-            This is my public workshop: a portfolio, AI lab, second brain and
-            learning space where I explore agentic systems, automation, APIs,
-            cloud architecture, and small live experiments.
+            Fourteen years of enterprise software — APIs, cloud platforms,
+            large-scale integrations. Now I am building my own infrastructure:
+            agents that monitor AI developments, propose course updates, and
+            open pull requests for me to review. Part portfolio, part ongoing
+            experiment in what it takes to build AI systems you can trust.
           </p>
 
           {/* CTAs */}
@@ -44,21 +46,21 @@ export default function HomePage() {
               href="/ai-lab"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-full hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
             >
-              Explore AI Lab <ArrowRight className="w-4 h-4" />
+              See what I am building <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/blog"
               className="inline-flex items-center gap-2 px-5 py-2.5 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
             >
-              Read the Blog
+              Read the writing
             </Link>
           </div>
 
           {/* Meta */}
           <p className="mt-8 text-sm text-zinc-400">
-            Netherlands-based · 14+ years in software ·{" "}
+            Based in the Netherlands · CS from Munster Technological University, Ireland ·{" "}
             <a href="https://qubitsy.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-              Founder of Qubitsy
+              Qubitsy
             </a>{" "}
             &amp;{" "}
             <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
@@ -75,28 +77,28 @@ export default function HomePage() {
             {
               icon: <FlaskConical className="w-5 h-5" />,
               label: "AI Lab",
-              desc: "Experiments & live demos",
+              desc: "Live experiments — agents, MCP, LangGraph",
               href: "/ai-lab",
               color: "text-blue-500",
             },
             {
               icon: <BookOpen className="w-5 h-5" />,
               label: "Blog",
-              desc: "Notes on AI, cloud & APIs",
+              desc: "What I find, what I learn, what I question",
               href: "/blog",
               color: "text-emerald-500",
             },
             {
               icon: <GraduationCap className="w-5 h-5" />,
               label: "Learn",
-              desc: "Tracks, fundamentals & applied AI",
+              desc: "Courses on MCP, agents, semantic search",
               href: "/learn",
               color: "text-amber-500",
             },
             {
               icon: <FolderCode className="w-5 h-5" />,
               label: "Projects",
-              desc: "Things I've built",
+              desc: "What is shipping, what is still in progress",
               href: "/ai-lab#projects",
               color: "text-purple-500",
             },
@@ -216,10 +218,17 @@ export default function HomePage() {
               About
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
-              I am a Netherlands-based software engineer and architect with 14+
-              years of experience across APIs, cloud platforms, integrations and
-              AI systems. I use this space to build in public, test ideas, write
-              notes, and turn emerging concepts into practical systems.
+              I studied computer science at Munster Technological University in
+              Ireland and wrote my thesis on deep learning for student engagement
+              — which, in hindsight, was always going to lead somewhere like
+              this. After graduation: enterprise software, API platforms, and
+              integrations at scale across Europe and India. Now based in the
+              Netherlands, running{" "}
+              <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Qubitsy</a>{" "}
+              and{" "}
+              <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
+              , and spending most of my curiosity on what it takes to build AI
+              systems that actually hold up.
             </p>
             <Link
               href="/about"
@@ -234,12 +243,14 @@ export default function HomePage() {
               Consulting via Qubitsy
             </p>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-base mb-3">
-              Need help with AI, cloud or API architecture?
+              Your proof of concept worked. Now you need to build the real thing.
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-5">
-              Through Qubitsy, I help teams design AI workflows, cloud
-              architectures, API platforms, and automation systems. Practical
-              focus, measurable outcomes.
+              Through Qubitsy I help engineering teams move from AI experiments
+              to production — agent architecture, API design, cloud integration,
+              and the observability layer that tells you when something breaks.
+              I have done this at enterprise scale and know where it gets
+              complicated.
             </p>
             <Link
               href="/contact"
