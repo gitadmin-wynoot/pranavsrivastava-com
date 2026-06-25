@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { getTracks, getCourses } from "@/lib/content";
+import { getTracks, getCourses, isCourseAvailable } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
@@ -22,6 +22,7 @@ const trackColors: Record<string, { bg: string; border: string; text: string; do
 export default function LearnPage() {
   const tracks = getTracks();
   const courses = getCourses();
+  const availableCourses = courses.filter(isCourseAvailable);
 
   const coursesByTrack = tracks.reduce<Record<string, number>>((acc, t) => {
     acc[t.slug] = courses.filter((c) => c.track === t.slug).length;
@@ -63,6 +64,45 @@ export default function LearnPage() {
           for practical application.
         </p>
       </div>
+
+      {/* ── Available now ───────────────────────────────────────────────── */}
+      {availableCourses.length > 0 && (
+        <div className="mb-20">
+          <div className="flex items-baseline justify-between mb-5">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Available now
+            </h2>
+            <Link
+              href="/courses"
+              className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            >
+              All courses &amp; roadmap →
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {availableCourses.map((course) => (
+              <Link
+                key={course.slug}
+                href={`/courses/${course.slug}`}
+                className="group flex flex-col p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="green">Available</Badge>
+                  {course.lessonCount && (
+                    <span className="text-xs text-zinc-400">{course.lessonCount} lessons</span>
+                  )}
+                </div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug mb-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {course.title}
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-3">
+                  {course.summary}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Track cards ─────────────────────────────────────────────────── */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-20">

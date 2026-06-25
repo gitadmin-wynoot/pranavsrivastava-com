@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { getTrack, getTracks, getCoursesByTrack } from "@/lib/content";
-import { Badge, statusVariant } from "@/components/ui/badge";
+import { getTrack, getTracks, getCoursesByTrack, isCourseAvailable } from "@/lib/content";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   params: Promise<{ track: string }>;
@@ -92,39 +92,57 @@ export default async function TrackPage({ params }: Props) {
               </div>
             ) : (
               <div className="space-y-3">
-                {courses.map((course, i) => (
-                  <Link
-                    key={course.slug}
-                    href={`/courses/${course.slug}`}
-                    className="group flex items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {course.title}
+                {courses.map((course, i) => {
+                  const available = isCourseAvailable(course);
+                  const inner = (
+                    <>
+                      <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className={`font-medium text-sm ${available ? "text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" : "text-zinc-600 dark:text-zinc-300"}`}>
+                            {course.title}
+                          </p>
+                          <Badge variant={available ? "green" : "outline"}>
+                            {available ? "Available" : "Soon"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                          {course.summary}
                         </p>
-                        <Badge variant={statusVariant[course.status]}>
-                          {course.status.replace("-", " ")}
-                        </Badge>
+                        <div className="flex gap-2 mt-2">
+                          <Badge variant={levelColor[course.level] ?? "default"}>
+                            {course.level}
+                          </Badge>
+                          {course.lessonCount && (
+                            <Badge variant="outline">{course.lessonCount} lessons</Badge>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                        {course.summary}
-                      </p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant={levelColor[course.level] ?? "default"}>
-                          {course.level}
-                        </Badge>
-                        {course.lessonCount && (
-                          <Badge variant="outline">{course.lessonCount} lessons</Badge>
-                        )}
-                      </div>
+                      {available && (
+                        <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-500 transition-colors shrink-0 mt-1" />
+                      )}
+                    </>
+                  );
+
+                  return available ? (
+                    <Link
+                      key={course.slug}
+                      href={`/courses/${course.slug}`}
+                      className="group flex items-start gap-4 p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
+                    >
+                      {inner}
+                    </Link>
+                  ) : (
+                    <div
+                      key={course.slug}
+                      className="flex items-start gap-4 p-4 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl opacity-90"
+                    >
+                      {inner}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-blue-500 transition-colors shrink-0 mt-1" />
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

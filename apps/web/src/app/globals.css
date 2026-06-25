@@ -18,6 +18,52 @@
   background-size: 28px 28px;
 }
 
+/* Very slow dot-grid drift — barely perceptible, adds quiet life to the hero */
+.dot-grid-drift {
+  animation: dot-pan 45s linear infinite;
+}
+@keyframes dot-pan {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 28px; }
+}
+
+/*
+  Hero ambient aurora — soft, slow-drifting background glow.
+  Deliberately low opacity: it should register as atmosphere, not decoration.
+  Blue / violet / emerald echo the section accent colours used across the site.
+*/
+.hero-aurora {
+  position: absolute;
+  inset: -25% -10% -25% -10%;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 48% at 18% 28%, rgba(59, 130, 246, 0.12), transparent 70%),
+    radial-gradient(34% 44% at 82% 32%, rgba(168, 85, 247, 0.10), transparent 70%),
+    radial-gradient(40% 42% at 62% 82%, rgba(16, 185, 129, 0.08), transparent 70%);
+  filter: blur(8px);
+  animation: aurora-drift 30s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.dark .hero-aurora {
+  background:
+    radial-gradient(38% 48% at 18% 28%, rgba(59, 130, 246, 0.18), transparent 70%),
+    radial-gradient(34% 44% at 82% 32%, rgba(168, 85, 247, 0.14), transparent 70%),
+    radial-gradient(40% 42% at 62% 82%, rgba(16, 185, 129, 0.11), transparent 70%);
+}
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -1.5%, 0) scale(1.05); }
+  100% { transform: translate3d(-1.5%, 1%, 0) scale(1.03); }
+}
+
+/* Respect users who prefer no motion */
+@media (prefers-reduced-motion: reduce) {
+  .dot-grid-drift,
+  .hero-aurora {
+    animation: none;
+  }
+}
+
 /* MDX prose content styles */
 .prose {
   @apply text-zinc-700 dark:text-zinc-300 leading-relaxed;

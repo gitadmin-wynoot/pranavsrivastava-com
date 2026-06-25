@@ -42,6 +42,7 @@ See [VISION.md](./VISION.md) for the full strategic picture.
 - "I am exploring...", "I built this to...", "Here is what I learned..."
 - Avoid: "world-class", "revolutionary", "cutting-edge AI ecosystem", "10x"
 - The reader should feel: this person knows what they are doing and explains it clearly.
+- **Before writing any user-facing copy, course content, or assistant prompt, read [docs/voice-and-style.md](./docs/voice-and-style.md)** — it defines Pranav's voice and the banned "default-AI" phrasing. Nothing on the site should sound like a generic assistant.
 
 ---
 
@@ -79,6 +80,8 @@ pnpm typecheck
 | MCP servers | `mcp-servers/` |
 | Local Docker stack | `infra/docker/docker-compose.yml` |
 | Architecture docs | `docs/architecture/` |
+| Web design system (read before editing `apps/web` pages) | `docs/web-design-system.md` |
+| Voice & style (read before writing any copy/content/prompts) | `docs/voice-and-style.md` |
 | Security rules | `docs/security/` |
 
 ---

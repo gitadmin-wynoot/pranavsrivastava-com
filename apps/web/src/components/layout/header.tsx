@@ -7,12 +7,13 @@ import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 
+// Work-first nav: hands-on labs lead, then deeper courses, then writing, then who I am.
+// /ai-lab (projects) is reachable from the homepage; Contact lives as a CTA, not a nav slot.
 const NAV_LINKS = [
-  { label: "About", href: "/about" },
-  { label: "AI Lab", href: "/ai-lab" },
-  { label: "Blog", href: "/blog" },
+  { label: "Labs", href: "/labs" },
   { label: "Learn", href: "/learn" },
-  { label: "Contact", href: "/contact" },
+  { label: "Writing", href: "/blog" },
+  { label: "About", href: "/about" },
 ];
 
 export function Header() {

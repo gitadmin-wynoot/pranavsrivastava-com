@@ -112,6 +112,20 @@ function estimateReadingTime(content: string): number {
   return Math.max(1, Math.round(words / 200));
 }
 
+export interface Lab {
+  slug: string;
+  title: string;
+  summary: string;
+  outcome: string; // the concrete thing you walk away having built
+  level: string; // Beginner | Intermediate | Advanced
+  durationMin: number; // hands-on time
+  tools: string[]; // stack used
+  tags: string[];
+  status: "published" | "draft" | "coming-soon";
+  updatedAt: string;
+  content: string;
+}
+
 function readMdxFiles(dir: string) {
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -178,6 +192,51 @@ export function getBlogPost(slug: string): BlogPost | null {
     readingTimeMin: estimateReadingTime(content),
     content,
   };
+}
+
+// ─── Labs ───────────────────────────────────────────────────────────────────
+// Hands-on, build-this-one-thing tutorials. Lighter than courses, the trust
+// engine of the site: short, runnable, outcome-first.
+
+function parseLab(file: string, dir: string): Lab {
+  const slug = file.replace(/\.mdx?$/, "");
+  const raw = fs.readFileSync(path.join(dir, file), "utf-8");
+  const { data, content } = matter(raw);
+  return {
+    slug,
+    title: data.title ?? slug,
+    summary: data.summary ?? "",
+    outcome: data.outcome ?? "",
+    level: data.level ?? "Intermediate",
+    durationMin: data.durationMin ?? 30,
+    tools: data.tools ?? [],
+    tags: data.tags ?? [],
+    status: data.status ?? "draft",
+    updatedAt: data.updatedAt ?? data.date ?? new Date().toISOString(),
+    content,
+  } satisfies Lab;
+}
+
+export function getLabs(): Lab[] {
+  const dir = getContentDir("labs");
+  return readMdxFiles(dir)
+    .map((file) => parseLab(file, dir))
+    .sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+}
+
+export function getLab(slug: string): Lab | null {
+  const dir = getContentDir("labs");
+  const file = [`${slug}.mdx`, `${slug}.md`].find((f) =>
+    fs.existsSync(path.join(dir, f))
+  );
+  return file ? parseLab(file, dir) : null;
+}
+
+/** A lab is "available" (openable) when published. */
+export function isLabAvailable(lab: Lab): boolean {
+  return lab.status === "published";
 }
 
 // ─── Courses ──────────────────────────────────────────────────────────────────
@@ -319,7 +378,25 @@ export function getCourses(): Course[] {
     })
     .filter((c): c is Course => c !== null);
 
-  return [...singleFileCourses, ...multiModuleCourses];
+  // Reorganise, do not remove: drop single-file courses that a multi-module
+  // course already supersedes, so the catalogue never double-lists a topic.
+  // The .mdx files stay on disk — they just are not surfaced twice.
+  const multiSlugs = new Set(multiModuleCourses.map((c) => c.slug));
+  const supersededSingleFiles = new Set([
+    "mcp-for-builders", // superseded by multi-module "mcp"
+    "ai-agents-observability", // superseded by multi-module "ai-agents"
+  ]);
+  const dedupedSingleFiles = singleFileCourses.filter(
+    (c) => !multiSlugs.has(c.slug) && !supersededSingleFiles.has(c.slug)
+  );
+
+  // Available (real) courses first, roadmap/coming-soon after.
+  return [...multiModuleCourses, ...dedupedSingleFiles];
+}
+
+/** A course is "available" (a real, openable course) when published. */
+export function isCourseAvailable(course: Course): boolean {
+  return course.status === "published";
 }
 
 export function getCoursesByTrack(trackSlug: string): Course[] {

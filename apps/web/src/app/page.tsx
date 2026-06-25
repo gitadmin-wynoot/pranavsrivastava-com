@@ -1,19 +1,46 @@
 import Link from "next/link";
-import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap } from "lucide-react";
-import { getBlogPosts, getProjects } from "@/lib/content";
+import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap, PenLine, Clock } from "lucide-react";
+import { getBlogPosts, getProjects, getLabs, isLabAvailable } from "@/lib/content";
+import { getMediumPosts } from "@/lib/medium";
 import { Badge, statusVariant } from "@/components/ui/badge";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { formatDate } from "@/lib/utils";
 
-export default function HomePage() {
-  const posts = getBlogPosts().slice(0, 3);
+export default async function HomePage() {
   const featuredProjects = getProjects().filter((p) => p.featured).slice(0, 2);
+  const featuredLabs = getLabs().filter(isLabAvailable).slice(0, 3);
+
+  // One unified "Writing" stream: native posts + Medium essays, newest first.
+  const mediumPosts = await getMediumPosts(6);
+  const writing = [
+    ...getBlogPosts().map((p) => ({
+      title: p.title,
+      href: `/blog/${p.slug}`,
+      external: false,
+      date: p.publishedAt,
+      readingTimeMin: p.readingTimeMin,
+      source: p.category,
+    })),
+    ...mediumPosts.map((p) => ({
+      title: p.title,
+      href: p.url,
+      external: true,
+      date: p.publishedAt,
+      readingTimeMin: p.readingTimeMin,
+      source: "Medium",
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 6);
 
   return (
     <div className="flex flex-col">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-zinc-200 dark:border-zinc-800">
+        {/* Ambient aurora glow — sits behind everything */}
+        <div className="hero-aurora" aria-hidden="true" />
         {/* Dot grid background */}
-        <div className="absolute inset-0 dot-grid opacity-100 dark:opacity-60" />
+        <div className="absolute inset-0 dot-grid dot-grid-drift opacity-100 dark:opacity-60" />
         {/* Gradient fade at bottom */}
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white dark:from-zinc-950" />
 
@@ -21,32 +48,33 @@ export default function HomePage() {
           {/* Label */}
           <div className="flex items-center gap-2 mb-6">
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
-              Software Architect · Netherlands · AI + Cloud + APIs
+              Product Thinkengineer · Applied AI · Netherlands
             </span>
           </div>
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl">
-            I went from a thesis on deep learning in Cork to building AI systems
-            from the Netherlands. This is where the work lives.
+            Product thinkengineer.
+            <span className="text-zinc-400 dark:text-zinc-500 font-normal"> Invisible infrastructure,
+            fourteen years, five domains.</span>{" "}
+            Now making it intelligent.
           </h1>
 
           {/* Subheading */}
           <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
-            Fourteen years of enterprise software — APIs, cloud platforms,
-            large-scale integrations. Now I am building my own infrastructure:
-            agents that monitor AI developments, propose course updates, and
-            open pull requests for me to review. Part portfolio, part ongoing
-            experiment in what it takes to build AI systems you can trust.
+            Computer vision, fraud detection at scale, speech-to-text,
+            intelligent CPaaS — the AI that has to work without excuses.
+            Building Wynoot on the side. Writing it all down. If you are early
+            here, good timing.
           </p>
 
-          {/* CTAs */}
+          {/* CTAs — work-first: lead into the labs, then the writing */}
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/ai-lab"
+              href="/labs"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-full hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
             >
-              See what I am building <ArrowRight className="w-4 h-4" />
+              Build something with me <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/blog"
@@ -58,7 +86,7 @@ export default function HomePage() {
 
           {/* Meta */}
           <p className="mt-8 text-sm text-zinc-400">
-            Based in the Netherlands · CS from Munster Technological University, Ireland ·{" "}
+            Netherlands ·{" "}
             <a href="https://qubitsy.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Qubitsy
             </a>{" "}
@@ -76,30 +104,30 @@ export default function HomePage() {
           {[
             {
               icon: <FlaskConical className="w-5 h-5" />,
-              label: "AI Lab",
-              desc: "Live experiments — agents, MCP, LangGraph",
-              href: "/ai-lab",
+              label: "Labs",
+              desc: "Hands-on tutorials — build a real thing in under an hour",
+              href: "/labs",
               color: "text-blue-500",
-            },
-            {
-              icon: <BookOpen className="w-5 h-5" />,
-              label: "Blog",
-              desc: "What I find, what I learn, what I question",
-              href: "/blog",
-              color: "text-emerald-500",
             },
             {
               icon: <GraduationCap className="w-5 h-5" />,
               label: "Learn",
-              desc: "Courses on MCP, agents, semantic search",
+              desc: "Deeper courses on AI systems — no filler, just what works",
               href: "/learn",
               color: "text-amber-500",
             },
             {
+              icon: <BookOpen className="w-5 h-5" />,
+              label: "Writing",
+              desc: "What I find interesting enough to write down",
+              href: "/blog",
+              color: "text-emerald-500",
+            },
+            {
               icon: <FolderCode className="w-5 h-5" />,
               label: "Projects",
-              desc: "What is shipping, what is still in progress",
-              href: "/ai-lab#projects",
+              desc: "What I have built — live, and in the oven",
+              href: "/ai-lab",
               color: "text-purple-500",
             },
           ].map((card) => (
@@ -121,6 +149,45 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Featured Labs ─────────────────────────────────────────────────── */}
+      {featuredLabs.length > 0 && (
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <FlaskConical className="w-4 h-4 text-blue-500" />
+              Build something
+            </h2>
+            <Link
+              href="/labs"
+              className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            >
+              All labs →
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {featuredLabs.map((lab) => (
+              <Link
+                key={lab.slug}
+                href={`/labs/${lab.slug}`}
+                className="group flex flex-col p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2 text-xs text-zinc-400">
+                  <Clock className="w-3.5 h-3.5" /> {lab.durationMin} min
+                  <span>·</span>
+                  <span>{lab.level}</span>
+                </div>
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {lab.title}
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-2 line-clamp-3">
+                  {lab.summary}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Featured Projects ─────────────────────────────────────────────── */}
       {featuredProjects.length > 0 && (
@@ -171,44 +238,62 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ── Latest writing ────────────────────────────────────────────────── */}
-      {posts.length > 0 && (
+      {/* ── Writing (native posts + Medium essays, newest first) ──────────── */}
+      {writing.length > 0 && (
         <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Latest writing
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <PenLine className="w-4 h-4 text-emerald-500" />
+              Writing
             </h2>
-            <Link
-              href="/blog"
+            <a
+              href="https://pranav-srivastava.medium.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
             >
-              All posts →
-            </Link>
+              More on Medium ↗
+            </a>
           </div>
           <div className="divide-y divide-zinc-100 dark:divide-zinc-900">
-            {posts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 -mx-3 px-3 rounded-lg transition-colors"
-              >
-                <div>
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {post.title}
-                  </span>
-                  <span className="ml-2 text-xs text-zinc-400">
-                    {post.category}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
-                  <span>{post.readingTimeMin} min read</span>
-                  <span>{formatDate(post.publishedAt)}</span>
-                </div>
-              </Link>
-            ))}
+            {writing.map((item) => {
+              const inner = (
+                <>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {item.title}
+                    </span>
+                    <span className="ml-2 text-xs text-zinc-400">
+                      {item.source}
+                      {item.external ? " ↗" : ""}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
+                    <span>{item.readingTimeMin} min read</span>
+                    <span>{formatDate(item.date)}</span>
+                  </div>
+                </>
+              );
+              const cls =
+                "group flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 -mx-3 px-3 rounded-lg transition-colors";
+              return item.external ? (
+                <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                  {inner}
+                </a>
+              ) : (
+                <Link key={item.href} href={item.href} className={cls}>
+                  {inner}
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
+
+      {/* ── Newsletter ───────────────────────────────────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+        <NewsletterSignup />
+      </section>
 
       {/* ── About + Consulting CTA ────────────────────────────────────────── */}
       <section className="border-t border-zinc-200 dark:border-zinc-800">
@@ -218,17 +303,25 @@ export default function HomePage() {
               About
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
-              I studied computer science at Munster Technological University in
-              Ireland and wrote my thesis on deep learning for student engagement
-              — which, in hindsight, was always going to lead somewhere like
-              this. After graduation: enterprise software, API platforms, and
-              integrations at scale across Europe and India. Now based in the
-              Netherlands, running{" "}
-              <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Qubitsy</a>{" "}
-              and{" "}
+              I call myself a product thinkengineer because the product
+              question and the engineering question happen in the same thought
+              — I am building the system and already wondering what it should
+              become. Fourteen years of that, across domains with genuinely
+              different constraints: telecom fraud at volume, banking
+              integrations, automotive APIs, mortgage platforms. Went back for
+              an AI Masters in my 30s because the algorithms were always the
+              part I found interesting, not an add-on. Started{" "}
               <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
-              , and spending most of my curiosity on what it takes to build AI
-              systems that actually hold up.
+              {" "}because a problem kept showing up. Consult through{" "}
+              <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Qubitsy</a>
+              {" "}for teams that need someone who has done enterprise at scale
+              and product from scratch.
+            </p>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mt-3">
+              Grew up in Jhansi, in the Netherlands since 2016. Usually on a
+              bike or mid-conversation when not building something. People who
+              know me say I always have three projects running and one more
+              idea forming. They are not wrong.
             </p>
             <Link
               href="/about"
@@ -243,14 +336,14 @@ export default function HomePage() {
               Consulting via Qubitsy
             </p>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-base mb-3">
-              Your proof of concept worked. Now you need to build the real thing.
+              The proof of concept worked. Now comes the hard part.
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-5">
-              Through Qubitsy I help engineering teams move from AI experiments
-              to production — agent architecture, API design, cloud integration,
-              and the observability layer that tells you when something breaks.
-              I have done this at enterprise scale and know where it gets
-              complicated.
+              I help engineering teams take AI from experiment to something that
+              runs reliably — agent architecture, API design, cloud integration,
+              and the observability that tells you when it breaks. Fourteen
+              years in enterprise, three years building my own products. I know
+              both sides.
             </p>
             <Link
               href="/contact"

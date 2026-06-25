@@ -1,0 +1,136 @@
+---
+title: "Build your first MCP server in 30 minutes"
+slug: "first-mcp-server"
+summary: "Stand up a working Model Context Protocol server in Python, expose a real tool, and call it live from an MCP client — no prior MCP experience needed."
+outcome: "A running MCP server that exposes a working tool, connected to a client and answering live."
+level: "Beginner"
+durationMin: 30
+tools: ["Python 3.10+", "FastMCP", "uv"]
+tags: ["MCP", "AI Agents", "Tools"]
+status: "published"
+updatedAt: "2026-06-23"
+---
+
+By the end of this lab you will have a small but real **Model Context Protocol (MCP) server** running on your machine, exposing a tool that an AI client can call. Nothing here is a toy snippet — the code runs as-is.
+
+<Callout type="info" title="What is MCP, in one line">
+MCP is a standard way to give an AI model access to tools and data through a small server it can talk to — instead of hard-coding integrations into the model.
+</Callout>
+
+<Diagram title="What you are building" caption="A client asks the model; the model calls your tool through MCP">
+{`
+  AI client  ──asks──▶  Model  ──tool call──▶  Your MCP server
+      ▲                                              │
+      └──────────────── answer ◀────────────────────┘
+`}
+</Diagram>
+
+### Before you start
+
+You need Python 3.10+ and about 30 minutes. We use [`uv`](https://docs.astral.sh/uv/) because it makes Python environments painless, but plain `pip` works too.
+
+<Steps>
+
+<Step number={1} title="Set up the project">
+
+Create a folder and install the MCP SDK.
+
+<CodeFile filename="terminal">
+```bash
+uv init weather-mcp
+cd weather-mcp
+uv add "mcp[cli]"
+```
+</CodeFile>
+
+If you prefer pip: `python -m venv .venv && source .venv/bin/activate && pip install "mcp[cli]"`.
+
+</Step>
+
+<Step number={2} title="Write the server">
+
+Create `server.py`. We expose one tool — a tiny "word stats" tool — so you can see the whole loop without external APIs.
+
+<CodeFile filename="server.py">
+```python
+from mcp.server.fastmcp import FastMCP
+
+# The server's name shows up in the client.
+mcp = FastMCP("word-tools")
+
+
+@mcp.tool()
+def word_stats(text: str) -> dict:
+    """Return basic statistics about a piece of text.
+
+    Args:
+        text: The text to analyse.
+    """
+    words = text.split()
+    return {
+        "characters": len(text),
+        "words": len(words),
+        "longest_word": max(words, key=len) if words else "",
+    }
+
+
+if __name__ == "__main__":
+    # Run over stdio — the transport MCP clients use locally.
+    mcp.run()
+```
+</CodeFile>
+
+That is the entire server. The `@mcp.tool()` decorator turns a normal Python function into something an AI client can call — the docstring and type hints become the tool's description and schema automatically.
+
+</Step>
+
+<Step number={3} title="Run and inspect it">
+
+The MCP Inspector is the fastest way to see your tool working — it gives you a UI to call the tool by hand.
+
+<CodeFile filename="terminal">
+```bash
+uv run mcp dev server.py
+```
+</CodeFile>
+
+This opens the Inspector in your browser. Open the **Tools** tab, pick `word_stats`, enter some text like `the quick brown fox`, and run it. You should get back character count, word count, and the longest word.
+
+<Callout type="tip" title="What just happened">
+The Inspector is acting as an MCP client. It discovered your tool, read its schema from the type hints, and called it over stdio — exactly how an AI model would.
+</Callout>
+
+</Step>
+
+<Step number={4} title="Connect it to a real client">
+
+To use it from a desktop AI client that speaks MCP, point its config at your server.
+
+<CodeFile filename="claude_desktop_config.json">
+```json
+{
+  "mcpServers": {
+    "word-tools": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/weather-mcp", "python", "server.py"]
+    }
+  }
+}
+```
+</CodeFile>
+
+Restart the client and ask it something like *"use word-tools to get stats for this paragraph."* It will call your tool and answer from the result.
+
+</Step>
+
+</Steps>
+
+<Callout type="important" title="You did it">
+You have a running MCP server, a working tool, and a client calling it live. Everything else in MCP — multiple tools, resources, prompts, auth — builds on exactly this loop.
+</Callout>
+
+### Where to go next
+
+- Add a second tool that calls a real API (start with something keyless).
+- Read about **resources** and **prompts** — the other two MCP primitives.
+- Work through the full [MCP course](/courses/mcp) to take this to production: validation, security, and deployment.
