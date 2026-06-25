@@ -1,20 +1,144 @@
 ---
 title: "Loop Engineering"
 slug: "loop-engineering"
-summary: "Designing the repeated cycle an agent runs — plan, act, observe, check, improve — so it makes progress instead of spinning. Where agents become dependable."
+summary: "An agent isn't one answer — it's a cycle: plan, act, observe, check, repeat. Designing that loop so it converges on a result instead of spinning forever is where AI agents become genuinely dependable."
 level: "Advanced"
-status: "coming-soon"
+status: "published"
 order: 9
 track: "ai-foundations"
 prereqs: ["harness-engineering"]
 tags: ["Agent Loops", "Planning", "Self-correction", "Workflows"]
-lessonCount: 7
+lessonCount: 4
 ---
 
-## What you will learn
+A chatbot answers once and stops. An *agent* keeps going — it takes a step, sees what happened, decides the next step, and repeats until the job is done. That repeating cycle is the agent's **loop**, and designing it well is the difference between an agent that quietly completes a task and one that gets stuck, wanders off, or runs forever. This course is about engineering that loop.
 
-- The core agent loop: plan, act, observe, check, repeat
-- Stopping conditions — how an agent knows it is done (or stuck)
-- Self-correction: using feedback and errors to improve mid-task
-- Designing loops that converge instead of wandering
-- Single-agent loops versus multi-agent workflows
+<Callout type="info" title="The one definition to hold onto">
+An AI agent is: a goal, some tools, a memory, and a *loop* that ties them together — plan, act, observe, check, repeat. You met the goal, tools, and memory in earlier courses. This course is the loop.
+</Callout>
+
+<LearningObjectives>
+- Understand the core agent loop and why repetition makes agents powerful
+- See how an agent uses feedback from its own actions to self-correct
+- Design loops that converge (finish) instead of wandering or spinning
+- Know when a simple fixed workflow beats a free-roaming loop
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The core loop: plan, act, observe, repeat" time={13} />
+
+A single model call is one shot: question in, answer out. But many real tasks cannot be done in one shot — they need several steps, and each step depends on what the last one revealed. So an agent runs a loop.
+
+<Diagram title="The agent loop" caption="Each turn, the agent acts, sees the result, and decides what's next">
+
+```
+        ┌──────────────────────────────────────────┐
+        │                                          ▼
+   ┌─────────┐   ┌───────┐   ┌─────────┐   ┌──────────────┐
+   │  PLAN   │──►│  ACT  │──►│ OBSERVE │──►│ DONE? CHECK   │
+   │ what's  │   │ use a │   │ see the │   │ if not, loop │
+   │ next?   │   │ tool  │   │ result  │   │ again        │
+   └─────────┘   └───────┘   └─────────┘   └──────┬───────┘
+        ▲                                          │ done
+        └──────────────── not done ────────────────┘  ▼
+                                                    finish
+```
+
+</Diagram>
+
+A worked example — *"Find the cheapest flight to Lisbon next Friday and hold it."*
+- **Plan:** I need to search flights first.
+- **Act:** call the flight-search tool.
+- **Observe:** three options come back.
+- **Check:** not done — I still need to pick the cheapest and hold it. Loop.
+- **Plan → Act → Observe:** pick the cheapest, call the hold tool, get a confirmation.
+- **Check:** done. Finish.
+
+The power is that the agent *adapts as it goes* — it did not need the whole plan up front, just the next step, informed by what it just saw.
+
+<ChapterSummary>
+- An agent runs a loop: plan the next step, act, observe the result, check if done
+- Each step is informed by the last — the agent adapts as it learns
+- This lets agents handle multi-step tasks a single answer never could
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Self-correction: learning from what went wrong" time={13} />
+
+The loop's quiet superpower is *recovering from mistakes mid-task.* Because the agent observes the result of each action, it can notice when something failed and try a different approach — without a human stepping in.
+
+A coding agent is the classic example: it writes some code, **runs it**, sees the error message, reads it, fixes the bug, and runs again — looping until the tests pass. The error message is feedback, and the loop lets the agent *use* that feedback. A one-shot model would have handed you broken code and stopped.
+
+<Callout type="tip" title="Why observation is everything">
+Self-correction only works if the agent actually *sees* the outcome of its actions — the error, the empty search result, the rejection. This is why the observability from the last course matters here too: an agent that cannot see what happened cannot fix it. Feedback is the fuel of the loop.
+</Callout>
+
+<ChapterSummary>
+- Observing each result lets the agent notice failures and try again
+- A coding agent loops: write, run, read the error, fix, repeat until it passes
+- Self-correction depends on the agent seeing real outcomes (feedback)
+</ChapterSummary>
+
+<Checkpoint>
+1. Walk through the four stages of the loop for the task "order more printer paper when it runs low."
+2. Why can a looping agent fix its own buggy code when a single model call cannot?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Making loops converge — not spin" time={13} />
+
+Loops are powerful and *dangerous*. A poorly designed loop can run forever, repeat the same failed action, or wander away from the goal — burning time and money. A core job of loop engineering is making sure the loop *converges*: it gets closer to done and then stops.
+
+The guard rails that make loops safe:
+
+<Steps>
+
+<Step number={1} title="A clear 'done' condition">
+The agent must be able to recognise success — the test passed, the booking is confirmed, the question is answered. Vague goals make loops that never end.
+</Step>
+
+<Step number={2} title="A step limit (a budget)">
+Cap the number of loops. If the agent hasn't finished in, say, 10 steps, stop and report — rather than spinning forever. A budget protects your time and cost.
+</Step>
+
+<Step number={3} title="Loop detection">
+Notice when the agent repeats the same action with the same result — a sign it is stuck. Break out and try a different path or ask a human.
+</Step>
+
+<Step number={4} title="Progress checks">
+Every few steps, ask: am I actually getting closer? If not, change strategy instead of grinding on.
+</Step>
+
+</Steps>
+
+<Callout type="warning" title="The runaway agent">
+The most common way agents fail in production is not a wrong answer — it is a loop that never ends, quietly running up a bill or repeating a useless action. Always cap steps and define "done." An agent without a stop condition is a liability, not a feature.
+</Callout>
+
+<ChapterSummary>
+- Loops can spin forever, repeat failures, or drift off-goal
+- Make them converge with a clear "done" condition and a step budget
+- Add loop detection and progress checks to catch stuck agents early
+</ChapterSummary>
+
+<ChapterHeader number={4} title="When a fixed workflow beats a free loop" time={11} />
+
+A free-roaming loop — where the agent decides each step itself — is flexible but unpredictable. For many real tasks, you do not want that freedom. If the steps are always the same (fetch order → check status → draft reply → send), a **fixed workflow** is better: more reliable, cheaper, easier to test.
+
+<Callout type="important" title="The judgement call">
+Use a *free loop* when the path genuinely varies and can't be planned in advance (research, debugging, open-ended tasks). Use a *fixed workflow* when the steps are known and stable. Many of the best systems are mostly fixed workflow with a small agent loop only where real flexibility is needed. Reliability comes from giving the agent freedom *only where it earns its keep.*
+</Callout>
+
+This is the maturity point of the whole journey: you have a model (the engine), a harness around it (the car), and a well-designed loop (how it drives). The last thing standing between you and a real product is running it safely, day after day, in the real world — which is the final course, **AI Ops**.
+
+<ChapterSummary>
+- Free loops are flexible but less predictable; fixed workflows are reliable but rigid
+- Use free loops only where the path truly varies; use workflows where steps are stable
+- The best systems are mostly structured, with agent freedom only where it's needed
+</ChapterSummary>
+
+<Checkpoint>
+1. List two guard rails that stop a loop from running forever.
+2. Give one task you'd build as a fixed workflow and one you'd build as a free agent loop.
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+Final course: **AI Ops** — running agents safely in production, where monitoring, cost, security, and rollback decide whether your system survives contact with real users.
+</Callout>

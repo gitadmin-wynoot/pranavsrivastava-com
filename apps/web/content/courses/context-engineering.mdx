@@ -1,20 +1,132 @@
 ---
 title: "Context Engineering"
 slug: "context-engineering"
-summary: "Beyond prompt writing: designing what information reaches the model, when, and in what shape. The discipline that decides whether an AI system is reliable or flaky."
+summary: "The craft that decides whether an AI system is reliable or flaky: giving the model exactly the right information, in the right shape, at the right moment. Far more than writing clever prompts."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 7
 track: "ai-foundations"
 prereqs: ["rag-and-tool-use"]
-tags: ["Context Engineering", "Prompting", "Retrieval", "System Design"]
-lessonCount: 7
+tags: ["Context Engineering", "Prompting", "Memory", "System Design"]
+lessonCount: 4
 ---
 
-## What you will learn
+Two teams build the same AI feature with the same model. One is reliable and sharp; the other is vague and unpredictable. The difference is almost never the model — it is *what information they put in front of it.* That craft is **context engineering**, and it is quietly the most important skill in building AI systems that actually work.
 
-- Why "prompt engineering" is only a small part of the picture
-- The context window as a budget — what earns a place in it
-- Selecting, ordering, and compressing context for the task at hand
-- Memory: what to carry forward, what to drop
-- Designing context so the same system behaves consistently
+<Callout type="info" title="Beyond prompt writing">
+"Prompt engineering" is wording a single question well. Context engineering is the bigger discipline: deciding *everything* the model sees for a task — the instructions, the retrieved facts, the history, the tools — and how it is arranged. Wording is a small part of it.
+</Callout>
+
+<LearningObjectives>
+- Understand why the model's output is only ever as good as its input context
+- Treat the context window as a limited budget and spend it well
+- Select, order, and trim information so the model focuses on what matters
+- Decide what an AI system should remember and what it should forget
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The model only sees its context" time={12} />
+
+An LLM has no memory of you, no access to your files, no awareness of anything except the text you place in its context window *right now*. Whatever is in that window, it uses. Whatever is missing, it cannot use — and will often guess to fill the gap.
+
+This leads to the golden rule: **garbage in, garbage out; gold in, gold out.** If the model gives a vague answer, the usual cause is not a weak model — it is that the right information was never put in front of it.
+
+<Callout type="tip" title="The reframe that changes everything">
+Stop asking "how do I word this prompt?" and start asking "what does the model need to *see* to answer this well — and is all of it in the window?" That shift is the heart of context engineering.
+</Callout>
+
+<ChapterSummary>
+- The model can only use what is in its context window at that moment
+- Missing information leads to guessing; vague output usually means poor context, not a weak model
+- The key question is "what does it need to see?" not "how do I phrase it?"
+</ChapterSummary>
+
+<ChapterHeader number={2} title="The context window is a budget" time={13} />
+
+The window has a fixed size (a token limit). Everything competes for that space: your instructions, the retrieved documents, the conversation so far, examples, tool results. You cannot pour in *everything* — and even if you could, you should not.
+
+Why not? Two reasons. First, cost and speed — more tokens means slower, pricier calls. Second, and more surprising: **too much context hurts quality.** Bury the one relevant paragraph inside fifty irrelevant ones and the model's attention gets diluted; it can miss the very fact you included. Models even tend to overlook things stuck in the *middle* of a long context.
+
+<Callout type="important" title="More context is not better context">
+A common beginner mistake is to stuff in the entire manual "just in case." It backfires — slower, costlier, and *less* accurate, because the signal drowns in noise. The skill is including the *right* little, not the most.
+</Callout>
+
+<Diagram title="Spend the budget on signal, not noise" caption="A focused window beats a stuffed one">
+
+```
+  STUFFED WINDOW                FOCUSED WINDOW
+  [50 pages of docs]            [the 2 relevant paragraphs]
+  [whole chat history]          [the last 3 turns that matter]
+  [every tool result]           [the one result needed now]
+  → slow, costly, model         → fast, cheap, model
+    misses the key line           sees exactly what matters
+```
+
+</Diagram>
+
+<ChapterSummary>
+- The context window is a fixed budget every piece of information competes for
+- Too much context is slow, expensive, and actually lowers accuracy
+- The goal is the *right* information, focused — not the *most* information
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can adding more documents to the context make the answer *worse*?
+2. Rewrite the question "how do I phrase this prompt?" the way a context engineer would ask it.
+</Checkpoint>
+
+<ChapterHeader number={3} title="Select, order, and compress" time={13} />
+
+Good context engineering is three moves, done well:
+
+<Steps>
+
+<Step number={1} title="Select — include only what's relevant">
+Pull in the documents, history, and tool results that actually bear on *this* task, and leave the rest out. This is where RAG (last course) earns its keep — fetching just the relevant passages instead of the whole library.
+</Step>
+
+<Step number={2} title="Order — put the important things where they're seen">
+Models pay most attention to the start and end of the context, less to the middle. Place the key instruction and the most relevant facts prominently — not buried in the middle of a wall of text.
+</Step>
+
+<Step number={3} title="Compress — shrink without losing meaning">
+Summarise long histories, trim boilerplate, replace ten verbose paragraphs with the three sentences that matter. Compression frees budget for what counts.
+</Step>
+
+</Steps>
+
+<Callout type="note" title="A concrete example">
+A customer-support assistant could dump the customer's entire 2-year history into the window. Better: *select* the last few interactions and the open ticket, *order* the current question first, *compress* the older history into a one-line summary ("long-time customer, previous billing issue resolved"). Same model, dramatically sharper answers.
+</Callout>
+
+<ChapterSummary>
+- Select: include only what's relevant to this task (RAG helps here)
+- Order: put key instructions and facts where the model attends most (start/end)
+- Compress: summarise and trim so the budget holds signal, not filler
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Memory — what to keep, what to forget" time={11} />
+
+Conversations and tasks pile up information faster than the window can hold. So a system must decide, continuously, what to *carry forward* and what to *let go*. This is memory design, and it is pure context engineering over time.
+
+A simple, powerful pattern: keep a running **summary** of what matters (the user's goal, key decisions, important facts) and drop the raw details once they are summarised. The model always sees a compact, up-to-date picture instead of an ever-growing transcript.
+
+<Callout type="tip" title="The principle">
+Memory is not "remember everything" — that overflows the budget and buries the signal. Memory is "remember what will matter later, in the smallest form that preserves it." Deciding that well is the difference between an assistant that stays sharp over a long task and one that gets confused.
+</Callout>
+
+This is also the bridge to the next course. Once you are deciding *what the model sees and remembers*, you are really designing the *system around the model* — its tools, memory, and rules. That system is the **harness**, and it is next.
+
+<ChapterSummary>
+- Long tasks overflow the window, so a system must choose what to carry forward
+- A running summary keeps the essentials compact and current
+- Good memory means keeping what will matter later in the smallest faithful form
+</ChapterSummary>
+
+<Checkpoint>
+1. Name the three moves of context engineering and what each does.
+2. Why is "remember everything" a bad memory strategy?
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+Next: **Harness Engineering** — building the whole system around the model: tools, memory, permissions, evaluations, and observability.
+</Callout>
