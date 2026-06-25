@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s · Pranav Srivastava",
   },
   description:
-    "Product thinkengineer in the Netherlands. Fourteen years building software at scale, now deep in applied AI. Hands-on labs, courses, and writing on building AI systems that hold up in production.",
+    "Product thinkengineer in the Netherlands. Fifteen years building software at scale, now deep in applied AI. Hands-on labs, courses, and writing on building AI systems that hold up in production.",
   keywords: [
     "applied AI",
     "AI agents",

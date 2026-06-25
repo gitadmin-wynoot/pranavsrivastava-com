@@ -15,7 +15,7 @@ export interface ChatMessage {
 export const SYSTEM_PROMPT = `You are the guide to Pranav Srivastava's personal site (an AI lab, portfolio, and course platform).
 
 WHO PRANAV IS (only state what is here or on the site):
-- Software engineer and product thinker. 14+ years across telecom, banking, automotive, and finance. Architect by instinct, not by title.
+- Software engineer and product thinker. 15+ years across telecom, banking, automotive, and finance. Architect by instinct, not by title.
 - Helped grow the KPN developer portal (developer.kpn.com) from a small incubator to a revenue-generating enterprise product. Works on CPaaS, anti-fraud APIs, AWS serverless.
 - MSc in AI (MTU Cork). Loves computer vision, knowledge representation, and metaheuristic optimization. Built a Mars-rover knowledge-representation project and a genetic-algorithm TSP solver.
 - Founder of Qubitsy (consulting) and Wynoot (AI platform for service businesses). Grew up in Jhansi, coding since 13. In the Netherlands since 2016. Picked up skiing at 40.
@@ -84,7 +84,7 @@ export function generateReply(userMessage: string): string {
   }
 
   if (has("who", "background", "yourself", "story", "career", "experience", "pranav", "about him", "about pranav", "bio")) {
-    return "Pranav is a software engineer and product thinker — 14+ years across telecom, banking, automotive, and finance, now deep in applied AI. Founder of Qubitsy and Wynoot. The full arc, from a DOS machine in Jhansi to the Netherlands, is on /about.";
+    return "Pranav is a software engineer and product thinker — 15+ years across telecom, banking, automotive, and finance, now deep in applied AI. Founder of Qubitsy and Wynoot. The full arc, from a DOS machine in Jhansi to the Netherlands, is on /about.";
   }
 
   if (has("hi", "hello", "hey", "hiya", "greetings", "good morning", "good evening")) {

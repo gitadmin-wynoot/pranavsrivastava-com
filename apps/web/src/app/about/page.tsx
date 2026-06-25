@@ -98,7 +98,7 @@ const depthAreas = [
 export const metadata: Metadata = {
   title: "About — Pranav Srivastava",
   description:
-    "Product thinkengineer. 14+ years across telecom, banking, automotive, and finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Qubitsy and Wynoot. Netherlands.",
+    "Product thinkengineer. 15+ years across telecom, banking, automotive, and asset finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Qubitsy and Wynoot. Netherlands.",
 };
 
 // type drives the colour + chip so education, career and founder chapters are
@@ -162,8 +162,8 @@ const milestones: { year: string; type: ArcType; title: string; desc: string }[]
   {
     year: "2016",
     type: "career",
-    title: "Eindhoven, Netherlands",
-    desc: "An assignment that turned into a life decision. Packed up for Brainport and stayed.",
+    title: "DLL — Eindhoven, Netherlands",
+    desc: "Moved to the Netherlands for a role at DLL (De Lage Landen), the asset-finance arm of the Rabobank group, headquartered in Eindhoven. The assignment that turned into a life decision.",
   },
   {
     year: "2017",
@@ -284,7 +284,7 @@ export default function AboutPage() {
             <MapPin className="w-3 h-3" /> Netherlands, since 2016
           </span>
           <span className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full text-xs">
-            <Briefcase className="w-3 h-3" /> 14+ years in enterprise software
+            <Briefcase className="w-3 h-3" /> 15+ years in enterprise software
           </span>
           <span className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full text-xs">
             <GraduationCap className="w-3 h-3" /> MSc AI · MTU Cork, Ireland
@@ -302,9 +302,9 @@ export default function AboutPage() {
         </p>
         <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
           <p>
-            Software engineer and product thinker with fourteen years building
+            Software engineer and product thinker with fifteen years building
             the systems businesses depend on — APIs, CPaaS, fraud detection,
-            AI integration — across telecom, banking, automotive, and finance.
+            AI integration — across telecom, banking, automotive, and asset finance.
             Joined a small KPN incubator in 2017 and helped grow{" "}
             <a href="https://developer.kpn.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">developer.kpn.com</a>
             {" "}into a revenue-generating enterprise product.
@@ -446,14 +446,14 @@ export default function AboutPage() {
               <p className="text-xs text-zinc-400 mt-0.5">TCS · Cognizant · KPN · 2010 → present</p>
             </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-              Across fourteen years and six companies, I have built integration
-              systems for automotive, banking, loans and mortgage, financial
+              Across fifteen years and several companies, I have built integration
+              systems for automotive, banking, asset finance, financial
               services, and telecom. Different industries, different
               constraints, same underlying discipline: well-designed APIs and
               reliable systems that communicate clearly.
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {["Telecom", "Banking", "Automotive", "Mortgage", "Financial services", "MuleSoft", "IBM DataPower"].map((t) => (
+              {["Telecom", "Banking", "Automotive", "Asset finance", "Financial services", "MuleSoft", "IBM DataPower"].map((t) => (
                 <span key={t} className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                   {t}
                 </span>
@@ -663,7 +663,7 @@ export default function AboutPage() {
               name: "Qubitsy",
               url: "https://qubitsy.com",
               role: "Founder · Consulting & R&D studio",
-              desc: "I help engineering teams take AI from experiment to production — agent architecture, API design, cloud integration, and the observability layer that tells you when something breaks. Fourteen years of enterprise context, startup mindset.",
+              desc: "I help engineering teams take AI from experiment to production — agent architecture, API design, cloud integration, and the observability layer that tells you when something breaks. Fifteen years of enterprise context, startup mindset.",
             },
             {
               name: "Wynoot",

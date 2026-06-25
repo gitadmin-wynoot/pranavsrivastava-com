@@ -56,7 +56,7 @@ export default async function HomePage() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl">
             Product thinkengineer.
             <span className="text-zinc-400 dark:text-zinc-500 font-normal"> Invisible infrastructure,
-            fourteen years, five domains.</span>{" "}
+            fifteen years, five domains.</span>{" "}
             Now making it intelligent.
           </h1>
 
@@ -306,9 +306,9 @@ export default async function HomePage() {
               I call myself a product thinkengineer because the product
               question and the engineering question happen in the same thought
               — I am building the system and already wondering what it should
-              become. Fourteen years of that, across domains with genuinely
+              become. Fifteen years of that, across domains with genuinely
               different constraints: telecom fraud at volume, banking
-              integrations, automotive APIs, mortgage platforms. Went back for
+              integrations, automotive APIs, asset-finance platforms. Went back for
               an AI Masters in my 30s because the algorithms were always the
               part I found interesting, not an add-on. Started{" "}
               <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
