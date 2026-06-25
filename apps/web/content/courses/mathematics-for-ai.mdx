@@ -1,60 +1,181 @@
 ---
 title: "Mathematics for AI"
 slug: "mathematics-for-ai"
-summary: "The mathematical foundation every AI practitioner needs — linear algebra, probability, statistics, and calculus explained with intuition, not just equations."
+summary: "The mathematical foundation every AI practitioner needs — vectors, matrices, probability, and the calculus behind learning — explained with intuition and everyday examples, not just equations."
 level: "Beginner to Intermediate"
-status: "coming-soon"
+status: "published"
 order: 1
 track: "ai-foundations"
 prereqs: []
 tags: ["Mathematics", "Linear Algebra", "Probability", "Statistics", "Calculus"]
-lessonCount: 10
+lessonCount: 5
 ---
 
-## Why this course exists
+You can use an AI tool without knowing the maths underneath. But you cannot truly understand *why* it works, *when* it will fail, or *how* to fix it without a feel for four ideas: vectors, matrices, probability, and gradients. This course builds that feel — in plain language, with examples you already understand.
 
-You can use an AI API without understanding the maths. But you cannot build reliable AI systems, debug model failures, or evaluate research papers without it.
+<Callout type="info" title="You do not need to be a mathematician">
+There are very few equations here. The goal is intuition — the mental pictures that make the rest of AI click. If you can read a weather forecast and follow a recipe, you can follow this.
+</Callout>
 
-This course builds the mathematical intuition that makes everything else click.
+<LearningObjectives>
+- Picture what vectors and matrices really are — and why AI represents everything as numbers
+- Understand probability as "reasoning under uncertainty," the way every model does
+- Grasp how a model *learns* using gradients, with no calculus background required
+- See all four ideas working together inside a single AI prediction
+</LearningObjectives>
 
-## What you will learn
+<ChapterHeader number={1} title="Vectors — turning anything into numbers" time={12} />
 
-### Linear algebra
-- Vectors, matrices, and tensors — what they actually are
-- Matrix multiplication as transformation
-- Eigenvalues and eigenvectors — and why they matter for PCA and attention
-- Singular Value Decomposition
+A computer cannot understand a photo, a word, or a customer. It only understands numbers. So the first job in any AI system is to turn things into lists of numbers. That list is called a <KeyTerm definition="An ordered list of numbers that describes something — like [age, height, income] describing a person.">vector</KeyTerm>.
 
-### Probability and statistics
-- Probability distributions — Gaussian, Bernoulli, categorical
-- Bayes' theorem and Bayesian thinking
-- Maximum likelihood estimation
-- Information theory: entropy, KL divergence, cross-entropy
+Think of describing a person to a computer. You might use: age, height in cm, and yearly income. So one person becomes `[34, 178, 52000]`. That is a vector — three numbers, each capturing one feature.
 
-### Calculus for optimisation
-- Derivatives and gradients — the intuition, not just the mechanics
-- The chain rule — why it is the foundation of backpropagation
-- Gradient descent: batch, stochastic, mini-batch
-- Common optimisers: SGD, Adam, AdamW
+The magic is this: once things are vectors, *closeness means similarity*. Two people with vectors that sit near each other are alike. Two movies whose vectors are close get recommended to the same person. The same word — "king" and "queen" — sit near each other because their vectors are similar.
 
-### Why this is in every AI system
-- Loss functions are minimised with calculus
-- Weights are matrices (linear algebra)
-- Outputs are probability distributions (statistics)
+<Diagram title="Things become points in space" caption="Once described as numbers, similar things land near each other">
 
-## Course outline
+```
+        income
+          |
+     52k  •  Anna [34, 178, 52k]
+          |   • Ben [36, 175, 50k]   <- near Anna, so "similar"
+          |
+     20k  |              • Cara [22, 165, 20k]
+          +---------------------------- age
+             20        34   36
+```
 
-1. Vectors and geometric intuition
-2. Matrix operations and transformations
-3. Eigendecomposition and SVD
-4. Probability fundamentals
-5. Common distributions in ML
-6. Bayes' theorem in practice
-7. Information theory: entropy and KL divergence
-8. Derivatives and gradient descent
-9. The chain rule and backpropagation
-10. Optimisers: from SGD to Adam
+</Diagram>
 
----
+This is the whole idea behind recommendations, search, and "find me more like this." Everything — images, words, songs, users — gets turned into a vector, and then AI works with distances between those points.
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified when this launches.*
+<ChapterSummary>
+- A vector is just an ordered list of numbers describing something
+- Turning things into vectors lets a computer compare them
+- Closeness between vectors means similarity — the basis of search and recommendations
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Matrices — machines that transform" time={12} />
+
+If a vector is a single thing described as numbers, a <KeyTerm definition="A grid of numbers that transforms vectors — rotating, stretching, or reshaping them.">matrix</KeyTerm> is a grid of numbers that *transforms* vectors. The best way to picture a matrix is as a machine: a vector goes in, a changed vector comes out.
+
+Imagine a photo. It is a grid of numbers (each pixel's brightness). When you rotate it, brighten it, or shrink it, a matrix is doing the work — taking every pixel and moving it to a new place. Instagram filters, in essence, are matrices.
+
+Inside a neural network, the "knowledge" the model has learned is stored as matrices. When the model makes a prediction, your input vector passes through matrix after matrix, getting transformed each step, until the final numbers come out as an answer.
+
+<Callout type="tip" title="One sentence to remember">
+Vectors are the *things*; matrices are the *transformations*. A neural network is mostly a stack of matrices reshaping a vector until it becomes an answer.
+</Callout>
+
+You do not need to multiply matrices by hand — the computer does that billions of times a second. You only need the picture: **data flows in as a vector, matrices reshape it step by step, an answer comes out.**
+
+<ChapterSummary>
+- A matrix transforms a vector — think of it as a machine: vector in, changed vector out
+- Images, rotations, and filters are all matrix operations
+- A neural network's learned knowledge lives in its matrices
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, what is the difference between a vector and a matrix?
+2. Why does turning a photo or a word into numbers make it useful to an AI?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Probability — reasoning when you are not sure" time={12} />
+
+Real life is uncertain, and AI models live in that uncertainty. They almost never say "this is definitely a cat." They say "I am 92% sure this is a cat." <KeyTerm definition="A way of measuring how likely something is, from 0 (impossible) to 1 (certain).">Probability</KeyTerm> is the language of that uncertainty.
+
+You already think in probabilities. A weather forecast says "70% chance of rain." That is a model expressing confidence, not certainty. Every modern AI does the same thing under the hood — it produces a list of options, each with a probability.
+
+One idea is worth knowing by name: **Bayes' theorem**, which is just *updating your belief when new evidence arrives*. A doctor thinks a patient is probably healthy. A test comes back positive. The doctor updates — now more worried, but not certain, because tests are imperfect. Spam filters, medical AI, and fraud detection all work this way: start with a belief, update it as evidence comes in.
+
+<Callout type="important" title="Why this matters in practice">
+Because models output probabilities, not certainties, a good AI system always asks: *how confident is it, and what does it cost if it is wrong?* A 92%-sure cat photo is harmless to get wrong. A 92%-sure "this transaction is safe" is not. Same number, very different stakes.
+</Callout>
+
+<ChapterSummary>
+- Models express answers as probabilities — confidence, not certainty
+- A weather forecast is the everyday version of what a model does
+- Bayes' theorem = updating your belief as new evidence arrives (spam filters, fraud, diagnosis)
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Gradients — how a model actually learns" time={14} />
+
+Here is the question that unlocks all of AI: how does a model *learn* from examples? The answer is a beautifully simple idea called **gradient descent**.
+
+Picture yourself on a foggy hillside at night, trying to reach the bottom of the valley. You cannot see far. But you *can* feel which way the ground slopes under your feet. So you take a small step downhill, feel again, step again. Step by step, you reach the bottom.
+
+That is exactly how a model learns:
+
+<Diagram title="Learning is walking downhill" caption="Each step reduces the error a little, until it can't go lower">
+
+```
+  error
+   high  \
+          \•  start (model is wrong)
+           \
+            \•  step... feel the slope... step down
+             \
+              \•
+               \___•___ bottom = model is as right as it can get
+                       (lowest error)
+```
+
+</Diagram>
+
+- The "height" of the hill is the model's <KeyTerm definition="A number measuring how wrong the model currently is. Learning means making it smaller.">error</KeyTerm> — how wrong it is.
+- The "slope underfoot" is the **gradient** — which direction reduces the error.
+- Each "step" nudges the model's numbers (its matrices) a little in the right direction.
+- Repeat millions of times, and the model walks itself down to good answers.
+
+That is the entire learning loop, and it is the same whether the model recognises cats or writes text. The calculus you may have heard about (derivatives, the chain rule) is simply the precise way to "feel the slope." You do not need to compute it — you need to know that *learning is repeated small steps downhill toward less error.*
+
+<Callout type="note" title="Why models need lots of data and compute">
+Each step is tiny, and there are millions of numbers to adjust. That is why training takes many examples and a lot of computing power — it is a very long walk down a very high-dimensional hill.
+</Callout>
+
+<ChapterSummary>
+- Learning = gradient descent = repeatedly stepping "downhill" to reduce error
+- The gradient is the slope that tells the model which way to adjust
+- This single idea powers all model training, from image recognition to language
+</ChapterSummary>
+
+<Checkpoint>
+1. Using the foggy-hill picture, explain what "the model is learning" actually means.
+2. Why does a model give a probability (like 92%) instead of a flat yes or no?
+</Checkpoint>
+
+<ChapterHeader number={5} title="All four, inside one prediction" time={10} />
+
+Let us watch the four ideas work together when an AI labels a photo as "a dog":
+
+<Steps>
+
+<Step number={1} title="Vector">
+The photo becomes a long vector of numbers (pixel brightnesses).
+</Step>
+
+<Step number={2} title="Matrices">
+That vector flows through the network's matrices, getting reshaped at each layer — edges, then shapes, then "dog-like" features.
+</Step>
+
+<Step number={3} title="Probability">
+The final numbers become a probability list: dog 0.94, cat 0.05, fox 0.01. The model reports its confidence.
+</Step>
+
+<Step number={4} title="Gradients (during training)">
+Earlier, while learning, every time the model guessed wrong, gradient descent nudged those matrices a little — until "dog" photos reliably produced high "dog" numbers.
+</Step>
+
+</Steps>
+
+That is the whole machine. Vectors turn the world into numbers, matrices transform them, probability expresses the answer, and gradients are how the model got good in the first place. Every course after this one builds on these four pictures.
+
+<ChapterSummary>
+- A single prediction uses all four ideas: vectors in, matrices transform, probability out, gradients trained it
+- You now have the mental model the rest of AI is built on
+- Nothing here required heavy maths — just the right pictures
+</ChapterSummary>
+
+<Callout type="tip" title="Where to go next">
+Next in the track: **Machine Learning Fundamentals**, where these ideas become real models that learn from data.
+</Callout>

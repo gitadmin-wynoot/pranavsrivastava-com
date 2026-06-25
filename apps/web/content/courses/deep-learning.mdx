@@ -1,65 +1,152 @@
 ---
 title: "Deep Learning"
 slug: "deep-learning"
-summary: "Neural network architectures from perceptrons to transformers — backpropagation, CNNs, RNNs, attention mechanisms, and transfer learning. Grounded in theory, applied through code."
+summary: "What neural networks really are, why stacking layers lets them learn features on their own, and how CNNs and RNNs see images and read sequences — explained with everyday analogies and real use cases."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 3
 track: "ai-foundations"
 prereqs: ["mathematics-for-ai", "machine-learning-fundamentals"]
-tags: ["Deep Learning", "Neural Networks", "CNNs", "Transformers", "Transfer Learning"]
-lessonCount: 11
+tags: ["Deep Learning", "Neural Networks", "CNNs", "RNNs", "Transfer Learning"]
+lessonCount: 5
 ---
 
-## What you will learn
+Classical machine learning needs you to tell it *what to look at* — "consider the house's size and location." Deep learning's superpower is that it figures out *what to look at* by itself. Show it enough photos and it discovers, on its own, that edges make shapes, shapes make eyes, and eyes make faces. This course explains how — without the heavy maths.
 
-Deep learning is the engine of modern AI. This course builds from a single neuron to the transformer architecture — understanding each step rather than treating it as a black box.
+<Callout type="info" title="Why 'deep'?">
+"Deep" just means *many layers stacked on top of each other.* Each layer learns slightly bigger ideas than the one below it. That stacking is the whole trick.
+</Callout>
 
-### Neural network foundations
-- The perceptron and why single-layer networks fail
-- Multilayer perceptrons and universal approximation
-- Activation functions: sigmoid, ReLU, GELU — and why the choice matters
-- Backpropagation: the algorithm, the chain rule, the implementation
+<LearningObjectives>
+- Understand a neural network as a stack of simple layers that learn features automatically
+- See why depth lets models learn edges → shapes → objects without being told
+- Know what CNNs (for images) and RNNs (for sequences) are, and where each is used
+- Understand transfer learning — why you rarely start from scratch
+</LearningObjectives>
 
-### Convolutional neural networks
-- Why convolution works for images — translation invariance
-- Architecture patterns: VGG, ResNet, EfficientNet
-- Transfer learning: using pre-trained models on new problems
-- Data augmentation and its effect on generalisation
+<ChapterHeader number={1} title="What a neural network actually is" time={13} />
 
-*This section is informed by hands-on project work including flower classification with CNNs and transfer learning.*
+The name sounds intimidating, but the idea is gentle. A neural network is built from tiny units called <KeyTerm definition="A tiny unit that takes in numbers, weighs them, adds them up, and passes on a result. Stacked in layers, they form a neural network.">neurons</KeyTerm>. Each neuron does something trivial: take some numbers in, multiply each by a "weight" (how much it cares about that input), add them up, and pass the result on.
 
-### Sequence models
-- Recurrent neural networks and vanishing gradients
-- LSTMs and GRUs — gating mechanisms
-- Why sequence models matter for time-series and NLP
+One neuron is almost useless. But connect thousands into layers — the output of one layer feeding the next — and something remarkable happens. The network can represent astonishingly complex patterns.
 
-### Attention and transformers
-- The attention mechanism — what it computes and why
-- Self-attention, multi-head attention, positional encoding
-- The transformer architecture — encoder, decoder, encoder-decoder
-- Why transformers replaced RNNs
+<Diagram title="A neural network is layers of neurons" caption="Numbers flow left to right, transformed at each layer">
 
-### Training in practice
-- Batch normalisation and layer normalisation
-- Learning rate schedules and warm-up
-- Gradient clipping
-- Mixed precision training
+```
+  input            hidden layers              output
+  [pixels]                                    [answer]
+    o  \        o        o
+    o ---\---  o  ----  o  ----  o            "cat"  0.91
+    o ----\--  o        o  ----  o            "dog"  0.07
+    o     /    o        o
+        (each line is a weight the model learns)
+```
 
-## Course outline
+</Diagram>
 
-1. From perceptron to multilayer networks
-2. Backpropagation — derivation and intuition
-3. Activation functions and vanishing gradients
-4. CNNs: convolution, pooling, receptive fields
-5. CNN architectures and reading ResNets
-6. Transfer learning in practice
-7. Sequence modelling: RNNs, LSTMs, GRUs
-8. The attention mechanism
-9. Transformers: architecture and training
-10. Training tricks: normalisation, schedules, precision
-11. Mini-project: build and train a classifier end to end
+Remember from the maths course: the inputs are a *vector*, each layer is a *matrix* that transforms it, and learning the weights is *gradient descent* walking downhill. A neural network is exactly those three ideas, stacked and repeated. Nothing more mysterious than that.
 
----
+<ChapterSummary>
+- A neuron does something simple: weigh inputs, add them, pass on a result
+- A neural network is many neurons in stacked layers
+- It is the maths-course ideas (vectors, matrices, gradient descent) stacked up
+</ChapterSummary>
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+<ChapterHeader number={2} title="Why depth is the magic" time={13} />
+
+Here is the insight that makes deep learning special. Each layer learns to spot *bigger ideas built from the layer below it.* You never tell it what to look for — it discovers a hierarchy on its own.
+
+For a face-recognition network, researchers have actually looked inside and seen this happen:
+
+<Diagram title="Layers learn bigger and bigger ideas" caption="Nobody programmed these stages — the network discovered them">
+
+```
+  Layer 1  →  edges and simple lines        /  \  |  —
+  Layer 2  →  corners, curves, textures     ◜ ◝  ⌒
+  Layer 3  →  parts: an eye, a nose, an ear  👁  👃
+  Layer 4  →  whole faces                    🙂
+```
+
+</Diagram>
+
+This is the difference from classical ML. There, *you* had to hand-pick the features ("measure the distance between the eyes"). Deep learning learns the features itself, which is why it took over for messy, real-world data like images, audio, and language — where nobody can list all the right features by hand.
+
+<Callout type="tip" title="The trade-off">
+Learning features automatically is powerful but hungry. Deep learning needs *lots* of data and computing power to discover those layers. With small, tidy datasets, classical ML (from the last course) often wins. Depth pays off when the patterns are too rich to describe by hand.
+</Callout>
+
+<ChapterSummary>
+- Each layer learns bigger ideas built from the layer beneath (edges → parts → objects)
+- The network discovers these features itself — you do not hand-pick them
+- This is why deep learning conquered images, audio, and language
+</ChapterSummary>
+
+<Checkpoint>
+1. In plain words, what does each successive layer of a face network learn?
+2. Why did deep learning take over from classical ML for tasks like image recognition?
+</Checkpoint>
+
+<ChapterHeader number={3} title="CNNs — networks that see" time={13} />
+
+A <KeyTerm definition="Convolutional Neural Network — a network design that scans an image with small filters, ideal for vision tasks.">CNN</KeyTerm> (Convolutional Neural Network) is the design built for images. Its trick is to scan the picture with small "filters" — little windows that slide across the image looking for one thing each (a vertical edge, a patch of red, a curve).
+
+Think of it like looking at a large painting through a small magnifying glass, sweeping it across the canvas, noting where you find each feature. Early filters find edges; later layers combine them into shapes and objects — the hierarchy from the last chapter.
+
+**Where CNNs are used every day:**
+- Your phone's camera finding faces to focus on
+- Medical imaging flagging a suspicious area on a scan for a radiologist to check
+- A factory line spotting a cracked part
+- Self-driving cars recognising pedestrians and signs
+
+<Callout type="note" title="A grounded example">
+In regions with too few radiologists, a CNN does not replace the doctor — it triages, pushing the likely-urgent scans to the top of the queue so a human sees those first. The model orders attention; the expert still decides.
+</Callout>
+
+<ChapterSummary>
+- A CNN scans an image with small sliding filters, each detecting one feature
+- Stacking them builds from edges to shapes to objects
+- Used in phone cameras, medical imaging, manufacturing, and self-driving
+</ChapterSummary>
+
+<ChapterHeader number={4} title="RNNs — networks that read sequences" time={12} />
+
+Images are static, but lots of data comes in *order*: words in a sentence, notes in a melody, days of stock prices. For these, what came *before* changes the meaning of what comes *next*. "I grew up in France, so I speak fluent ___" — to fill the blank you must remember "France" from earlier.
+
+A <KeyTerm definition="Recurrent Neural Network — a network that processes a sequence one step at a time while carrying a memory of what came before.">RNN</KeyTerm> (Recurrent Neural Network) handles this by reading one item at a time while keeping a little *memory* of what it has seen so far. It reads "I," updates its memory, reads "grew," updates again, and so on — so by the blank, it still "remembers" France.
+
+RNNs powered early translation, speech recognition, and text prediction. But they have a weakness: they struggle to remember things from *long* ago in a sequence — the memory fades. That weakness is exactly the problem the next course (**Attention & Transformers**) was invented to solve.
+
+<Callout type="important" title="This is the bridge to modern AI">
+RNNs read sequences one step at a time and forget long-range context. The breakthrough that fixed this — *attention* — is what made today's large language models possible. You are one course away from it.
+</Callout>
+
+<ChapterSummary>
+- RNNs process ordered data one step at a time, carrying a memory of the past
+- This suits language, speech, and time series — where order matters
+- Their weakness (forgetting long-range context) set the stage for transformers
+</ChapterSummary>
+
+<ChapterHeader number={5} title="Transfer learning — standing on giants" time={11} />
+
+Training a deep network from scratch needs enormous data and compute — out of reach for most projects. <KeyTerm definition="Reusing a model already trained on a huge dataset and adapting it to your smaller, specific task.">Transfer learning</KeyTerm> is the brilliant shortcut: take a network someone already trained on millions of images, and *reuse* it for your task.
+
+The analogy: hiring someone who already knows how to see, then teaching them only your specific job. The lower layers (which learned edges and shapes) are universal — every vision task needs them. You keep those and only retrain the last bit for your specific labels.
+
+<Callout type="tip" title="Why this matters for real projects">
+Transfer learning is why a startup with a few hundred labelled images can still build a good classifier. You do not start from zero — you start from a model that already understands the visual world, and nudge it toward your problem. The same idea underpins modern AI: today's chatbots are huge pre-trained models that get *fine-tuned* for specific uses.
+</Callout>
+
+<ChapterSummary>
+- Training from scratch needs huge data and compute; most projects cannot
+- Transfer learning reuses a pre-trained model and adapts its final layers
+- It is why small teams can build strong models — and it foreshadows how LLMs are fine-tuned
+</ChapterSummary>
+
+<Checkpoint>
+1. Why is an RNN better suited to a sentence than a CNN?
+2. A startup has only 500 labelled product photos. Why is transfer learning their best bet?
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+Next: **Attention & Transformers** — the idea that fixed the RNN's memory problem and became the architecture behind every modern large language model.
+</Callout>

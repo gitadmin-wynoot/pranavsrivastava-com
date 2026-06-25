@@ -1,58 +1,167 @@
 ---
 title: "Machine Learning Fundamentals"
 slug: "machine-learning-fundamentals"
-summary: "Supervised, unsupervised, and reinforcement learning from first principles — with real intuition for what is happening inside each algorithm and when each approach actually works."
+summary: "How machines learn patterns from data instead of following hand-written rules — the three families of learning, why models overfit, and how to tell a good model from a lucky one. Plain language, real examples."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 2
 track: "ai-foundations"
 prereqs: ["mathematics-for-ai"]
-tags: ["Machine Learning", "Supervised Learning", "Unsupervised Learning", "Classification", "Regression"]
-lessonCount: 10
+tags: ["Machine Learning", "Supervised Learning", "Unsupervised Learning", "Classification", "Overfitting"]
+lessonCount: 5
 ---
 
-## What you will learn
+For decades, software meant writing rules: *if this, then that.* Machine learning flips that on its head. Instead of writing the rules, you show the computer thousands of examples and let it *figure out the rules itself.* This course explains how that works — and, just as important, when it goes wrong.
 
-A proper understanding of classical ML — not just how to call `model.fit()` but why each algorithm works, what its assumptions are, and when it will fail.
+<Callout type="info" title="The one-line definition">
+Machine learning is teaching a computer to spot patterns from examples, so it can make good guesses about things it has never seen before.
+</Callout>
 
-### Supervised learning
-- Linear and logistic regression — geometry and probability interpretations
-- Decision trees and random forests — information gain, bagging, feature importance
-- Support Vector Machines — the kernel trick, margin maximisation
-- Gradient boosting: XGBoost, LightGBM — why they win tabular competitions
-- Evaluation: confusion matrices, ROC/AUC, precision/recall trade-offs
+<LearningObjectives>
+- Understand why "learning from examples" beats "writing rules" for some problems
+- Tell apart the three families: supervised, unsupervised, and reinforcement learning
+- Recognise overfitting — the single most common way ML goes wrong
+- Judge whether a model is actually good, using the right measure for the job
+</LearningObjectives>
 
-### Unsupervised learning
-- K-means clustering — convergence, limitations, choosing K
-- Hierarchical clustering
-- Gaussian Mixture Models
-- Principal Component Analysis — geometric and algebraic view
-- Autoencoders as learnable dimensionality reduction
+<ChapterHeader number={1} title="Rules vs. learning — when examples win" time={12} />
 
-### Regularisation and generalisation
-- Overfitting and underfitting — the bias-variance trade-off
-- L1 (Lasso) and L2 (Ridge) regularisation
-- Dropout and early stopping
-- Cross-validation strategies
+Imagine writing software to spot spam email. The rules approach: *if it contains "free money", mark as spam.* Spammers write "fr3e m0ney" and you are back to square one. You add another rule. They adapt again. You lose.
 
-### Reinforcement learning (introduction)
-- Markov Decision Processes
-- Q-learning and policy gradients
-- Where RL shows up in modern AI (RLHF for LLMs)
+The machine learning approach: show the computer a million emails already labelled "spam" or "not spam," and let it learn the *patterns* that separate them — patterns far too subtle and numerous to write by hand. When spammers adapt, you feed in new examples and the model relearns.
 
-## Course outline
+<Callout type="tip" title="When to reach for ML">
+Use machine learning when the rules are too many, too subtle, or keep changing — recognising faces, understanding language, detecting fraud. Use plain rules when the logic is simple and stable — calculating tax, validating a form. ML is not always the answer; it is the answer when rules cannot keep up.
+</Callout>
 
-1. The ML problem: fitting, generalising, failing
-2. Linear regression — least squares to gradient descent
-3. Classification: logistic regression and decision boundaries
-4. Tree-based models: from decision trees to gradient boosting
-5. Support Vector Machines
-6. Clustering: K-means, hierarchical, GMMs
-7. Dimensionality reduction: PCA and autoencoders
-8. The bias-variance trade-off and regularisation
-9. Evaluation metrics that actually matter
-10. Introduction to reinforcement learning
+<ChapterSummary>
+- Traditional software follows hand-written rules; ML learns rules from examples
+- ML shines when patterns are too complex or change too fast to code by hand
+- Not every problem needs ML — simple, stable logic is better as plain rules
+</ChapterSummary>
 
----
+<ChapterHeader number={2} title="The three families of learning" time={14} />
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+Almost all machine learning falls into three families, and the difference comes down to *what the computer is shown.*
+
+| Family | What it gets | What it learns | Everyday example |
+|---|---|---|---|
+| **Supervised** | Examples *with* the right answers | To predict the answer for new cases | Spam filter (emails labelled spam / not) |
+| **Unsupervised** | Examples with *no* answers | To find structure and groupings | Grouping customers into types nobody pre-defined |
+| **Reinforcement** | A goal and rewards for good moves | To act well through trial and error | A program learning to play chess by winning and losing |
+
+**Supervised learning** is by far the most common. You give it labelled examples — photos tagged "dog" or "cat," houses with their sale prices — and it learns to predict the label. Predicting a category (dog/cat) is called *classification*; predicting a number (a price) is called *regression*.
+
+**Unsupervised learning** gets no labels. You hand it your customers and say "find natural groups." It might discover that you actually have three kinds of customer — something nobody told it to look for. This is how "customers like you also bought…" begins.
+
+**Reinforcement learning** learns by doing. It tries an action, gets a reward or penalty, and gradually learns a strategy that earns the most reward. It is how programs master games — and, notably, part of how modern chatbots are tuned to be helpful (more on that later in the track).
+
+<Callout type="note" title="A surprising connection">
+Modern AI mixes these. A chatbot is first trained in a self-supervised way on text, then *reinforcement learning from human feedback* (RLHF) shapes it to be helpful and polite. You will meet RLHF again in the LLMs course.
+</Callout>
+
+<ChapterSummary>
+- Supervised: learn from examples with answers (most common — classification & regression)
+- Unsupervised: find hidden structure in data with no answers (grouping, patterns)
+- Reinforcement: learn good behaviour through rewards and trial and error
+</ChapterSummary>
+
+<Checkpoint>
+1. You want to predict tomorrow's temperature from past weather. Which family, and is it classification or regression?
+2. You have a pile of news articles and want to auto-group them by topic, with no pre-set topics. Which family?
+</Checkpoint>
+
+<ChapterHeader number={3} title="How a model fits the data" time={12} />
+
+At heart, training a model means *finding the line (or curve, or boundary) that best fits your examples.* Picture house prices: bigger houses cost more. Plot size against price, and the model draws the line that best runs through the dots. Now, given a new house's size, it reads the price off the line.
+
+<Diagram title="A model is a best-fit line" caption="Training finds the line; prediction reads off it">
+
+```
+  price
+    |                         •
+    |                    •  /
+    |                •   /  <- the line the model learned
+    |            •     /
+    |        •      /
+    |    •       /
+    |________/_______________ size
+              ^ new house: find its size, read the price off the line
+```
+
+</Diagram>
+
+For classification, instead of a line *through* the dots, the model draws a line *between* the groups — a boundary with "dogs" on one side and "cats" on the other. Fancier models draw wiggly boundaries that separate complicated groups. But the idea never changes: **fit the examples, then use the fit to judge new cases.**
+
+How does it find the best line? Exactly the "walking downhill" idea from the maths course — it starts with a bad line and nudges it, step by step, until the error is as small as it can be.
+
+<ChapterSummary>
+- Training = finding the line, curve, or boundary that best fits the examples
+- Regression fits a line through the data; classification draws a boundary between groups
+- The "best fit" is found by gradient descent — stepping downhill to less error
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Overfitting — the trap that catches everyone" time={14} />
+
+Here is the most important warning in all of machine learning. A model can do *too well* on the examples it studied — by memorising them instead of learning the real pattern. This is called <KeyTerm definition="When a model memorises its training examples (including their noise) instead of learning the general pattern, so it fails on new data.">overfitting</KeyTerm>, and it is the number one reason AI projects disappoint in the real world.
+
+An analogy: a student who memorises the exact answers to last year's exam will ace a re-run of that exam — and fail this year's, because they learned the answers, not the subject. An overfit model is that student.
+
+<Diagram title="Underfit, just right, overfit" caption="The middle one learned the pattern; the right one memorised the dots">
+
+```
+  UNDERFIT          GOOD FIT           OVERFIT
+  (too simple)      (the pattern)      (memorised noise)
+
+   •  •              •  •                •__•
+  ____•___          __/‾‾\__            _/‾\_•/‾\_
+  •     •          •/      \•          •/ \•/    \•
+  (misses it)     (smooth, general)   (wiggly, brittle)
+```
+
+</Diagram>
+
+The cure is simple to state: **always test the model on data it has never seen.** You hold back some examples, train on the rest, then check the held-back set. If it does well on examples it studied but badly on the held-back ones — it overfit. This hold-back check (called *validation*) is non-negotiable. A model is only as good as its performance on data it has never seen.
+
+<Callout type="warning" title="The demo trap">
+Almost every "amazing" AI demo that flops in production flopped because of overfitting or testing on data too similar to the training data. If someone shows you a model with 99% accuracy, the first question is always: *99% on data it had never seen before?*
+</Callout>
+
+<ChapterSummary>
+- Overfitting = memorising the examples instead of learning the pattern
+- An overfit model looks brilliant on training data and fails on new data
+- Always measure on held-back ("validation") data the model never saw
+</ChapterSummary>
+
+<Checkpoint>
+1. In the exam analogy, what does "overfitting" correspond to, and why does it fail?
+2. A teammate reports a model with 98% accuracy. What is the one question you must ask?
+</Checkpoint>
+
+<ChapterHeader number={5} title="Judging a model with the right measure" time={12} />
+
+"Accuracy" sounds like the obvious way to judge a model — what fraction did it get right? But accuracy can lie, badly. Suppose 1 in 1,000 transactions is fraud. A lazy model that says "never fraud" is 99.9% accurate — and completely useless, because it never catches a single fraud.
+
+So we use sharper measures. The two that matter most:
+
+- **Precision** — *when the model raises an alarm, how often is it right?* High precision = few false alarms.
+- **Recall** — *of all the real cases, how many did the model catch?* High recall = few misses.
+
+There is almost always a trade-off. Catch more fraud (high recall) and you will also flag more innocent transactions (lower precision). Which matters more depends entirely on the job:
+
+<Callout type="important" title="The measure depends on the cost of being wrong">
+- **Cancer screening**: missing a real case is deadly, a false alarm just means another test. Favour *recall*.
+- **Spam filter**: a missed spam is mildly annoying; deleting a real email is a disaster. Favour *precision*.
+
+There is no universally "best" model — only the best model *for what it costs you to be wrong.* This is a product decision as much as a technical one.
+</Callout>
+
+<ChapterSummary>
+- Accuracy is misleading when one outcome is rare (fraud, disease)
+- Precision = how often alarms are right; recall = how many real cases you catch
+- The right balance depends on the cost of a false alarm vs. a miss — a judgement call, not just maths
+</ChapterSummary>
+
+<Callout type="tip" title="Where to go next">
+You now understand classical machine learning. Next: **Deep Learning**, where models stack many layers to learn patterns far too complex for the methods here.
+</Callout>
