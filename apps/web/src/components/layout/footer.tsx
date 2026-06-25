@@ -44,9 +44,10 @@ export function Footer() {
             </p>
             <nav className="space-y-1.5">
               {[
-                { label: "AI Lab", href: "/ai-lab" },
-                { label: "Blog", href: "/blog" },
+                { label: "Labs", href: "/labs" },
                 { label: "Learn", href: "/learn" },
+                { label: "Writing", href: "/blog" },
+                { label: "Projects", href: "/ai-lab" },
                 { label: "About", href: "/about" },
                 { label: "Contact", href: "/contact" },
               ].map((link) => (
@@ -68,8 +69,9 @@ export function Footer() {
             </p>
             <nav className="space-y-1.5">
               {[
-                { label: "GitHub", href: "https://github.com" },
-                { label: "LinkedIn", href: "https://linkedin.com" },
+                { label: "LinkedIn", href: "https://nl.linkedin.com/in/pranav-srivastava-651a9427" },
+                { label: "Medium", href: "https://pranav-srivastava.medium.com" },
+                { label: "GitHub", href: "https://pranavsdev.github.io" },
                 { label: "Email", href: "mailto:hello@pranavsrivastava.com" },
               ].map((link) => (
                 <a
@@ -90,9 +92,13 @@ export function Footer() {
           <p className="text-xs text-zinc-400">
             © {year} Pranav Srivastava. Built in public.
           </p>
-          <p className="text-xs text-zinc-400">
-            This site is a living AI OS — always evolving.
-          </p>
+          {/* A quiet whisper — the circle is found, not advertised. */}
+          <Link
+            href="/circle"
+            className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+          >
+            The Circle — by invitation →
+          </Link>
         </div>
       </div>
     </footer>
