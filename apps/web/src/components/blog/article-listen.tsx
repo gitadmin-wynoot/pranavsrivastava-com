@@ -4,66 +4,44 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, Pause, Square, Volume2 } from "lucide-react";
 
 // "Listen to this post" — browser speech synthesis. No API key, no cost.
-// Prefers a male, high-quality voice, and lets the reader pick another. Skips
-// code/diagrams/tables and chunks by sentence (Chrome cuts off long utterances).
+// Fixed to "Google UK English Male" where available (Chrome / Edge); other
+// browsers fall back to the best male voice they have so it never breaks.
+// Skips code/diagrams/tables and chunks by sentence (Chrome cuts off long ones).
 type PlayState = "idle" | "playing" | "paused";
 
-const VOICE_KEY = "tts-voice";
+const PREFERRED_VOICE = "Google UK English Male";
+const MALE = /daniel|alex|aaron|tom|reed|oliver|arthur|fred|guy|davis|\bmale\b/i;
+const FEMALE = /samantha|karen|moira|tessa|victoria|fiona|aria|jenny|zira|susan|ava|female/i;
 
-// Heuristics — the API exposes no gender field, so we go by known voice names.
-const MALE = /daniel|aaron|tom|reed|oliver|arthur|fred|alex|rishi|google uk english male|\bmale\b|guy|davis|tony|brandon|christopher|eric|roger|steffan|william|liam/i;
-const FEMALE = /samantha|karen|moira|tessa|victoria|fiona|aria|jenny|zira|susan|allison|ava|serena|kate|female|sonia|libby|google us english$/i;
-const QUALITY = /enhanced|premium|neural|natural|siri|online/i;
-
-function score(v: SpeechSynthesisVoice): number {
-  let s = 0;
-  if (QUALITY.test(v.name)) s += 5;
-  if (MALE.test(v.name)) s += 4;
-  if (FEMALE.test(v.name)) s -= 4;
-  if (/^en[-_]?gb/i.test(v.lang)) s += 2;
-  else if (/^en[-_]?us/i.test(v.lang)) s += 1;
-  if (v.localService) s += 1; // installed voices tend to be cleaner than remote fallbacks
-  return s;
+function pickVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
+  const en = voices.filter((v) => /^en/i.test(v.lang));
+  return (
+    en.find((v) => v.name === PREFERRED_VOICE) ??
+    en.find((v) => MALE.test(v.name) && !FEMALE.test(v.name)) ??
+    en.find((v) => /^en[-_]?gb/i.test(v.lang)) ??
+    en[0] ??
+    null
+  );
 }
 
 export function ArticleListen({ targetId = "article-body" }: { targetId?: string }) {
   const [supported, setSupported] = useState(true);
   const [state, setState] = useState<PlayState>("idle");
   const [rate, setRate] = useState(1);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [voiceName, setVoiceName] = useState<string>("");
 
   const chunks = useRef<string[]>([]);
   const session = useRef(0);
   const rateRef = useRef(1);
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
-  const voiceNameRef = useRef<string>("");
+  const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       setSupported(false);
       return;
     }
-    const saved = (() => {
-      try {
-        return localStorage.getItem(VOICE_KEY) ?? "";
-      } catch {
-        return "";
-      }
-    })();
-
     const load = () => {
-      const en = window.speechSynthesis
-        .getVoices()
-        .filter((v) => /^en/i.test(v.lang))
-        .sort((a, b) => score(b) - score(a));
-      if (en.length === 0) return;
-      voicesRef.current = en;
-      setVoices(en);
-      // Default to the saved choice if still available, else the best (male) voice.
-      const initial = (saved && en.find((v) => v.name === saved)?.name) || en[0].name;
-      voiceNameRef.current = initial;
-      setVoiceName(initial);
+      const v = pickVoice(window.speechSynthesis.getVoices());
+      if (v) voiceRef.current = v;
     };
     load();
     window.speechSynthesis.onvoiceschanged = load;
@@ -73,21 +51,6 @@ export function ArticleListen({ targetId = "article-body" }: { targetId?: string
   useEffect(() => {
     rateRef.current = rate;
   }, [rate]);
-
-  function chooseVoice(name: string) {
-    voiceNameRef.current = name;
-    setVoiceName(name);
-    try {
-      localStorage.setItem(VOICE_KEY, name);
-    } catch {
-      /* ignore */
-    }
-    // Restart so the new voice takes effect immediately if playing.
-    if (state !== "idle") {
-      stop();
-      setTimeout(play, 60);
-    }
-  }
 
   const buildChunks = useCallback(() => {
     const el = document.getElementById(targetId);
@@ -115,8 +78,7 @@ export function ArticleListen({ targetId = "article-body" }: { targetId?: string
       return;
     }
     const u = new SpeechSynthesisUtterance(chunks.current[i]);
-    const v = voicesRef.current.find((x) => x.name === voiceNameRef.current);
-    if (v) u.voice = v;
+    if (voiceRef.current) u.voice = voiceRef.current;
     u.rate = rateRef.current;
     u.onend = () => speakFrom(i + 1, mySession);
     window.speechSynthesis.speak(u);
@@ -168,23 +130,6 @@ export function ArticleListen({ targetId = "article-body" }: { targetId?: string
           {state === "paused" ? <Play className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
           {state === "paused" ? "Resume" : "Listen"}
         </button>
-      )}
-
-      {/* Voice picker — pick the best one your device offers */}
-      {voices.length > 0 && (
-        <select
-          value={voiceName}
-          onChange={(e) => chooseVoice(e.target.value)}
-          aria-label="Voice"
-          title="Voice"
-          className="max-w-[8rem] bg-transparent text-xs text-zinc-500 dark:text-zinc-400 focus:outline-none cursor-pointer truncate"
-        >
-          {voices.map((v) => (
-            <option key={v.name} value={v.name}>
-              {v.name.replace(/\s*\(.*\)$/, "")}
-            </option>
-          ))}
-        </select>
       )}
 
       {state !== "idle" && (
