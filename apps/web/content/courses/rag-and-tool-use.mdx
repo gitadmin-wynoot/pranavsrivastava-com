@@ -1,22 +1,153 @@
 ---
 title: "RAG & Tool Use"
 slug: "rag-and-tool-use"
-summary: "Connect a model to the outside world — retrieve from your own knowledge, call APIs, and run code — so it answers from facts and actions, not just memory."
+summary: "How to connect a language model to real knowledge and real actions — so it answers from your documents instead of guessing, and can search, calculate, and call APIs. The leap from 'chatbot' to 'useful system'."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 6
 track: "ai-foundations"
 prereqs: ["large-language-models"]
 tags: ["RAG", "Retrieval", "Tools", "Function Calling"]
-lessonCount: 8
+lessonCount: 5
 ---
 
-## What you will learn
+An LLM on its own is a brilliant improviser with a frozen, fuzzy memory. It does not know your company's documents, today's date, or the answer to "what's 8,431 × 297." This course is about fixing that — giving the model **real knowledge** (RAG) and **real abilities** (tools). This is the step that turns a clever chatbot into a system you can actually rely on.
 
-- Why a model needs external knowledge, and what retrieval adds
-- Retrieval-augmented generation end to end — chunk, embed, retrieve, ground
-- Tool use and function calling: letting the model take actions
-- Citing sources and keeping answers honest
-- When to retrieve, when to call a tool, and when to just answer
+<Callout type="info" title="Two upgrades, one goal">
+RAG gives the model *facts to read*. Tools give the model *things it can do*. Together they move it from "answers from memory" to "answers from sources and actions."
+</Callout>
 
-Pairs with the hands-on <strong>Semantic Search & Embeddings</strong> course in Applied AI.
+<LearningObjectives>
+- Understand why a raw LLM cannot be trusted with facts — and how RAG fixes it
+- Follow the RAG pipeline end to end, in plain steps
+- Understand tool use: letting the model search, calculate, and call APIs
+- Know when to retrieve, when to use a tool, and when to just answer
+</LearningObjectives>
+
+<ChapterHeader number={1} title="Why a model needs the outside world" time={12} />
+
+From the last course: an LLM predicts plausible text from a frozen snapshot of what it read during training. That creates three hard limits:
+
+- **It is out of date.** It knows nothing after its training cut-off — not today's news, not your latest policy.
+- **It does not know your private data.** Your company wiki, your customer records, your codebase — invisible to it.
+- **It guesses at facts.** Ask for a specific number or citation and it may confidently invent one.
+
+You cannot retrain a giant model every time a document changes — that is absurdly expensive. The smart move is to *leave the model as-is and hand it the right information at question time.* That is the whole idea behind RAG.
+
+<Callout type="note" title="A grounded example">
+A bank wants an assistant that answers staff questions from its 4,000-page policy manual. Retraining the model on the manual is slow, costly, and breaks the moment a policy changes. Instead: when someone asks a question, *fetch the relevant policy pages and show them to the model.* It reads them and answers — always from the current manual.
+</Callout>
+
+<ChapterSummary>
+- A raw LLM is out of date, blind to your private data, and prone to inventing facts
+- Retraining for every new document is impractical
+- The fix: keep the model fixed and supply the right information at question time
+</ChapterSummary>
+
+<ChapterHeader number={2} title="RAG, step by step" time={14} />
+
+<KeyTerm definition="Retrieval-Augmented Generation — fetching relevant documents and giving them to the model so it answers from real sources.">RAG</KeyTerm> stands for Retrieval-Augmented Generation. Despite the name, the idea is simple: **find the relevant facts, then let the model answer using them.**
+
+<Diagram title="The RAG pipeline" caption="Retrieve the right passages, then let the model answer from them">
+
+```
+  Question: "What is our refund window?"
+       |
+       v
+  1. SEARCH your documents for relevant passages
+       |
+       v
+  2. RETRIEVE the top few:  "...refunds within 30 days..."
+       |
+       v
+  3. GIVE them to the model along with the question
+       |
+       v
+  4. ANSWER from those passages, citing the source
+       "Refunds are accepted within 30 days [Policy 4.2]."
+```
+
+</Diagram>
+
+The clever part is step 1 — finding the *right* passages. This uses the "things become points in space" idea from the Maths course: the question and every document chunk are turned into vectors, and the system grabs the chunks whose vectors sit closest to the question's. (That technique, *semantic search*, has its own hands-on course in Applied AI.)
+
+<Callout type="tip" title="Why RAG beats memory">
+With RAG, answers are grounded in real, current, citable sources. The model stops guessing and starts quoting. You can even show the user *where* each fact came from — which is exactly what builds trust.
+</Callout>
+
+<ChapterSummary>
+- RAG = search your documents, retrieve the best passages, answer from them
+- Finding the right passages uses semantic (meaning-based) search over vectors
+- Answers become grounded, current, and citable instead of guessed
+</ChapterSummary>
+
+<Checkpoint>
+1. Why is RAG better than retraining the model every time a document changes?
+2. What does the "retrieve" step actually look for, and how does it find it?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Tools — letting the model act" time={13} />
+
+RAG lets the model *read*. Tools let it *do*. A <KeyTerm definition="A function or service the model can call — a calculator, a web search, a database query, an API — to get information or take an action.">tool</KeyTerm> is any capability you hand the model: a calculator, a web search, a database lookup, sending an email, running code.
+
+The model does not run the tool itself. Instead, when it realises it needs one, it outputs a structured request — *"call the calculator with 8431 × 297"* — your system runs it, and the result is handed back to the model to continue. This is often called *function calling*.
+
+<Diagram title="How tool use works" caption="The model asks; your system runs the tool; the result comes back">
+
+```
+  User: "What's 8431 × 297, and is it more than our budget of 2.4M?"
+       |
+       v
+  Model:  needs maths → asks to call  calculator(8431 * 297)
+       |
+  System runs it → 2,503,  ...wait, 2,503,  207
+       |
+       v
+  Model:  reads result → "That's 2,503,207 — yes, over your 2.4M budget."
+```
+
+</Diagram>
+
+This is how an AI assistant can check live weather, look up an order, book a meeting, or run a piece of code. The model supplies the *reasoning and language*; the tools supply *truth and action.*
+
+<Callout type="important" title="Tools fix what LLMs are bad at">
+LLMs are weak at exact arithmetic, current data, and precise lookups — exactly the things ordinary software is great at. Tools let the model delegate those to reliable code, then explain the result. Best of both worlds.
+</Callout>
+
+<ChapterSummary>
+- A tool is any capability the model can call: calculator, search, database, API, code
+- The model requests a tool; your system runs it; the result returns to the model
+- Tools provide the exactness and real-world actions LLMs lack
+</ChapterSummary>
+
+<ChapterHeader number={4} title="When to retrieve, when to use a tool, when to just answer" time={11} />
+
+A good AI system does not RAG or call tools for *everything* — that would be slow and wasteful. Part of the craft is choosing:
+
+| The question needs… | Use | Example |
+|---|---|---|
+| Facts from your documents | **RAG** | "What's our refund policy?" |
+| A live value or an action | **A tool** | "What's the weather in Tokyo?" / "Book the room." |
+| Exact calculation | **A tool** | "What's 18% of 4,317?" |
+| General knowledge or reasoning | **Just answer** | "Explain why the sky is blue." |
+
+Often a single request mixes these — *"Summarise our Q3 results [RAG] and email them to the team [tool]."* Orchestrating that gracefully is where the next courses (Context, Harness, and Loop Engineering) come in. This course gives you the two building blocks; the rest of the track assembles them into reliable systems.
+
+<Callout type="note" title="The bigger picture">
+RAG and tools are the moment an LLM stops being a clever text box and starts being an *agent* — something that can pull in knowledge and act on the world. Everything after this is about doing that *reliably*.
+</Callout>
+
+<ChapterSummary>
+- Don't retrieve or call tools for everything — choose based on what the question needs
+- RAG for your documents, tools for live data/actions/maths, plain answers for general reasoning
+- Combining them well is the foundation of capable AI agents
+</ChapterSummary>
+
+<Checkpoint>
+1. Give one question best served by RAG and one best served by a tool.
+2. Why shouldn't an AI system use RAG or tools for every single question?
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+You can now give a model knowledge and abilities. The hands-on versions — **AI Agents** and **MCP** — live in the Applied AI track. Next in foundations: **Context Engineering**, the craft of giving the model exactly the right information at the right moment.
+</Callout>

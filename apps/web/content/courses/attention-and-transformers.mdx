@@ -1,23 +1,119 @@
 ---
 title: "Attention & Transformers"
 slug: "attention-and-transformers"
-summary: "How attention lets a model decide what to focus on, and how transformers turned that one idea into the architecture behind every modern LLM."
+summary: "The single idea — letting a model decide what to pay attention to — that fixed the memory problem in older networks and became the architecture behind every modern AI. Explained from scratch, in plain words."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 4
 track: "ai-foundations"
 prereqs: ["deep-learning"]
-tags: ["Attention", "Transformers", "Self-Attention", "Deep Learning"]
-lessonCount: 8
+tags: ["Attention", "Transformers", "Self-Attention", "LLMs"]
+lessonCount: 5
 ---
 
-## What you will learn
+Almost every AI you have heard of — ChatGPT, Claude, image generators, translation — runs on one architecture: the *transformer*. And the transformer is built on one elegant idea: **attention.** This course explains that idea so clearly you will see why it changed everything.
 
-- The problem with RNNs that attention was invented to solve
-- Self-attention from first principles — queries, keys, and values, in plain terms
-- Multi-head attention and why several "views" beat one
-- Positional encoding: how a parallel model still understands order
-- The full transformer block, assembled piece by piece
-- Why this architecture scaled when nothing else did
+<Callout type="info" title="Why this is the most important course in the track">
+Everything before this built up to attention. Everything after it is built on attention. If one idea is worth truly understanding in modern AI, it is this one.
+</Callout>
 
-This is the hinge of the whole track — everything from here forward is built on it.
+<LearningObjectives>
+- Understand the exact problem with older networks that attention solves
+- Grasp "attention" through everyday analogies — deciding what to focus on
+- See why transformers are fast *and* good at long-range understanding
+- Know why this architecture, and not a cleverer one, powers today's AI
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The problem: a sentence read through a straw" time={12} />
+
+Recall the RNN from the Deep Learning course: it reads a sentence one word at a time, carrying a small memory forward. The trouble is that memory fades. By the end of a long paragraph, the beginning is a blur.
+
+Consider: *"The trophy did not fit in the brown suitcase because **it** was too big."* What does "it" refer to — the trophy or the suitcase? You know instantly: the trophy. But an RNN, having shuffled word-by-word, often loses that thread. It read the sentence through a straw, remembering only a little at a time.
+
+<Callout type="note" title="The core limitation">
+Older networks process words in order and struggle to connect words that are far apart. But language is full of long-range connections — a pronoun here referring to a noun ten words back. Something better was needed.
+</Callout>
+
+<ChapterSummary>
+- RNNs read sequentially and forget long-range context
+- Language constantly links far-apart words (pronouns, references)
+- This long-range problem is exactly what attention was invented to solve
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Attention: letting the model look around" time={14} />
+
+Attention throws out the straw. Instead of reading word by word and forgetting, the model looks at the **whole sentence at once** and, for each word, decides *which other words matter most to understanding it.*
+
+When the model processes "it" in our sentence, attention lets it glance back and ask: *which earlier word am I really about?* It weighs every word and decides "trophy" matters most. It has, quite literally, learned where to *pay attention*.
+
+<Diagram title="Attention links each word to the words that matter" caption="Processing 'it', the model attends most strongly to 'trophy'">
+
+```
+  The  trophy  did  not  fit  ...  because   it   was big
+        ▲                                    │
+        └──────────── strong attention ──────┘
+        (weaker attention to every other word too)
+```
+
+</Diagram>
+
+A human analogy: reading a contract, when you hit "the aforementioned party," your eyes flick back to find who that was. You do not re-read the whole document — you *attend* to the relevant part. Attention gives a model that same ability, for every word, all at once.
+
+<Callout type="tip" title="The plain-English definition">
+Attention is the model, for each word, deciding how much to focus on every other word. "Self-attention" just means it does this *within the same sentence* — words attending to other words in their own text.
+</Callout>
+
+<ChapterSummary>
+- Attention lets the model see the whole input at once, not through a straw
+- For each word, it decides which other words matter most
+- This directly captures the long-range links that older networks missed
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does "it" in the trophy sentence trip up an RNN but not an attention-based model?
+2. In your own words, what does "self-attention" mean?
+</Checkpoint>
+
+<ChapterHeader number={3} title="The transformer: attention, stacked and parallel" time={13} />
+
+A <KeyTerm definition="The neural network architecture, built from layers of attention, behind virtually all modern large language models.">transformer</KeyTerm> is what you get when you stack many attention layers together. Each layer lets every word gather context from every other word; the next layer builds richer understanding on top of that; and so on, deepening meaning at each level — just like the layer hierarchy from the Deep Learning course.
+
+It has two superpowers:
+
+1. **It captures long-range meaning** — any word can attend directly to any other, no matter how far apart. The straw is gone.
+2. **It is fast to train** — because it looks at all words *at the same time* (in parallel) rather than one after another, it makes full use of modern hardware. RNNs were stuck going one step at a time.
+
+<Callout type="important" title="Why speed mattered so much">
+That second point is easy to overlook but it is half the story. Because transformers train in parallel, researchers could train them on enormous amounts of text affordably. Bigger training became practical — and *that* is what produced today's large language models. The architecture did not just understand better; it scaled better.
+</Callout>
+
+<ChapterSummary>
+- A transformer stacks many attention layers, deepening understanding at each
+- Superpower 1: any word can connect to any other (long-range meaning)
+- Superpower 2: it processes all words in parallel, so it trains fast and scales
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Why this one idea won" time={11} />
+
+There were many clever architectures over the years. Why did the transformer take over so completely? Because it hit a rare sweet spot: it was **better at understanding** (long-range attention) *and* **cheaper to scale** (parallel training) at the same time. Usually you trade one for the other. The transformer gave both.
+
+That combination meant: feed it more text and more computing power, and it kept getting better — predictably. This "just add scale" property is why a single architecture now underlies chatbots, code assistants, translation, image generation, and more. They are, under the hood, the same machine pointed at different data.
+
+<Callout type="note" title="One architecture, everywhere">
+The same transformer idea powers text models, image models (vision transformers), audio, and even protein-folding research. Learning it once unlocks understanding across all of modern AI — which is why this course sits at the centre of the track.
+</Callout>
+
+<ChapterSummary>
+- The transformer uniquely combined better understanding with cheaper scaling
+- That let it improve simply by adding more data and compute
+- One architecture now powers text, images, audio, and science — all built on attention
+</ChapterSummary>
+
+<Checkpoint>
+1. Name the transformer's two superpowers and why each matters.
+2. Why did "trains in parallel" turn out to be just as important as "understands better"?
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+You now understand the engine. Next: **Large Language Models** — what happens when you train a giant transformer on a huge slice of human text.
+</Callout>

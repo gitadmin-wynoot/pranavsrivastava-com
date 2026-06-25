@@ -1,21 +1,123 @@
 ---
 title: "Large Language Models"
 slug: "large-language-models"
-summary: "What LLMs actually are, how they are trained, why they work as well as they do, and where they quietly fail — language as a universal interface to computation."
+summary: "What an LLM really is, how 'predict the next word' produces something that feels like reasoning, how these models are trained and made helpful, and where they quietly fail — in plain language."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 5
 track: "ai-foundations"
 prereqs: ["attention-and-transformers"]
 tags: ["LLMs", "Pretraining", "Fine-tuning", "Tokenization"]
-lessonCount: 9
+lessonCount: 5
 ---
 
-## What you will learn
+A large language model is the thing behind ChatGPT and Claude. It can write, summarise, translate, code, and reason about almost anything — yet at its core it does something almost laughably simple: it predicts the next word. This course explains how something so simple becomes something so capable, and where it still gets things wrong.
 
-- Tokenization: how text becomes numbers a model can work with
-- Pretraining, fine-tuning, and instruction tuning — what each stage does
-- Why "predict the next token" produces reasoning-like behaviour
-- Context windows, temperature, and the knobs that shape output
-- Where LLMs hallucinate, and how to reason about their limits
-- A grounded mental model you can actually build systems on
+<Callout type="info" title="The whole secret, up front">
+An LLM is a giant transformer trained to guess the next word in a piece of text, over and over, on a huge slice of the internet and books. That is it. Everything impressive emerges from doing that one thing at enormous scale.
+</Callout>
+
+<LearningObjectives>
+- Understand how "predict the next word" leads to writing, translating, and reasoning
+- Follow the three training stages that turn raw text into a helpful assistant
+- Know the key dials — context window, temperature — and what they do
+- Understand *why* LLMs hallucinate, so you can use them wisely
+</LearningObjectives>
+
+<ChapterHeader number={1} title="Predicting the next word — the whole game" time={13} />
+
+Give an LLM the words "The capital of France is" and it predicts the most likely next word: "Paris." Give it "Once upon a" and it predicts "time." That is the entire core skill — guess what comes next.
+
+Now here is the leap. To predict the next word *well* across all of human writing, the model is forced to learn an astonishing amount: grammar, facts, reasoning steps, the style of a legal letter versus a poem, even how a half-finished joke usually ends. You cannot reliably finish *"To make a good argument, you should first…"* without having absorbed how arguments work. The simple task secretly demands deep knowledge.
+
+<Callout type="tip" title="Why 'just predicting words' fools people">
+It sounds shallow, but consider: to correctly continue a maths solution, a code snippet, or a careful explanation, the model has to have learned the underlying pattern. Next-word prediction at scale is a back door into knowledge and reasoning.
+</Callout>
+
+Before predicting, the model chops text into pieces called <KeyTerm definition="The small chunks (words or word-parts) an LLM reads and predicts. 'Unbelievable' might be three tokens: un-believ-able.">tokens</KeyTerm> — usually whole words or word-parts. Everything an LLM does is really "predict the next token," one token at a time, feeding its own output back in to keep going.
+
+<ChapterSummary>
+- An LLM's one skill is predicting the next token (word or word-part)
+- Doing this well across all writing forces it to learn grammar, facts, and reasoning
+- It generates text one token at a time, feeding its output back in
+</ChapterSummary>
+
+<ChapterHeader number={2} title="How an LLM is made: three stages" time={14} />
+
+A raw next-word predictor is knowledgeable but unruly — it will happily continue offensive text or ramble. Turning it into a helpful assistant takes three stages:
+
+<Steps>
+
+<Step number={1} title="Pre-training — read almost everything">
+The model reads a vast amount of text (books, websites, code) and learns to predict the next token. This is where it absorbs language and world knowledge. It is hugely expensive and done once. The result is powerful but raw.
+</Step>
+
+<Step number={2} title="Fine-tuning — learn to follow instructions">
+The model is then trained on examples of *good answers to instructions* — questions paired with helpful, well-structured responses. This teaches it to behave like an assistant rather than just autocompleting text.
+</Step>
+
+<Step number={3} title="Human feedback (RLHF) — learn to be helpful and safe">
+Finally, humans rate the model's answers, and it is nudged toward the responses people prefer — more helpful, honest, and harmless. This is the reinforcement learning you met in the ML course, applied to politeness and usefulness.
+</Step>
+
+</Steps>
+
+<Callout type="note" title="A useful mental model">
+Pre-training gives the model its *knowledge*. Fine-tuning gives it *manners*. Human feedback gives it *judgement* about what people actually want. A brilliant but rude expert, taught to be a good assistant.
+</Callout>
+
+<ChapterSummary>
+- Pre-training: read everything, learn language and knowledge (expensive, once)
+- Fine-tuning: learn to follow instructions like an assistant
+- RLHF: human ratings shape it toward helpful, honest, harmless answers
+</ChapterSummary>
+
+<Checkpoint>
+1. How can "predict the next word" lead to a model that can reason through a problem?
+2. What does each of the three training stages contribute — in one phrase each?
+</Checkpoint>
+
+<ChapterHeader number={3} title="The dials: context window and temperature" time={12} />
+
+Two settings shape how an LLM behaves, and knowing them makes you far more effective.
+
+**The context window** is how much text the model can "hold in mind" at once — your prompt plus its answer, measured in tokens. Think of it as the model's short-term memory or its desk space. Everything outside the window is invisible to it. If a conversation gets very long, the earliest parts may fall off the desk. This is why feeding the model the *right* information matters — a whole course later in this track (*Context Engineering*) is about exactly that.
+
+**Temperature** controls creativity versus reliability. Low temperature makes the model pick the most likely next word every time — focused, predictable, repeatable (good for facts and code). High temperature lets it take chances — more varied and creative, but riskier (good for brainstorming, bad for a tax calculation).
+
+<Callout type="tip" title="Practical rule">
+Need a correct, consistent answer? Low temperature. Need fresh ideas or varied phrasing? Higher temperature. Same model, very different behaviour.
+</Callout>
+
+<ChapterSummary>
+- The context window is the model's working memory — only what fits is "seen"
+- Long conversations can push early content out of the window
+- Temperature trades reliability (low) for creativity (high)
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Why LLMs hallucinate — and what to do" time={13} />
+
+LLMs sometimes state false things with total confidence. This is called <KeyTerm definition="When an LLM generates fluent, confident text that is simply not true.">hallucination</KeyTerm>, and understanding *why* it happens is the key to using these tools safely.
+
+Remember: the model predicts *plausible* next words, not *true* ones. It has no separate "fact-checker" inside. If a fluent, confident-sounding sentence is the most likely continuation, it produces it — whether or not it is correct. It is built to sound right, and usually that overlaps with being right, but not always.
+
+<Callout type="warning" title="The mental model that keeps you safe">
+An LLM is a brilliant, well-read improviser, not a database. It is wonderful at language and reasoning, and unreliable on specific facts, names, numbers, and citations. Trust it for *shape and reasoning*; verify the *facts*.
+</Callout>
+
+The practical fix is to *give the model the facts* instead of relying on its memory — connect it to real documents and tools so it answers from sources, not from vibes. That is precisely the next course, **RAG & Tool Use**.
+
+<ChapterSummary>
+- LLMs predict plausible text, not verified truth — there is no built-in fact-checker
+- They are reliable for language and reasoning, unreliable for specific facts
+- The fix is to supply real facts and tools (the next course), not trust memory
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does an LLM sometimes sound confident while being wrong?
+2. For a factual question, would you use low or high temperature — and would you trust the model's memory or give it sources?
+</Checkpoint>
+
+<Callout type="tip" title="Where to go next">
+Next: **RAG & Tool Use** — connecting the model to real knowledge and real actions so it answers from facts and can actually *do* things.
+</Callout>
