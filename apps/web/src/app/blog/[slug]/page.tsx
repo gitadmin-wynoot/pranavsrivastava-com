@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { getBlogPost, getBlogPosts } from "@/lib/content";
+import { mdxCompileOptions } from "@/lib/mdx";
+import { CodeBlock } from "@/components/mdx/code-block";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
@@ -33,7 +35,8 @@ export default async function BlogPostPage({ params }: Props) {
 
   const { content } = await compileMDX({
     source: post.content,
-    options: { parseFrontmatter: false },
+    options: mdxCompileOptions,
+    components: { pre: CodeBlock },
   });
 
   return (

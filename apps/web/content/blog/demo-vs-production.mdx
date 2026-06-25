@@ -1,0 +1,75 @@
+---
+title: "The demo always works. Production is where AI gets hard."
+slug: "demo-vs-production"
+summary: "Every AI proof of concept looks brilliant in the demo. Here is what actually breaks when it meets real users, real volume, and real money — and what it takes to survive it."
+category: "AI Systems"
+tags: ["Production AI", "AI Agents", "Engineering"]
+published: false
+publishedAt: "2026-06-23"
+---
+
+> Draft scaffold. The structure and the opening are here; the parts marked
+> **[YOUR STORY]** are where your real experience goes — that is the part nobody
+> else can write. Replace this blockquote and flip `published: true` when ready.
+
+The demo always works.
+
+That is the most dangerous sentence in AI right now. You wire up a model, feed it
+a clean example, and it does something that looks like magic. Everyone in the room
+nods. The proof of concept is "done."
+
+Then it meets production — real users, real volume, real money on the line — and
+the magic quietly falls apart. I have watched this happen enough times, across
+enough industries, to believe the gap between *demo* and *dependable* is the real
+work. The model was never the hard part.
+
+Here is what the demo hides.
+
+### 1. Real input is nothing like your example
+
+[YOUR STORY: a time clean demo data hid messy reality — e.g. the inputs you saw
+at telecom/CPaaS scale, the edge cases that only show up at volume. One concrete
+example beats a paragraph of theory.]
+
+### 2. The threshold is a business decision, not a technical one
+
+You cannot tune your way out of this with precision and recall. Set the dial too
+tight and you block legitimate users; too loose and you let the bad through. Both
+have real costs, owned by different people.
+
+[YOUR STORY: the anti-fraud threshold example — what a false positive actually
+cost, what a false negative actually cost, and how you decided where to set it.]
+
+### 3. It has to be observable, or you are flying blind
+
+A model that fails silently in production is worse than no model. You need to know
+*when* it is wrong, *why*, and *how often* — before a customer tells you.
+
+[YOUR STORY: what you instrument, what you learned the hard way about observability
+— from KPN-scale systems or Wynoot.]
+
+### 4. Cost and latency are features, not afterthoughts
+
+[YOUR STORY: a moment where the thing worked but was too slow or too expensive to
+ship — and what you did about it.]
+
+### 5. Trust is the actual product
+
+[YOUR STORY: why guardrails / reliability matter more than capability for anything
+real — tie to your guardrails and KR thinking.]
+
+### What it actually takes
+
+[YOUR TAKE: 3–4 plain principles you have earned. e.g. design for the failure
+case first; instrument before you scale; the model serves the business outcome,
+not the other way around. Keep it grounded — this is the part people will quote.]
+
+---
+
+None of this is a reason not to build with AI. It is a reason to respect the
+distance between a demo and a system someone depends on. That distance is where I
+spend most of my time — and, honestly, where the interesting engineering lives.
+
+*If you are staring at a proof of concept that worked and wondering what it takes
+to make it real, that is exactly the conversation I enjoy — [get in touch](/contact),
+or [build something hands-on](/labs).*

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Clock, Wrench, Target } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { getLab, getLabs, isLabAvailable } from "@/lib/content";
+import { mdxCompileOptions } from "@/lib/mdx";
 import { Badge } from "@/components/ui/badge";
 import { courseComponents } from "@/components/mdx/course-components";
 
@@ -31,7 +32,7 @@ export default async function LabPage({ params }: Props) {
 
   const { content } = await compileMDX({
     source: lab.content,
-    options: { parseFrontmatter: false },
+    options: mdxCompileOptions,
     components: courseComponents,
   });
 

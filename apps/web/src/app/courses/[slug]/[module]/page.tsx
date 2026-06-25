@@ -10,6 +10,7 @@ import {
   getCourses,
   isMultiModuleCourse,
 } from "@/lib/content";
+import { mdxCompileOptions } from "@/lib/mdx";
 import { courseComponents } from "@/components/mdx/course-components";
 
 interface Props {
@@ -56,7 +57,7 @@ export default async function CourseModulePage({ params }: Props) {
 
   const { content } = await compileMDX({
     source: mod.content,
-    options: { parseFrontmatter: false },
+    options: mdxCompileOptions,
     components: courseComponents,
   });
 

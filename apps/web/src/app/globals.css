@@ -64,6 +64,52 @@
   }
 }
 
+/*
+  Syntax highlighting (rehype-highlight / highlight.js token classes).
+  A restrained dark palette tuned to the site — readable, not a rainbow.
+  Applies inside .code-block <pre> (which sits on a near-black surface).
+*/
+.hljs { color: #e4e4e7; }
+.hljs-comment,
+.hljs-quote { color: #6b7280; font-style: italic; }
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-meta .hljs-keyword { color: #c4b5fd; }            /* violet — keywords */
+.hljs-built_in,
+.hljs-class .hljs-title,
+.hljs-title.class_,
+.hljs-type { color: #7dd3fc; }                            /* sky — types/builtins */
+.hljs-title,
+.hljs-title.function_,
+.hljs-function .hljs-title,
+.hljs-section { color: #93c5fd; }                         /* blue — function names */
+.hljs-string,
+.hljs-regexp,
+.hljs-addition { color: #86efac; }                        /* green — strings */
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet { color: #fcd34d; }                          /* amber — numbers */
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-property { color: #fda4af; }                        /* rose — attrs/props */
+.hljs-params { color: #e4e4e7; }
+.hljs-meta,
+.hljs-comment.hljs-doctag { color: #a1a1aa; }             /* decorators, imports */
+.hljs-deletion { color: #fca5a5; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+
+/* Slim, unobtrusive scrollbars on code windows */
+.code-block pre::-webkit-scrollbar { height: 8px; width: 8px; }
+.code-block pre::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+.code-block pre::-webkit-scrollbar-track { background: transparent; }
+
 /* MDX prose content styles */
 .prose {
   @apply text-zinc-700 dark:text-zinc-300 leading-relaxed;

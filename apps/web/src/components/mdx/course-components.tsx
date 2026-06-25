@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { CodeBlock } from "./code-block";
 import {
   Info,
   Lightbulb,
@@ -234,7 +235,8 @@ export function CodeFile({
         <FileCode className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
         <span className="text-xs font-mono text-zinc-300">{filename}</span>
       </div>
-      <div className="[&>pre]:!rounded-none [&>pre]:!m-0 [&>pre]:!border-0">
+      {/* Strip the inner CodeBlock's own frame so it sits flush under the filename bar */}
+      <div className="[&>.code-block]:!my-0 [&>.code-block]:!rounded-none [&>.code-block]:!border-0">
         {children}
       </div>
     </div>
@@ -293,4 +295,5 @@ export const courseComponents = {
   CodeFile,
   Steps,
   Step,
+  pre: CodeBlock,
 };

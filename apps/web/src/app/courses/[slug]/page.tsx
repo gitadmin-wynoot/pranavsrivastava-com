@@ -10,6 +10,7 @@ import {
   getCourseModules,
   isMultiModuleCourse,
 } from "@/lib/content";
+import { mdxCompileOptions } from "@/lib/mdx";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { courseComponents } from "@/components/mdx/course-components";
 
@@ -179,7 +180,7 @@ async function SingleFileCourse({ slug }: { slug: string }) {
 
   const { content } = await compileMDX({
     source: course.content,
-    options: { parseFrontmatter: false },
+    options: mdxCompileOptions,
     components: courseComponents,
   });
 
