@@ -101,56 +101,99 @@ export const metadata: Metadata = {
     "Product thinkengineer. 14+ years across telecom, banking, automotive, and finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Qubitsy and Wynoot. Netherlands.",
 };
 
-const milestones = [
+// type drives the colour + chip so education, career and founder chapters are
+// visually distinct on one timeline instead of blurring together.
+type ArcType = "origin" | "education" | "career" | "founder";
+
+const arcStyle: Record<ArcType, { label: string; dot: string; chip: string }> = {
+  origin: {
+    label: "Origin",
+    dot: "bg-zinc-400 dark:bg-zinc-500",
+    chip: "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+  },
+  education: {
+    label: "Education",
+    dot: "bg-amber-500",
+    chip: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
+  },
+  career: {
+    label: "Career",
+    dot: "bg-blue-500",
+    chip: "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30",
+  },
+  founder: {
+    label: "Founder",
+    dot: "bg-emerald-500",
+    chip: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30",
+  },
+};
+
+const milestones: { year: string; type: ArcType; title: string; desc: string }[] = [
   {
     year: "2002",
+    type: "origin",
     title: "First program, Jhansi",
-    desc: "A DOS machine, an E. Balaguruswamy BASIC programming book with a black cover, and a hunch that this was something worth understanding. Still remember every page.",
+    desc: "A DOS machine and an E. Balaguruswamy BASIC book with a black cover. Thirteen years old, hooked. Still remember the pages.",
   },
   {
-    year: "2006",
-    title: "BE in Computer Engineering, Bhopal",
-    desc: "Four years of computer engineering — the foundation everything since has been built on. Where you start matters less than how far the curiosity carries you.",
+    year: "2006–10",
+    type: "education",
+    title: "BE, Computer Engineering — Bhopal",
+    desc: "Four years on the fundamentals everything since has been built on. Where you start matters less than how far the curiosity carries you.",
   },
   {
     year: "2010",
-    title: "Enterprise begins, India",
-    desc: "First production software role in Noida, then TCS in Ahmedabad and Pune. APIs, integration, consulting for real enterprise customers across banking, automotive, and finance.",
+    type: "career",
+    title: "First production role — Noida",
+    desc: "Out of college and straight into real software: APIs, integrations, things that had to actually work for paying customers.",
+  },
+  {
+    year: "2011",
+    type: "career",
+    title: "TCS — Ahmedabad, then Pune",
+    desc: "Consulting across banking, automotive, and finance. Where I learned that every industry has its own constraints — and that the constraints are the interesting part.",
   },
   {
     year: "2014",
-    title: "Cognizant, Pune",
-    desc: "Two years growing into senior engineering and architecture roles. Large-scale integration, multi-domain client consulting.",
+    type: "career",
+    title: "Cognizant — Pune",
+    desc: "Grew into senior engineering and integration architecture. Larger systems, higher stakes, multi-domain clients.",
   },
   {
     year: "2016",
-    title: "Netherlands",
-    desc: "Moved to Eindhoven on an assignment that turned into a life decision. Joined KPN in 2017.",
+    type: "career",
+    title: "Eindhoven, Netherlands",
+    desc: "An assignment that turned into a life decision. Packed up for Brainport and stayed.",
   },
   {
     year: "2017",
+    type: "career",
     title: "KPN — developer portal incubator",
-    desc: "Joined a small internal incubator building developer.kpn.com. Helped take it from early idea to MVP to a revenue-generating product suite used by enterprises and SMBs across the Netherlands.",
+    desc: "Joined a small internal incubator and helped grow developer.kpn.com from early idea to a revenue-generating product used by enterprises and SMBs.",
   },
   {
-    year: "2019",
-    title: "MSc in AI, Cork, Ireland",
-    desc: "Full Master's in Artificial Intelligence at MTU — alongside the day job and life in a new country. Graduated 2021. Thesis: student engagement detection using computer vision.",
+    year: "2019–21",
+    type: "education",
+    title: "MSc in Artificial Intelligence — MTU, Cork",
+    desc: "A full Master's done alongside the day job and life abroad. Computer vision, knowledge representation, optimization. Thesis: reading student engagement from a webcam.",
   },
   {
     year: "2022",
+    type: "founder",
     title: "Qubitsy + Gravitii",
-    desc: "Founded the consulting studio. Started Gravitii — a product chapter that taught me exactly what market fit is not.",
+    desc: "Founded the consulting studio. Started Gravitii — the product chapter that taught me, in detail, what market fit is not.",
   },
   {
     year: "2024",
-    title: "Wynoot + ski slopes",
-    desc: "Launched Wynoot with AI at the core. Also picked up skiing at 40. Both required the same thing: showing up without excuses.",
+    type: "founder",
+    title: "Wynoot",
+    desc: "Launched Wynoot with AI at the core. Same year I picked up skiing at 40 — both needed the same thing: showing up without excuses.",
   },
   {
     year: "Now",
+    type: "founder",
     title: "Building in public",
-    desc: "Architecting enterprise-scale AI systems by day, building Wynoot in parallel, writing and teaching in between. The itch is still the same one from Jhansi.",
+    desc: "Architecting AI systems at scale by day, building Wynoot in parallel, writing and teaching in between. The itch is the same one from Jhansi.",
   },
 ];
 
@@ -285,22 +328,41 @@ export default function AboutPage() {
 
       {/* ── The arc ───────────────────────────────────────────────────────── */}
       <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
-          The arc
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            The arc
+          </h2>
+          {/* Legend — so the colour coding reads at a glance */}
+          <div className="flex flex-wrap gap-3 text-xs text-zinc-400">
+            {(["education", "career", "founder"] as const).map((t) => (
+              <span key={t} className="inline-flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${arcStyle[t].dot}`} />
+                {arcStyle[t].label}
+              </span>
+            ))}
+          </div>
+        </div>
+
         <div className="relative">
-          <div className="absolute left-[38px] top-3 bottom-3 w-px bg-zinc-200 dark:bg-zinc-800" />
+          <div className="absolute left-[52px] top-3 bottom-3 w-px bg-zinc-200 dark:bg-zinc-800" />
           <div className="space-y-6">
             {milestones.map((m) => (
-              <div key={m.year} className="flex gap-4 items-start">
-                <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 w-10 shrink-0 pt-0.5 text-right">
+              <div key={m.year + m.title} className="flex gap-4 items-start">
+                <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 w-12 shrink-0 pt-0.5 text-right">
                   {m.year}
                 </span>
-                <div className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-600 shrink-0 mt-1.5 z-10" />
-                <div className="pb-1">
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-snug">
-                    {m.title}
-                  </p>
+                <div
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 z-10 ring-4 ring-white dark:ring-zinc-950 ${arcStyle[m.type].dot}`}
+                />
+                <div className="pb-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-snug">
+                      {m.title}
+                    </p>
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full ${arcStyle[m.type].chip}`}>
+                      {arcStyle[m.type].label}
+                    </span>
+                  </div>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-0.5">
                     {m.desc}
                   </p>
