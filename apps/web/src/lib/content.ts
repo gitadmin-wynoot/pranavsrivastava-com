@@ -88,6 +88,7 @@ export interface Course {
   prereqs: string[];   // course slugs recommended before this
   tags: string[];
   lessonCount?: number;
+  order?: number;      // position within its track's curriculum
   content: string;
 }
 
@@ -343,6 +344,7 @@ export function getCourses(): Course[] {
       prereqs: data.prereqs ?? [],
       tags: data.tags ?? [],
       lessonCount: data.lessonCount,
+      order: data.order,
       content,
     } satisfies Course;
   });
@@ -400,7 +402,9 @@ export function isCourseAvailable(course: Course): boolean {
 }
 
 export function getCoursesByTrack(trackSlug: string): Course[] {
-  return getCourses().filter((c) => c.track === trackSlug);
+  return getCourses()
+    .filter((c) => c.track === trackSlug)
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
 export function getCourse(slug: string): Course | null {
