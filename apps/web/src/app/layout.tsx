@@ -18,19 +18,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pranav Srivastava — AI, Cloud & API Architect",
+    default: "Pranav Srivastava — Building AI that actually works",
     template: "%s · Pranav Srivastava",
   },
   description:
-    "AI, Cloud & API Architect. Builder of Qubitsy and Wynoot. Public workshop: portfolio, AI lab, second brain, courses, and live experiments.",
+    "Product thinkengineer in the Netherlands. Fourteen years building software at scale, now deep in applied AI. Hands-on labs, courses, and writing on building AI systems that hold up in production.",
   keywords: [
-    "AI architect",
-    "cloud engineer",
-    "API platform",
-    "LangGraph",
+    "applied AI",
+    "AI agents",
     "MCP",
-    "agentic systems",
-    "Qubitsy",
+    "RAG",
+    "production AI",
+    "AI labs",
+    "Pranav Srivastava",
   ],
   authors: [{ name: "Pranav Srivastava" }],
   creator: "Pranav Srivastava",
@@ -39,15 +39,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://pranavsrivastava.com",
     siteName: "Pranav Srivastava",
-    title: "Pranav Srivastava — AI, Cloud & API Architect",
+    title: "Pranav Srivastava — Building AI that actually works",
     description:
-      "Building practical AI, cloud and API systems — and documenting the journey from idea to working product.",
+      "Hands-on labs, courses, and writing on building AI systems that hold up in production — from someone who does it at scale.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pranav Srivastava — AI, Cloud & API Architect",
+    title: "Pranav Srivastava — Building AI that actually works",
     description:
-      "Building practical AI, cloud and API systems — and documenting the journey from idea to working product.",
+      "Hands-on labs, courses, and writing on building AI systems that hold up in production.",
   },
 };
 
