@@ -6,6 +6,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import { getBlogPost, getBlogPosts } from "@/lib/content";
 import { mdxCompileOptions } from "@/lib/mdx";
 import { CodeBlock } from "@/components/mdx/code-block";
+import { ArticleListen } from "@/components/blog/article-listen";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
@@ -67,10 +68,13 @@ export default async function BlogPostPage({ params }: Props) {
             {post.summary}
           </p>
         )}
-        <div className="flex items-center gap-3 mt-4 text-xs text-zinc-400">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-3 mt-4 text-xs text-zinc-400">
           <span>{formatDate(post.publishedAt)}</span>
           <span>·</span>
           <span>{post.readingTimeMin} min read</span>
+          <span className="hidden sm:inline">·</span>
+          {/* Listen to this post (browser text-to-speech) */}
+          <ArticleListen targetId="article-body" />
         </div>
       </header>
 
@@ -78,7 +82,7 @@ export default async function BlogPostPage({ params }: Props) {
       <hr className="border-zinc-200 dark:border-zinc-800 mb-10" />
 
       {/* MDX content */}
-      <article className="prose max-w-none">{content}</article>
+      <article id="article-body" className="prose max-w-none">{content}</article>
 
       {/* Footer */}
       <div className="mt-16 pt-8 border-t border-zinc-200 dark:border-zinc-800">
