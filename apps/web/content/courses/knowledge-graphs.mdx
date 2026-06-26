@@ -1,56 +1,116 @@
 ---
 title: "Knowledge Graphs"
 slug: "knowledge-graphs"
-summary: "Represent and query structured world knowledge — RDF, SPARQL, ontologies, and how knowledge graphs power semantic search, RAG systems, and reasoning pipelines."
+summary: "How to give machines structured, connected knowledge they can reason over — facts as a web of relationships rather than loose text. The idea behind Google's panels, recommendations, and grounding LLMs in real facts."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 13
 track: "ai-foundations"
 prereqs: ["machine-learning-fundamentals"]
-tags: ["Knowledge Graphs", "RDF", "SPARQL", "Ontologies", "Semantic Web", "Graph Neural Networks"]
-lessonCount: 8
+tags: ["Knowledge Graphs", "Relationships", "Reasoning", "Recommendations", "RAG"]
+lessonCount: 4
 ---
 
-## What you will learn
+Most AI you have met in this track learns fuzzy patterns from data. Knowledge graphs are the other half of intelligence: *structured, explicit knowledge* — facts and how they connect — that a machine can store, query, and reason over precisely. They are how a system *knows* that Paris is the capital of France and France is in Europe, and can therefore answer "is Paris in Europe?" without ever being told directly.
 
-Knowledge graphs make information machine-readable and queryable in a way that flat text cannot. They underpin semantic search, entity resolution, and the grounding layer beneath modern RAG systems.
+<Callout type="info" title="The one-line idea">
+A knowledge graph stores facts as a web of connected things: *entities* (Paris, France) linked by *relationships* (is-capital-of). It is knowledge a machine can follow like a map.
+</Callout>
 
-### Knowledge representation
-- Triples: subject, predicate, object — the basic unit
-- RDF and the semantic web model
-- OWL ontologies: classes, properties, axioms
-- Named graphs and provenance
-- Knowledge graph vs. property graph (Neo4j vs. RDF stores)
+<LearningObjectives>
+- Understand a knowledge graph as entities connected by relationships
+- See why "connected facts" enable reasoning that loose text cannot
+- Recognise where knowledge graphs power products you use daily
+- Understand how they make LLMs more accurate and trustworthy
+</LearningObjectives>
 
-### Querying and reasoning
-- SPARQL: the query language for RDF
-- Inference and reasoning over ontologies
-- RDFS and OWL reasoning rules
-- Path queries and graph traversal
+<ChapterHeader number={1} title="Facts as a web, not a list" time={12} />
 
-### Building knowledge graphs
-- Entity extraction from text using NLP
-- Relation extraction and co-reference resolution
-- Schema design for a domain: entities, relationships, constraints
-- Wikidata and DBpedia as public knowledge sources
+Imagine storing what you know about the world. A list of sentences works for lookup but not for *connecting* ideas. A knowledge graph instead stores each fact as a tiny link between two things:
 
-### Knowledge graphs in modern AI
-- Knowledge graph embeddings: TransE, RotatE
-- Graph Neural Networks for structured data
-- Grounding LLMs with knowledge graphs
-- Hybrid RAG: vector similarity + graph traversal
+<Diagram title="A small knowledge graph" caption="Entities (boxes) connected by relationships (arrows)">
 
-## Course outline
+```
+   [Paris] ──is capital of──► [France] ──is in──► [Europe]
+      │                          │
+   located in              has currency
+      ▼                          ▼
+  [Île-de-France]            [Euro]
+```
 
-1. The knowledge graph model: triples and RDF
-2. Ontologies and OWL
-3. SPARQL querying in depth
-4. Building KGs from unstructured text
-5. Graph databases: RDF stores vs. property graphs
-6. Knowledge graph embeddings
-7. Graph Neural Networks for relational data
-8. Integrating knowledge graphs into AI pipelines
+</Diagram>
 
----
+Each arrow is a fact: *Paris — is capital of — France.* Three parts: two things and the relationship between them (often called a *triple*). String millions of these together and you get a map of knowledge a computer can walk across.
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+The power is in the *connections*. Even though nobody stored "Paris is in Europe," the machine can follow the path — Paris → France → Europe — and work it out. That is simple *reasoning*, and loose text cannot do it reliably.
+
+<ChapterSummary>
+- A knowledge graph stores facts as links: thing — relationship — thing
+- Connecting millions of these forms a navigable map of knowledge
+- The machine can follow links to infer facts nobody stored directly
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Why structure enables reasoning" time={12} />
+
+This connects to your MSc-track theme: there are two kinds of "knowing." LLMs *learn* fuzzy patterns and are brilliant but unreliable on exact facts. Knowledge graphs *store* exact facts and relationships and are precise but must be built. The best systems use both.
+
+A knowledge graph can answer questions that need *chains* of facts: "Which European capitals use the euro?" requires following capital → country → continent and country → currency, then combining. It can also enforce rules: if every person has exactly one birth date, the graph can flag a contradiction. This is the formal, rule-based side of AI — the same family as the Mars-rover knowledge-representation idea — and it is making a strong comeback *because* it shores up the weaknesses of LLMs.
+
+<Callout type="tip" title="Two kinds of knowing, side by side">
+LLM: "I have a general sense of European geography" (flexible, sometimes wrong). Knowledge graph: "I can prove Paris is in Europe by following these links" (exact, checkable). Pairing them gives you flexibility *and* reliability.
+</Callout>
+
+<ChapterSummary>
+- LLMs know fuzzily; knowledge graphs know exactly — and you want both
+- Graphs answer multi-step questions by following chains of facts
+- They can enforce rules and catch contradictions — formal, checkable reasoning
+</ChapterSummary>
+
+<Checkpoint>
+1. Express the fact "Claude is made by Anthropic" as a three-part triple.
+2. How can a graph answer "is Paris in Europe?" if that exact fact was never stored?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Where you already meet knowledge graphs" time={12} />
+
+These are not academic curiosities — they quietly run products you use constantly:
+
+- **Search panels** — when a search engine shows a box of facts about a person or place (born, height, spouse, films), that comes from a knowledge graph, not a web page.
+- **Recommendations** — "because you watched X" works by linking films, actors, genres, and your history in a graph and following the connections.
+- **Shopping** — "frequently bought together" and product relationships sit in a graph.
+- **Fraud & security** — linking people, accounts, devices, and transactions reveals suspicious *patterns of connection* a flat list would hide.
+
+<Callout type="note" title="A grounded example">
+A bank can model customers, accounts, devices, and transfers as a graph. A fraud ring that shares a device or routes money in a tell-tale loop *lights up* as a pattern in the graph — even when each individual transaction looks innocent. The relationships are the signal.
+</Callout>
+
+<ChapterSummary>
+- Knowledge graphs power search fact-panels, recommendations, and shopping links
+- In fraud and security, the *connections* between entities reveal hidden patterns
+- They shine whenever relationships between things carry the meaning
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Knowledge graphs + LLMs" time={11} />
+
+The most exciting use today is pairing graphs with language models to fix the LLM's biggest flaw: making up facts. Instead of trusting the model's fuzzy memory, you let it *consult the graph* for the precise, current truth — a structured cousin of the RAG idea from earlier in the track.
+
+The pattern: the user asks a question, the system pulls the exact relevant facts from the knowledge graph, hands them to the LLM, and the model answers from those verified facts — in fluent language. You get the LLM's wonderful communication *and* the graph's reliability, with answers you can trace back to real, connected facts.
+
+<Callout type="important" title="The through-line">
+This is the same lesson as RAG and Knowledge Representation, in graph form: don't trust the model's memory — ground it in real, checkable knowledge. Knowledge graphs are one of the cleanest ways to do that, especially for facts that have rich relationships.
+</Callout>
+
+<ChapterSummary>
+- Pairing a graph with an LLM grounds its answers in exact, current facts
+- The model fetches verified facts from the graph, then explains them fluently
+- You get fluent communication plus traceable reliability — flexibility and trust together
+</ChapterSummary>
+
+<Checkpoint>
+1. Give an everyday product that runs on a knowledge graph, and what the graph provides.
+2. How does consulting a knowledge graph reduce an LLM's tendency to invent facts?
+</Checkpoint>
+
+<Callout type="tip" title="Related courses">
+This pairs naturally with **RAG & Tool Use** and **Large Language Models** in this track — different routes to the same goal: grounding AI in real knowledge.
+</Callout>

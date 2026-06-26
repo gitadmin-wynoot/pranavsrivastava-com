@@ -1,62 +1,116 @@
 ---
 title: "Computer Vision"
 slug: "computer-vision"
-summary: "From feature detection and image matching to CNNs, object detection, and real-time tracking. Practical computer vision with a foundation in how images become numbers and what algorithms do with them."
+summary: "How computers turn a grid of pixels into understanding — detecting features, recognising objects, and tracking motion. The ideas behind face unlock, medical imaging, and self-driving, explained simply with real use cases."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 12
 track: "ai-foundations"
 prereqs: ["deep-learning"]
-tags: ["Computer Vision", "CNNs", "Feature Detection", "Object Detection", "Tracking"]
-lessonCount: 9
+tags: ["Computer Vision", "CNNs", "Object Detection", "Image Recognition", "Tracking"]
+lessonCount: 4
 ---
 
-## What you will learn
+You glance at a photo and instantly know it shows a dog on a beach at sunset. A computer sees only millions of numbers. Computer vision is the craft of closing that gap — turning a grid of pixels into a *judgement*. This course explains how, from the basics of what an image even is, to the systems that unlock your phone and read medical scans.
 
-Computer vision is one of the most mature applied areas of AI. This course covers both classical techniques (which still matter) and deep learning approaches — because understanding why SIFT works makes understanding why CNNs work much clearer.
+<Callout type="info" title="The core challenge in one line">
+A photo is just numbers (each pixel's colour). Computer vision is teaching a machine to go from those numbers to meaning — "that's a cracked weld," "that's a pedestrian," "that ID is fake."
+</Callout>
 
-### Classical computer vision
-- Image representation: pixels, channels, colour spaces
-- Feature detection: corners, edges, blobs
-- SIFT-inspired feature descriptors and matching
-- Homography and geometric transformations
-- Calibration: checkerboard patterns, camera intrinsics/extrinsics
+<LearningObjectives>
+- Understand what an image is to a computer, and why vision is hard
+- Grasp "features" — the building blocks vision is built on
+- See how CNNs turned vision from clever tricks into reliable systems
+- Know the main vision tasks and where each is used in the real world
+</LearningObjectives>
 
-*These topics are covered from direct project experience including feature point identification and image matching, scene reconstruction using KLT tracking, and camera calibration.*
+<ChapterHeader number={1} title="What an image is to a computer" time={11} />
 
-### Deep learning for vision
-- CNNs revisited: why they work for images
-- Image classification, localisation, and detection
-- Object detection architectures: YOLO, R-CNN family
-- Semantic segmentation
-- Transfer learning strategies for vision
+To a computer, an image is a grid of <KeyTerm definition="A single dot in an image, stored as numbers for its colour (typically red, green, blue values).">pixels</KeyTerm>, each just numbers for its colour. A modest photo is millions of these numbers — and nowhere in them is it written "this is a dog." The meaning has to be *computed* from the raw values.
 
-### Real-time tracking
-- Optical flow and the KLT tracker
-- Multi-object tracking
-- Head pose estimation and facial landmark detection
-- Eye gaze detection
+That is why vision is hard. The same dog looks utterly different in different photos: lighting changes the numbers, angle changes them, distance, background, a paw over the face — all change the pixels completely while the *dog* stays the same. A vision system has to see through all that variation to the thing itself. Humans do this effortlessly; for a computer it is a genuine feat.
 
-*Drawing from OpenFace 2.0 head and eye tracking project work and a research project on student engagement detection using facial expression analysis.*
+<ChapterSummary>
+- An image is a grid of pixels — just colour numbers, with no built-in meaning
+- The same object produces wildly different pixels under different conditions
+- Vision is hard because meaning must be computed despite all that variation
+</ChapterSummary>
 
-### Practical applications
-- Dataset collection and annotation strategies
-- Data augmentation for vision
-- Evaluation: mAP, IoU, precision/recall for detection
-- Deploying vision models in production
+<ChapterHeader number={2} title="Features — the building blocks of seeing" time={13} />
 
-## Course outline
+Before deep learning, the key idea was the <KeyTerm definition="A small, distinctive, recognisable pattern in an image — an edge, a corner, a texture — used as a building block for understanding.">feature</KeyTerm>: a small, distinctive pattern like an edge, a corner, or a texture. The insight is that you can recognise and *match* things by their features, even across different photos.
 
-1. Images as data: pixels, colour spaces, representations
-2. Classical feature detection: edges, corners, SIFT
-3. Feature matching and homography
-4. Camera calibration and scene reconstruction
-5. CNNs for vision: architecture review
-6. Object detection: YOLO and the R-CNN family
-7. Tracking: optical flow and KLT
-8. Facial analysis: landmarks, pose, gaze
-9. Building and deploying a vision system end to end
+Think of how you'd recognise a friend in two different pictures — not by comparing every pixel, but by distinctive features: the shape of their nose, a particular smile. Early computer vision did the same: find the standout points in each image, then match them. This is how panorama stitching lines up two photos, and how early apps recognised a landmark.
 
----
+<Diagram title="Matching by features, not pixels" caption="Find distinctive points in each image, then match them up">
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+```
+   photo A              photo B (same scene, shifted)
+   •corner              •corner
+       •edge      ───►      •edge      matched points
+   •texture             •texture       reveal it's the same thing
+```
+
+</Diagram>
+
+<Callout type="note" title="Why this still matters">
+Even in the deep-learning era, the idea survives: networks learn features automatically (as you saw in Deep Learning — edges, then shapes, then objects). Understanding features by hand first makes the modern, automatic version far less mysterious.
+</Callout>
+
+<ChapterSummary>
+- A feature is a small distinctive pattern — an edge, corner, or texture
+- Things can be recognised and matched by their features across different images
+- This hand-crafted idea became the *learned* features inside CNNs
+</ChapterSummary>
+
+<Checkpoint>
+1. Why do two photos of the same object look completely different to a computer?
+2. Why is matching by features smarter than comparing images pixel by pixel?
+</Checkpoint>
+
+<ChapterHeader number={3} title="CNNs — when vision became reliable" time={13} />
+
+For decades, vision relied on clever hand-crafted features and worked only so-so. Then came the **CNN** (from the Deep Learning course), which *learns* the features itself — and vision suddenly leapt from "sometimes works" to "better than humans" on many tasks.
+
+Recall how a CNN works: it scans the image with small sliding filters, early layers finding edges, later layers combining them into shapes and whole objects. The magic is that nobody specifies those filters — the network discovers the right ones by training on labelled images. Hand-crafted features were a person's best guess; learned features are tuned by millions of examples.
+
+<Callout type="tip" title="The shift that changed everything">
+The move from hand-crafted to *learned* features is the single biggest event in computer vision. It is why your phone reliably finds faces, why scan-reading tools became genuinely useful, and why self-driving became plausible. Same problem, far better tools.
+</Callout>
+
+<ChapterSummary>
+- Hand-crafted features capped how well vision could work
+- CNNs learn the right features from labelled examples instead
+- This leap made vision reliable enough for real products
+</ChapterSummary>
+
+<ChapterHeader number={4} title="The vision tasks, and where they're used" time={12} />
+
+"Computer vision" is really a family of tasks. The main ones, and where you meet them:
+
+| Task | What it answers | Everyday use |
+|---|---|---|
+| **Classification** | "What is in this image?" | Photo apps sorting pictures by content |
+| **Detection** | "What's here, and *where*?" (boxes) | Self-driving spotting cars and pedestrians |
+| **Segmentation** | "Which exact pixels are the object?" | Medical scans outlining a tumour; photo background blur |
+| **Tracking** | "Where did it move across frames?" | Sports analysis; security cameras following motion |
+| **Recognition** | "*Which specific* one is this?" | Face unlock; identifying a product |
+
+<Callout type="important" title="A grounded example, and a caution">
+In healthcare, segmentation can outline a suspicious region on a scan and detection can flag likely-urgent cases first — a real help where radiologists are scarce. But as the maths and ML courses warned: these systems express *probabilities*, fail in unusual conditions, and must be tested on data they've never seen. In vision, the cost of a confident mistake can be high — so the model assists the expert; it does not replace them.
+</Callout>
+
+<ChapterSummary>
+- Vision is a family of tasks: classification, detection, segmentation, tracking, recognition
+- Each maps to real products, from face unlock to medical imaging to self-driving
+- These systems give probabilities and can fail on unusual inputs — verify, and keep a human in high-stakes loops
+</ChapterSummary>
+
+<Checkpoint>
+1. What changed when CNNs let networks *learn* features instead of hand-crafting them?
+2. For a self-driving car spotting pedestrians, which vision task is it, and why must it report where, not just what?
+</Checkpoint>
+
+<Callout type="tip" title="Related courses">
+The architecture behind all of this is in **Deep Learning** (this track). To see how the same transformer idea now applies to images, revisit **Attention & Transformers**.
+</Callout>

@@ -1,61 +1,121 @@
 ---
 title: "Metaheuristic Optimisation"
 slug: "metaheuristic-optimization"
-summary: "Evolutionary algorithms, swarm intelligence, and search heuristics for problems where gradient descent cannot reach — TSP, scheduling, hyperparameter tuning, and prompt optimisation."
+summary: "When a problem has more possible answers than atoms in the universe, you can't check them all. Nature-inspired search — evolution, ant trails, swarms — finds excellent answers fast. The elegant maths behind scheduling, routing, and tuning."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 14
 track: "ai-foundations"
 prereqs: ["mathematics-for-ai"]
-tags: ["Optimisation", "Genetic Algorithms", "Evolutionary Computation", "Swarm Intelligence", "Combinatorial Search"]
-lessonCount: 8
+tags: ["Optimisation", "Genetic Algorithms", "Swarm Intelligence", "Scheduling", "Search"]
+lessonCount: 4
 ---
 
-## What you will learn
+Some of the most important problems in the world share a brutal property: there are *too many possible answers to ever check them all.* Planning delivery routes, scheduling staff, packing a shipment — the options explode beyond astronomical. Metaheuristics are the beautiful, often nature-inspired methods that find excellent answers anyway. This is the corner of the track its author loves most.
 
-Not all optimisation problems have gradients. When the search space is discrete, combinatorial, or noisy — genetic algorithms, simulated annealing, and particle swarm optimisation become the right tools. This course covers why, when, and how to use them.
+<Callout type="info" title="The problem in one line">
+For many real problems, the perfect answer is impossible to compute — there are simply too many options. Metaheuristics find a *very good* answer fast, which is almost always what you actually need.
+</Callout>
 
-### Why metaheuristics
-- The landscape of optimisation problems
-- When gradient-based methods fail: discrete search, multimodal functions, non-differentiable objectives
-- No Free Lunch theorem: why no single algorithm dominates all problems
-- NP-hard problems and approximation
+<LearningObjectives>
+- Understand why some problems are impossible to solve perfectly ("NP-hard")
+- See why "very good, fast" beats "perfect, never" for real decisions
+- Grasp genetic algorithms and swarm methods through their natural analogies
+- Recognise where these methods quietly run the world (and modern AI)
+</LearningObjectives>
 
-### Evolutionary algorithms
-- Genetic algorithms: representation, selection, crossover, mutation
-- Fitness landscapes and premature convergence
-- Genetic programming
-- Evolution strategies and CMA-ES
+<ChapterHeader number={1} title="When perfect is impossible" time={12} />
 
-*This is backed by direct thesis research — solving the Travelling Salesman Problem with genetic algorithms including custom crossover operators for permutation encodings.*
+Picture a delivery driver with 50 stops. How many possible routes are there? More than the number of atoms in the observable universe. A computer checking them one by one — even billions per second — would still be running long after the sun burns out. These are called <KeyTerm definition="Problems where the number of possible answers explodes so fast that checking them all is impossible, no matter how fast your computer.">NP-hard</KeyTerm> problems, and they are everywhere: routing, scheduling, packing, timetabling.
 
-### Swarm intelligence
-- Particle Swarm Optimisation: velocity, inertia, social and cognitive components
-- Ant Colony Optimisation for graph problems
-- Bee algorithms
+So "try every option and pick the best" is off the table. And gradient descent (the "walk downhill" method from the Maths course) does not work here either — these problems are not smooth hills you can roll down; they are vast landscapes of discrete choices with no slope to follow. We need a different kind of search.
 
-### Simulated annealing and local search
-- Hill climbing and its limitations
-- Simulated annealing: Metropolis criterion, cooling schedules
-- Tabu search
+<ChapterSummary>
+- Many real problems have astronomically many possible answers (NP-hard)
+- Checking them all is impossible even for the fastest computers
+- Gradient descent doesn't apply — these are discrete choices, not smooth hills
+</ChapterSummary>
 
-### Modern applications in AI
-- Neural Architecture Search (NAS)
-- Hyperparameter optimisation: Bayesian vs. evolutionary approaches
-- Prompt optimisation as a search problem
-- Differentiable + evolutionary hybrid methods
+<ChapterHeader number={2} title="Good enough, fast — the key mindset" time={11} />
 
-## Course outline
+Here is the liberating idea: for almost every real problem, you do not *need* the perfect answer — you need a *very good* one, quickly. A delivery route that is 99% as good as the theoretical best, found in one second, is worth infinitely more than the perfect route found in a thousand years.
 
-1. The optimisation problem landscape
-2. Genetic algorithms from scratch
-3. Crossover and mutation strategies for combinatorial problems
-4. Solving TSP: a worked example
-5. Evolution strategies and CMA-ES
-6. Particle Swarm Optimisation
-7. Simulated annealing and tabu search
-8. Metaheuristics in modern AI: NAS, HPO, prompt optimisation
+Metaheuristics embrace this. They are clever strategies for *searching* an enormous space of options intelligently — sampling, improving, and homing in on excellent solutions — without ever examining them all. They trade a guarantee of perfection for the ability to actually finish.
 
----
+<Callout type="tip" title="The mental shift">
+Stop asking "what is the perfect answer?" (impossible) and start asking "how do I find a great answer fast, and keep improving it?" That reframe is the whole field — and it mirrors real engineering, where shipped-and-good beats perfect-and-never.
+</Callout>
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+<ChapterSummary>
+- For real problems, "very good, fast" beats "perfect, never"
+- Metaheuristics search the space intelligently instead of exhaustively
+- They trade guaranteed perfection for actually producing a usable answer
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can't you solve a 50-stop delivery route by checking every possibility?
+2. Why is a near-perfect answer found in seconds usually better than the perfect one found in years?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Learning from nature: evolution and swarms" time={14} />
+
+The most elegant metaheuristics borrow strategies that nature spent billions of years perfecting.
+
+**Genetic algorithms — survival of the fittest.** Instead of one guess, keep a whole *population* of candidate answers. Score them, let the best ones "reproduce" by combining their features, add a little random "mutation," and repeat over many generations. The population steadily evolves toward excellent solutions — exactly how nature breeds fitter creatures.
+
+<Diagram title="A genetic algorithm evolves better answers" caption="Each generation keeps the best, combines them, mutates a little, repeats">
+
+```
+  Gen 1:  random answers   →  score  →  keep the best
+                                          |
+                          combine + mutate them
+                                          ▼
+  Gen 2:  better answers   →  score  →  keep the best  →  ...
+                                          |
+                                          ▼
+  Gen N:  excellent answer (good enough, found fast)
+```
+
+</Diagram>
+
+**Ant colony optimisation — follow the pheromones.** Real ants find the shortest path to food by leaving scent trails; shorter paths get walked more, so their scent builds up, so more ants follow. Artificial "ants" do the same over a problem — great for routing.
+
+**Particle swarm — the flock.** Like a flock of birds, many "particles" roam the solution space, each drawn toward its own best find and the swarm's best find, converging together on a great answer.
+
+<Callout type="note" title="A grounded example worth admiring">
+Mumbai's dabbawalas deliver around 200,000 lunchboxes a day across the city and back, with a famously tiny error rate — a living, human solution to exactly this routing-and-sorting class of problem. Nature, humans, and algorithms keep rediscovering the same elegant strategies for taming impossible search.
+</Callout>
+
+<ChapterSummary>
+- Genetic algorithms evolve a population: score, breed the best, mutate, repeat
+- Ant colony methods use pheromone-style trails; particle swarms move like flocks
+- All borrow nature's strategies for finding great answers in vast spaces
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Where this runs the world (and AI)" time={11} />
+
+These methods quietly power decisions all around you, and increasingly inside AI systems:
+
+- **Logistics** — delivery routes, warehouse picking, fleet scheduling
+- **Scheduling** — staff rotas, airline crews, hospital theatres, exam timetables
+- **Design & packing** — fitting shapes into space, network layout, resource allocation
+- **AI itself** — tuning a model's settings (hyperparameters), and even searching for better prompts and pipeline configurations
+
+<Callout type="important" title="The connection to the rest of the track">
+Modern AI is full of "too many options to try them all" problems: which model settings, which prompt, which retrieval configuration, how to schedule an agent's tasks. Metaheuristics are one of the cleanest tools for navigating those huge spaces — which is why this "classical" topic keeps resurfacing inside cutting-edge AI systems.
+</Callout>
+
+<ChapterSummary>
+- Metaheuristics run logistics, scheduling, design, and resource allocation
+- They increasingly tune AI itself — settings, prompts, and pipelines
+- "Too many options to check" problems are everywhere, so these methods endure
+</ChapterSummary>
+
+<Checkpoint>
+1. Explain a genetic algorithm using the survival-of-the-fittest analogy.
+2. Give one place inside an AI system where metaheuristic search is useful, and why.
+</Checkpoint>
+
+<Callout type="important" title="Track complete">
+That's all 14 courses of AI Foundations — from the maths under machine learning, through deep learning and the transformer-LLM revolution, to engineering and operating real AI systems, plus the deep dives in NLP, vision, knowledge, and optimisation. You now have the complete mental map. The **Applied AI** track is where you build it for real.
+</Callout>

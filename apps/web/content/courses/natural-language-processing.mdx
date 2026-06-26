@@ -1,57 +1,119 @@
 ---
 title: "Natural Language Processing"
 slug: "natural-language-processing"
-summary: "NLP from bag-of-words to large language models — tokenisation, embeddings, intent classification, named entity recognition, and the evolution that led to GPT and Claude."
+summary: "How computers came to understand human language — from counting words, to capturing meaning with embeddings, to the modern era of LLMs. The story and the still-useful fundamentals, in plain language."
 level: "Intermediate"
-status: "coming-soon"
+status: "published"
 order: 11
 track: "ai-foundations"
 prereqs: ["deep-learning"]
-tags: ["NLP", "Text", "Embeddings", "Transformers", "LLMs", "Intent Classification"]
-lessonCount: 9
+tags: ["NLP", "Text", "Embeddings", "Intent Classification", "LLMs"]
+lessonCount: 4
 ---
 
-## What you will learn
+Language is messy, ambiguous, and deeply human — which is exactly why teaching computers to handle it was one of AI's hardest, longest quests. This course tells that story, from the clumsy early methods to today's language models, and along the way gives you the fundamentals that still matter even in the LLM era.
 
-NLP covers the gap between raw text and machine understanding. This course covers the full arc — from classical text processing to the transformer-based systems that power modern LLMs.
+<Callout type="info" title="Why learn the older NLP if LLMs exist?">
+Two reasons. First, the ideas (embeddings, classification) are still inside today's systems and inside many cheap, fast, production features. Second, understanding the journey shows you *why* LLMs were such a leap — and where simpler tools still beat them.
+</Callout>
 
-### Classical NLP
-- Text preprocessing: tokenisation, stemming, lemmatisation
-- Bag-of-words and TF-IDF representations
-- N-gram models and statistical language modelling
-- Named entity recognition (NER) and part-of-speech tagging
+<LearningObjectives>
+- Understand why human language is so hard for computers
+- Trace NLP's evolution: counting words → meaning → context → LLMs
+- Grasp embeddings — turning words into meaning you can measure
+- Know the everyday NLP tasks (classification, entity extraction) still in wide use
+</LearningObjectives>
 
-### Word embeddings
-- Word2Vec — skip-gram and CBOW objectives
-- GloVe and FastText
-- Why distributed representations changed NLP
+<ChapterHeader number={1} title="Why language is so hard" time={11} />
 
-### Neural NLP
-- Sequence-to-sequence models for translation and summarisation
-- Attention mechanisms applied to NLP
-- BERT and the masked language model objective
-- Fine-tuning pre-trained models on classification tasks
+To a computer, "bank" in *"river bank"* and *"savings bank"* is the same string — yet the meanings are opposite worlds. Human language is full of this: ambiguity, sarcasm, context, idioms ("it's raining cats and dogs"), and meaning that depends on who is speaking and when.
 
-*This section draws from hands-on work building personality-based chatbots with intent classification and speech-to-text context extraction.*
+Early systems tried to handle language with hand-written grammar rules, and drowned — there are too many exceptions, too much context, too much that humans "just know." This is the same lesson as the ML course: when the rules are endless, *learn from examples* instead. NLP's whole history is the move from rules to learning.
 
-### Modern LLMs (bridge to Applied AI track)
-- GPT-style autoregressive language modelling
-- Prompt engineering as a new programming paradigm
-- What LLMs can and cannot do
-- Hallucination, calibration, and factual grounding
+<ChapterSummary>
+- Language is ambiguous and context-dependent — the same word can mean opposite things
+- Hand-written grammar rules can't keep up with human language
+- NLP advanced by learning from examples instead of coding rules
+</ChapterSummary>
 
-## Course outline
+<ChapterHeader number={2} title="From counting words to capturing meaning" time={14} />
 
-1. Text as data: preprocessing and representation
-2. Bag-of-words to TF-IDF
-3. Word embeddings: Word2Vec and GloVe
-4. Sequence models for NLP
-5. Attention applied to text
-6. BERT and contextual representations
-7. Intent classification and NER in practice
-8. Fine-tuning language models
-9. Bridge to LLMs: autoregression and prompting
+The first practical trick was simple: **count the words.** Represent a document by how often each word appears (a "bag of words"). Spam filters worked this way — emails heavy with "free," "winner," "click" scored as spam. Crude, but useful, and still fine for many tasks today.
 
----
+The problem: counting words ignores *meaning*. "Great" and "excellent" are treated as totally unrelated, and word order vanishes entirely. The breakthrough was the <KeyTerm definition="A vector of numbers representing a word's meaning, so that similar meanings sit close together.">embedding</KeyTerm> — turning each word into a vector (from the Maths course) positioned so that words with *similar meanings sit near each other.*
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+<Diagram title="Embeddings place meaning in space" caption="Similar words cluster; relationships become directions">
+
+```
+                 • queen
+        • king          • woman
+                 • man
+        • Paris
+              • France        • dog • puppy
+        • Tokyo               • cat • kitten
+              • Japan
+
+  Similar things cluster. Famously: king - man + woman ≈ queen.
+```
+
+</Diagram>
+
+This was huge: meaning became something you could *measure* with distance. "Find similar documents," "recommend related articles," and semantic search all became possible. Embeddings are still everywhere today — they are exactly what powers the retrieval step in RAG.
+
+<Callout type="tip" title="The through-line of the whole track">
+Embeddings are the Maths course's "things become points in space," applied to language. They quietly run modern search and RAG. If one NLP idea survives into everything, it is this one.
+</Callout>
+
+<ChapterSummary>
+- Bag-of-words (counting) is crude but still useful for simple tasks like spam
+- Embeddings turn words into vectors where similar meanings sit close
+- This made meaning measurable — powering search, recommendations, and RAG
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does counting words fail to capture that "great" and "excellent" are similar?
+2. In one sentence, what does an embedding do for a word?
+</Checkpoint>
+
+<ChapterHeader number={3} title="The everyday NLP tasks still in use" time={12} />
+
+Long before chatbots, NLP quietly powered features you use daily — and these still run on simpler, cheaper models where an LLM would be overkill:
+
+- **Text classification** — sorting text into categories. Spam vs. not, positive vs. negative review (*sentiment analysis*), routing a support ticket to the right team.
+- **Named entity recognition** — pulling out the *things* in text: names, dates, places, amounts. ("Invoice #4471 from Acme Ltd dated 3 March for £2,000" → company, date, amount.)
+- **Intent detection** — figuring out what a user *wants* ("book a flight" vs. "cancel a flight") — the backbone of older voice assistants.
+
+<Callout type="note" title="When the old tools still win">
+Need to label a million support tickets by topic, fast and cheap? A small classification model beats calling an LLM a million times — it is faster, cheaper, and more consistent. A good engineer reaches for the *right-sized* tool, not always the biggest one. (This echoes the cost lessons from AI Ops.)
+</Callout>
+
+<ChapterSummary>
+- Classification, entity extraction, and intent detection are the workhorse NLP tasks
+- They power spam filters, sentiment analysis, ticket routing, and form-filling
+- For high-volume, narrow tasks, small NLP models often beat an LLM on speed and cost
+</ChapterSummary>
+
+<ChapterHeader number={4} title="The leap to language models" time={11} />
+
+The old methods had a ceiling. Bag-of-words ignored order; early embeddings gave each word *one* fixed meaning (so "bank" could not be both river and money). The missing piece was *context* — understanding each word in light of the words around it.
+
+That is precisely what **attention** delivered (the course earlier in this track). Modern language models give each word a meaning that shifts with its sentence, so "river bank" and "savings bank" finally land in different places. That single advance turned NLP from a box of separate tools — one for classification, one for translation, one for summarising — into a single model that can do *all* of them.
+
+<Callout type="important" title="How the pieces connect">
+Everything here leads into the modern track: embeddings → semantic search and RAG; the limits of fixed meaning → why attention mattered; the separate tasks → unified by LLMs. NLP is the story of the whole field, told through language.
+</Callout>
+
+<ChapterSummary>
+- Old methods lacked context: word order and shifting meaning were lost
+- Attention gave words context-dependent meaning — the key NLP breakthrough
+- LLMs unified the once-separate NLP tasks into one general model
+</ChapterSummary>
+
+<Checkpoint>
+1. Give one NLP task where a small classic model still beats an LLM, and why.
+2. What did "context" add that older embeddings lacked, and which idea delivered it?
+</Checkpoint>
+
+<Callout type="tip" title="Related courses">
+For the hands-on version of embeddings and retrieval, see **Semantic Search & Embeddings** in Applied AI. To go deeper on the architecture, revisit **Attention & Transformers** in this track.
+</Callout>
