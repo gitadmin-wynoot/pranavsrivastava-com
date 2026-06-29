@@ -1,69 +1,149 @@
 ---
-title: "API Design: REST and Beyond"
+title: "Designing Good APIs: Principles & Best Practices"
 slug: "rest-api-design"
-summary: "Design, build, and secure APIs that are a pleasure to work with — REST conventions, GraphQL for flexible queries, authentication patterns, versioning, and the standards that keep APIs maintainable long-term."
+summary: "The difference between an API people love and one they curse: naming, versioning, errors, security, and documentation. Practical principles — with the standards to follow — that keep an API clean and usable for years."
 level: "Beginner to Intermediate"
-status: "coming-soon"
+status: "published"
+order: 3
 track: "cloud-apis"
-prereqs: []
-tags: ["REST", "GraphQL", "API Design", "Authentication", "OpenAPI", "MuleSoft"]
-lessonCount: 9
+prereqs: ["api-fundamentals", "api-types"]
+tags: ["API Design", "REST", "OpenAPI", "Authentication", "Versioning"]
+lessonCount: 5
 ---
 
-## What you will learn
+Two APIs can do the same job — one is a joy to use, the other a daily frustration. The difference is rarely cleverness; it's *care* in a handful of decisions: how you name things, how you report errors, how you handle change and security. This course is those decisions, with the standards to lean on. It will make any API you build (or judge) better.
 
-Good API design is a multiplier. A well-designed API enables every client to move independently, scales without breaking changes, and communicates intent through its structure alone.
+<Callout type="tip" title="Remember who your user is.">
+The person calling your API — often another developer — is your *user*, and their confusion is your bug. Good API design is product design. New here? Do [API Fundamentals](/courses/api-fundamentals) and [The Types of APIs](/courses/api-types) first.
+</Callout>
 
-### REST fundamentals
-- The REST constraints: stateless, uniform interface, layered system
-- Resources, representations, and URLs that make sense
-- HTTP semantics: methods, status codes, headers done right
-- HATEOAS: navigable APIs vs. documentation-only APIs
+<LearningObjectives>
+- Name and structure resources so an API reads like plain English
+- Report errors in a way that helps the caller fix the problem
+- Handle change safely with versioning, and protect the API with auth
+- Make your API self-explanatory with documentation and a standard spec
+</LearningObjectives>
 
-### API design in practice
-- Naming resources: nouns not verbs, plural not singular
-- Pagination: cursor vs. offset, pitfalls of large offsets
-- Filtering, sorting, and partial responses
-- Error response design: consistent, informative, not leaky
+<ChapterHeader number={1} title="Name things like a human would" time={12} />
 
-*Informed by real enterprise integration work with IBM WebSphere DataPower, MuleSoft Anypoint, and building integration platforms across financial services and telecoms.*
+A well-named API is almost self-explanatory. The core REST convention: **resources are nouns, addressed by URL; the verb lives in the HTTP method, not the name.**
 
-### GraphQL
-- The query model: ask exactly for what you need
-- Schema design: types, queries, mutations, subscriptions
-- DataLoader and the N+1 problem
-- When GraphQL is the wrong choice
+| Don't | Do | Why |
+|---|---|---|
+| `GET /getUser?id=42` | `GET /users/42` | The verb is already GET — don't repeat it |
+| `POST /createOrder` | `POST /orders` | POST already means "create" |
+| `GET /user_list` | `GET /users` | Collections are plural nouns |
+| `POST /users/42/deactivate` | `POST /users/42/deactivation` | Even actions read as resources |
 
-### API security
-- Authentication vs. authorisation
-- OAuth 2.0 and OpenID Connect: flows and when to use each
-- API keys, JWTs, and mutual TLS
-- Rate limiting and throttling strategies
+The test: read the method + path aloud. `DELETE /users/42` says "delete user 42." If it reads like a sentence, you've named it well. Consistency matters as much as the rules — pick plural nouns, lowercase, hyphens-not-underscores, and never break the pattern.
 
-### Production concerns
-- OpenAPI / Swagger: design-first approach
-- Versioning strategies: URL, header, content negotiation
-- Breaking vs. non-breaking changes
-- API gateways and their role (Kong, AWS API Gateway, MuleSoft)
+<Callout type="tip" title="A small thing that compounds">
+Once you set a convention (plural nouns, nesting like `/users/42/orders`), follow it *everywhere*. An API where every endpoint behaves predictably is one a newcomer can guess correctly. Predictability is a feature.
+</Callout>
 
-### AI-powered APIs
-- Designing APIs that wrap LLM calls
-- Streaming responses with Server-Sent Events
-- Tool schemas for agent function calling
-- Building MCP servers as structured APIs
+<ChapterSummary>
+- Resources are plural nouns in the URL; the action is the HTTP method
+- `GET /users/42`, not `GET /getUser?id=42` — don't repeat the verb
+- Pick one convention and follow it everywhere — predictability is the feature
+</ChapterSummary>
 
-## Course outline
+<ChapterHeader number={2} title="Errors that help, not haunt" time={13} />
 
-1. REST constraints and why they matter
-2. URL design and resource modelling
-3. HTTP semantics: methods, headers, status codes
-4. Request/response design patterns
-5. API security: OAuth 2.0 and JWT
-6. GraphQL fundamentals
-7. OpenAPI and design-first development
-8. Versioning, breaking changes, and deprecation
-9. APIs in the AI era: streaming, tool schemas, MCP
+When something goes wrong, your error response is the only thing the caller has to work with. A good one turns a frustrated developer into a productive one. A bad one — a bare `400` with no explanation — turns them into a support ticket.
 
----
+Three things every error should do:
+1. **Use the right status code** so machines can react (`400` bad input, `401` not logged in, `403` not allowed, `404` not found, `429` too many requests, `500` our fault).
+2. **Say what went wrong, in plain language** — "email is required" beats "validation error."
+3. **Help them fix it** — point at the field, the limit, the next step.
 
-*Coming soon. Email hello@pranavsrivastava.com to be notified.*
+```json
+{
+  "error": "invalid_request",
+  "message": "The 'email' field is required.",
+  "field": "email"
+}
+```
+
+<Callout type="note" title="From the trenches">
+On a high-traffic API I worked on, we once had a wall of support tickets from developers hitting cryptic errors. We spent one sprint rewriting every error message — plain English, probable cause, suggested fix. Support volume dropped sharply and adoption kept climbing. The error message *is* part of the product.
+</Callout>
+
+<Callout type="info" title="The standard">
+There's even a standard shape for API errors: [RFC 9457, *Problem Details for HTTP APIs*](https://datatracker.ietf.org/doc/html/rfc9457). Following it means tools and clients know what to expect.
+</Callout>
+
+<ChapterSummary>
+- An error response is a product surface — design it to help the caller fix the problem
+- Use the right status code, explain in plain language, point at the fix
+- There's a standard error shape worth following (RFC 9457)
+</ChapterSummary>
+
+<Checkpoint>
+1. Rewrite `GET /fetchAllProducts` and `POST /deleteUser?id=9` as clean REST endpoints.
+2. What three things should a good error response always do?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Versioning — change without breaking people" time={12} />
+
+Here's a hard truth: the moment other people depend on your API, you can't freely change it. Rename a field and every app using it breaks. But you also can't freeze forever. The answer is <KeyTerm definition="Offering multiple versions of an API so existing users keep working while new users get improvements.">versioning</KeyTerm> — running the old shape and the new shape side by side.
+
+The common, readable approach is to put the version in the path: `GET /v1/users/42` and `GET /v2/users/42`. Existing apps stay on `v1` and keep working; new apps adopt `v2`. You give people time to move, then retire the old version on a clear schedule.
+
+<Callout type="important" title="The golden rule of public APIs">
+Once people build on your API, **breaking changes are betrayals of trust.** Plan for change from day one: version early, deprecate kindly (announce, give a long runway), and never silently alter behaviour. An API is a promise, and reliability is the whole value.
+</Callout>
+
+<ChapterSummary>
+- Once others depend on your API, you can't change it freely
+- Versioning runs old and new side by side (e.g. `/v1/`, `/v2/`)
+- Plan for change: version early, deprecate with plenty of warning, never break silently
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Security — who's calling, and what may they do?" time={12} />
+
+Most APIs shouldn't answer just anyone. Two questions sit at the heart of API security:
+
+- **Authentication** — *who are you?* The caller proves their identity, usually with a secret **API key** or a token.
+- **Authorisation** — *what are you allowed to do?* Even an identified caller shouldn't be able to do everything. A read-only key can fetch but not delete.
+
+For anything beyond a simple key, the industry standard is <KeyTerm definition="The standard framework for granting limited access to an API on a user's behalf, without sharing their password.">OAuth 2.0</KeyTerm> — the mechanism behind every "Log in with Google" button. It lets an app act for a user with limited, revocable permission, and without ever seeing the user's password.
+
+<Callout type="info" title="The standard">
+OAuth 2.0 is defined in [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749); the friendly overview is at [oauth.net/2](https://oauth.net/2/). Two more essentials: always serve APIs over **HTTPS** (encrypted), and never put secrets in URLs or client-side code.
+</Callout>
+
+<ChapterSummary>
+- Authentication = who you are (API key or token); authorisation = what you may do
+- Apply least privilege — a key should only do what its job needs
+- Use OAuth 2.0 for user-delegated access; always use HTTPS; never leak secrets
+</ChapterSummary>
+
+<ChapterHeader number={5} title="Documentation — an API nobody can read doesn't exist" time={11} />
+
+The best-designed API is useless if a developer can't figure out how to call it. Documentation isn't an afterthought; it's how your API gets adopted. And the good news: you can largely *generate* it.
+
+The standard is the <KeyTerm definition="OpenAPI Specification — a standard, machine-readable description of an API that powers interactive docs and code generation.">OpenAPI Specification</KeyTerm> (you may know its old name, Swagger). You describe your API once in a structured file — every endpoint, input, and response — and tools turn that into interactive documentation developers can read *and try in the browser*, plus client code in many languages.
+
+<Callout type="info" title="The standard">
+The [OpenAPI Specification](https://spec.openapis.org/) is the de-facto way to describe REST APIs. Pair it with a tool like Swagger UI and your docs stay in sync with your API automatically.
+</Callout>
+
+<Callout type="important" title="The thread through this whole course">
+Naming, errors, versioning, security, docs — every one of them is really the same idea: **treat the developer using your API as your customer.** Make it predictable, honest about failures, stable over time, safe, and easy to learn. Do that and people will choose your API and stay. That care is the entire craft.
+</Callout>
+
+<ChapterSummary>
+- Documentation is how an API gets adopted — not optional
+- Describe your API once in OpenAPI; generate interactive docs and client code from it
+- Every principle here reduces to one: the developer calling your API is your customer
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can't you freely rename a field once others use your API, and what's the fix?
+2. What's the difference between authentication and authorisation? Give an example of each.
+3. What does describing your API in OpenAPI get you "for free"?
+</Checkpoint>
+
+<Callout type="tip" title="Where this goes next">
+You can design a clean API. But where does it actually *run*? Next: **Cloud Foundations** — the servers, services, and providers (AWS, Azure, GCP) that host it.
+</Callout>

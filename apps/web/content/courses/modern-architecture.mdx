@@ -1,0 +1,143 @@
+---
+title: "Modern Architecture & API Management: Putting It Together"
+slug: "modern-architecture"
+summary: "How the pieces connect into a real system you could build — the journey of a request, monolith vs. microservices, and the API gateway every serious API needs. The capstone that turns the whole track into one clear picture."
+level: "Beginner to Intermediate"
+status: "published"
+order: 5
+track: "cloud-apis"
+prereqs: ["api-fundamentals", "rest-api-design", "cloud-foundations"]
+tags: ["Architecture", "API Management", "API Gateway", "Microservices", "Cloud"]
+lessonCount: 4
+---
+
+You've met the pieces: APIs, their types, good design, and the cloud they run on. This final course assembles them into one picture — how a real system actually fits together, how to build one without over-complicating it, and the "front door" (API management) that every serious API ends up needing. By the end you'll have the whole map.
+
+<Callout type="tip" title="This is the connect-the-dots course.">
+We won't add much new — we'll *assemble* what you've learned into a system you could sketch on a napkin and actually build. Best done after the earlier courses in this track.
+</Callout>
+
+<LearningObjectives>
+- Trace a real request through a modern system, end to end
+- Understand monolith vs. microservices — and which a beginner should start with
+- Know what API management is and the concrete reasons you'll need it
+- See how to assemble all of it the *easy* way, using managed cloud services
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The journey of a request" time={12} />
+
+Here's how the whole track connects: follow a single request from a user's tap to the answer on their screen.
+
+<Figure name="request-journey" />
+
+1. A **user** taps something in an app. The app sends an API **request** (Course 1) in a chosen style — usually REST (Course 2).
+2. It arrives at an **API gateway** — the single front door (more on this soon).
+3. The gateway routes it to the right **service** — your code, running on the cloud (Course 4), perhaps as a serverless function.
+4. The service reads or writes a **database**, then builds a **response** following good design (Course 3).
+5. The answer travels back the same way, and the app shows it to the user.
+
+That's a modern system. Every app you use is some version of this loop, repeated millions of times a second. Once you can see this picture, the whole field stops being a fog of buzzwords and becomes a handful of parts doing understandable jobs.
+
+<ChapterSummary>
+- A request travels: user → gateway → service → database → and back
+- Each step maps to something you've learned: API style, cloud, good design
+- Every modern app is a version of this same loop
+</ChapterSummary>
+
+<ChapterHeader number={2} title="One big service, or many small ones?" time={12} />
+
+As systems grow, a fork appears. Do you build everything as one program (a <KeyTerm definition="A single application that contains all of a system's features in one codebase and deployment.">monolith</KeyTerm>), or split it into many small, independent services (<KeyTerm definition="An architecture where a system is built from many small, independent services that each do one job and talk over APIs.">microservices</KeyTerm>) that talk to each other through APIs?
+
+- **Monolith** — one application, one deployment. Simple to build, simple to run, everything in one place. The downside comes later: as it gets huge, it becomes harder to change and to scale just the busy parts.
+- **Microservices** — many small services (users, orders, payments — each its own service), connected by APIs (often gRPC internally, from Course 2). Each can be built, scaled, and updated independently. The cost: a lot more moving parts and complexity.
+
+<Callout type="important" title="The advice nobody gives beginners loudly enough">
+**Start with a monolith.** Microservices solve problems of *scale and large teams* — problems you don't have yet. Beginning with microservices is one of the most common ways early projects drown in complexity. Build one clean service first; split it later, only when real growth forces your hand. Simple, working, and shipped beats clever and unfinished.
+</Callout>
+
+<ChapterSummary>
+- A monolith is one application; microservices are many small ones connected by APIs
+- Microservices buy independent scaling and team autonomy — at the cost of big complexity
+- Beginners should start monolith and split only when growth demands it
+</ChapterSummary>
+
+<Checkpoint>
+1. Walk a "place order" request through the five steps of its journey.
+2. Why is starting with microservices usually a mistake for a small, new project?
+</Checkpoint>
+
+<ChapterHeader number={3} title="The front door: API management" time={14} />
+
+Imagine your API becomes popular. Now you have real problems: some callers hammer it and slow it down for everyone; you need to check who's allowed in; you want to see who's using what; you need to roll out a new version without breaking the old; and you'd like outside developers to discover and try it. Solving each of these *inside* every service, separately, is a nightmare.
+
+The answer is to put a single **front door** in front of everything: an <KeyTerm definition="A single entry point in front of your services that handles cross-cutting concerns like authentication, rate limiting, routing, and monitoring.">API gateway</KeyTerm>, and around it, **API management** — the discipline (and tools) for running APIs as products.
+
+<Figure name="api-gateway" />
+
+A gateway handles, in one place, the things *every* API needs:
+
+- **Authentication** — checking the caller's key or token before anything else
+- **Rate limiting** — capping how often each caller can hit you, so no one can overwhelm the system
+- **Routing** — sending each request to the right service behind it
+- **Monitoring & analytics** — who's calling what, how often, how fast
+- **Versioning** — directing callers to the right version cleanly
+
+API *management* adds the product layer on top: a **developer portal** where others discover your APIs, read the docs, get a key, and start building — plus usage plans, security policies, and analytics. This is how a company turns its APIs into something external developers (and paying customers) actually adopt.
+
+<Callout type="note" title="Why this is close to my heart">
+I spent years helping build a telecom developer portal from a small idea into a product generating real revenue — turning raw internal APIs (messaging, fraud checks, and more) into something thousands of developers could find, trust, and build on. The gateway and the management layer are what made that possible. Without them, you have capabilities; with them, you have a *product*.
+</Callout>
+
+<Callout type="info" title="What it's called in the cloud">
+Managed gateways exist on every provider: **AWS API Gateway**, **Azure API Management**, **Google Apigee / API Gateway**. You don't build this layer from scratch — you configure a managed one.
+</Callout>
+
+<ChapterSummary>
+- As an API grows, you need auth, rate limits, routing, monitoring, and versioning — for all of it at once
+- An API gateway handles these in one front door; API management adds the product layer (developer portal, plans, analytics)
+- This is how raw APIs become products developers adopt — and it's a managed cloud service, not something you build yourself
+</ChapterSummary>
+
+<ChapterHeader number={4} title="How to actually build it — the easy path" time={11} />
+
+Put together, here's the beginner-friendly way to build a real system today, leaning on everything in this track and letting the cloud do the heavy lifting:
+
+<Steps>
+
+<Step number={1} title="Design a clean REST API">
+Start with REST and good design (Courses 2–3): clear resources, sensible errors, a version from day one. Describe it in OpenAPI so your docs come for free.
+</Step>
+
+<Step number={2} title="Run it serverless">
+Deploy your code as serverless functions (Course 4) — no servers to manage, automatic scaling, near-zero cost while small. One clean service (a monolith), not a swarm.
+</Step>
+
+<Step number={3} title="Use a managed database">
+Don't run your own database — use a managed one (RDS, Cloud SQL, or a hosted service). Let the provider handle backups and uptime.
+</Step>
+
+<Step number={4} title="Put a managed gateway in front">
+When you have real users, add a managed API gateway for auth, rate limiting, and monitoring — configured, not coded.
+</Step>
+
+</Steps>
+
+<Callout type="important" title="The whole track in one sentence">
+Design a clean API, run it on managed cloud services, and put a gateway in front when it grows — and you can take an idea to a real, scalable system without a big team or a server room. The cloud handles the hard parts; you focus on the API and the product. That is the modern builder's superpower, and you now understand every piece of it.
+</Callout>
+
+<ChapterSummary>
+- The easy path: clean REST API → serverless → managed database → managed gateway
+- Let managed cloud services handle the hard, undifferentiated work
+- You can now take an idea to a real, scalable system — and understand every part
+</ChapterSummary>
+
+<Checkpoint>
+1. What does an API gateway handle that you'd otherwise repeat in every service?
+2. What's the difference between an API gateway and full API management?
+3. Sketch the four-step "easy path" to building a real system from this track.
+</Checkpoint>
+
+<Callout type="tip" title="You've completed the track">
+From "what is an API" to running one in the cloud behind a managed gateway — you now have the full map of how modern software is built and connected. The next step is to build something small and real: design one clean API and deploy it serverless. The pieces will click into place the moment you do.
+</Callout>

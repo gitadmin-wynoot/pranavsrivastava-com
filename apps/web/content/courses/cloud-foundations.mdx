@@ -1,0 +1,116 @@
+---
+title: "Cloud Foundations: Where Your API Actually Runs"
+slug: "cloud-foundations"
+summary: "Your API has to live somewhere. A beginner's map of cloud computing — renting vs. owning, the IaaS/PaaS/SaaS layers, serverless, and how AWS, Azure, and GCP fit — so you can choose where to build without drowning in jargon."
+level: "Beginner"
+status: "published"
+order: 4
+track: "cloud-apis"
+prereqs: ["api-fundamentals"]
+tags: ["Cloud", "AWS", "Azure", "GCP", "Serverless", "Architecture"]
+lessonCount: 4
+---
+
+You've designed a lovely API. Now — where does it *run*? It needs a computer that's always on, connected to the internet, that can grow when lots of people show up. That's what "the cloud" provides. This course demystifies it, so a beginner can confidently pick where to build without getting lost in three providers' worth of jargon.
+
+<Callout type="tip" title="No ops background needed.">
+We'll skip the deep infrastructure and focus on the mental model: what the cloud is, the choices it offers, and how it connects to your API. The goal is for you to *understand the landscape* and make sensible early decisions.
+</Callout>
+
+<LearningObjectives>
+- Understand what "the cloud" actually is, in plain terms
+- Know the three layers — IaaS, PaaS, SaaS — and how much each one does for you
+- Understand serverless, and why it's often the easiest start
+- See how the big providers (AWS, Azure, GCP) map to the same ideas
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The cloud is just renting someone else's computers" time={11} />
+
+Strip away the mystique and the cloud is simple: instead of *buying* computers, running them in a room, and maintaining them yourself, you **rent** them from a company that runs enormous data centres — and pay only for what you use. Need a server for an hour? Rent it for an hour. Suddenly have a million users? Rent more, instantly. Traffic drops? Give them back.
+
+This is transformative for a builder. You don't need money for hardware, a server room, or a team to keep machines alive. A person with a laptop can launch something the whole world can reach, and only pay as it grows. The cloud is what makes "anyone can build" actually true.
+
+<Callout type="note" title="Why this changed everything">
+Before the cloud, launching a real service meant buying servers up front — a serious barrier. Now you start for a few dollars and scale only when you have the users (and revenue) to justify it. The cost of *trying* collapsed, and that's why so much gets built today.
+</Callout>
+
+<ChapterSummary>
+- The cloud is renting computers on demand instead of buying and running your own
+- You pay for what you use and scale up or down instantly
+- It removed the upfront cost of launching — anyone can now reach the whole world
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Three layers: how much do you want to manage?" time={14} />
+
+Cloud comes in layers, and the only real question each one answers is: **how much do you want to handle yourself, versus let the provider handle?** Less control means more convenience — and usually a faster path to shipping.
+
+<Figure name="cloud-stack" />
+
+- **IaaS** (Infrastructure as a Service) — you rent a bare machine and manage almost everything on it: the operating system, updates, your app. Most control, most work. *Example: a virtual server (AWS EC2, Azure VM).*
+- **PaaS** (Platform as a Service) — you just bring your *code*; the provider handles the machine, the operating system, scaling, and patching. Far less work, a little less control. *Example: deploy code to Vercel, Google App Engine, Azure App Service.*
+- **SaaS** (Software as a Service) — you don't build anything; you just *use* finished software. *Example: Gmail, Notion, Slack.* (This is the layer your own product might one day be, for *your* users.)
+
+<Callout type="tip" title="Which should a beginner pick?">
+Start as high up the stack as you can. For most new projects, **PaaS or serverless** (next chapter) lets you ship in an afternoon without becoming a system administrator. Drop down to IaaS only when you genuinely need the extra control. Convenience first; complexity only when it pays for itself.
+</Callout>
+
+<ChapterSummary>
+- The layers differ by how much you manage vs. the provider
+- IaaS = you manage the machine; PaaS = you bring only code; SaaS = you just use it
+- Beginners should start high (PaaS/serverless) and drop lower only when needed
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, what is "the cloud"?
+2. You want to deploy your API without managing servers or operating systems. Which layer fits?
+</Checkpoint>
+
+<ChapterHeader number={3} title="Serverless — the easiest start of all" time={12} />
+
+There's an option that sits even higher than PaaS for many tasks, with a slightly confusing name. <KeyTerm definition="A way to run code where the provider handles all servers automatically — you just supply a function, and pay only when it runs.">Serverless</KeyTerm> doesn't mean there are no servers (there are). It means *you never think about them.* You hand the provider a single function — "when a request comes in, run this" — and it takes care of everything: starting machines, scaling to millions, and shutting down when idle. You pay only for the moments your code actually runs.
+
+For a beginner building an API, this is often the gentlest possible start. No server to set up, no machine to keep alive, automatic scaling, and near-zero cost when nobody's using it. Many modern APIs are simply a set of these functions.
+
+<Callout type="info" title="What it's called on each provider">
+The same idea, three names: **AWS Lambda**, **Azure Functions**, **Google Cloud Functions**. You write a function; the cloud runs it on demand.
+</Callout>
+
+<ChapterSummary>
+- Serverless means you supply a function and never manage servers yourself
+- It scales automatically and costs almost nothing when idle
+- Often the easiest way for a beginner to run an API (Lambda / Azure Functions / Cloud Functions)
+</ChapterSummary>
+
+<ChapterHeader number={4} title="AWS, Azure, GCP — same ideas, different labels" time={11} />
+
+The "big three" cloud providers — **Amazon Web Services (AWS)**, **Microsoft Azure**, and **Google Cloud Platform (GCP)** — can feel overwhelming, each with hundreds of services and their own names for everything. Here's the secret that calms it down: **they offer the same core building blocks, just with different labels.**
+
+| You need… | AWS | Azure | GCP |
+|---|---|---|---|
+| A virtual server | EC2 | Virtual Machines | Compute Engine |
+| Run a function (serverless) | Lambda | Azure Functions | Cloud Functions |
+| Store files | S3 | Blob Storage | Cloud Storage |
+| A managed database | RDS | SQL Database | Cloud SQL |
+| Deploy code (PaaS) | Elastic Beanstalk | App Service | App Engine |
+
+Learn the *concepts* — a server, a function, file storage, a database — and you can move between providers; the names change, the ideas don't.
+
+<Callout type="important" title="Don't agonise over the choice">
+For a beginner, **which** provider matters far less than people think. All three are excellent. Pick one (AWS is the most common, Azure if you're in a Microsoft shop, GCP if you lean toward data/AI), learn the building blocks, and start. You can always learn another later — the concepts transfer.
+</Callout>
+
+<ChapterSummary>
+- AWS, Azure, and GCP offer the same building blocks under different names
+- Learn the concepts (server, function, storage, database) and you can use any of them
+- Don't agonise over the choice — pick one, start, and the knowledge transfers
+</ChapterSummary>
+
+<Checkpoint>
+1. What does "serverless" actually mean, and why is it beginner-friendly?
+2. AWS calls it "Lambda." What's the equivalent idea on Azure and GCP?
+3. Why shouldn't a beginner stress about which cloud provider to choose?
+</Checkpoint>
+
+<Callout type="tip" title="Where this goes next">
+You can design an API and you know where it runs. The final course ties it together: **Modern Architecture & API Management** — how all the pieces connect into a real system, and the "front door" every serious API needs.
+</Callout>
