@@ -182,7 +182,83 @@ function AgentLoop() {
   );
 }
 
+/* ── Things become points in space (vectors / embeddings) ───────────────── */
+function VectorsSpace() {
+  const catCluster = [[150, 90], [185, 120], [135, 140]];
+  const carCluster = [[440, 150], [480, 120], [470, 175]];
+  return (
+    <svg viewBox="0 0 600 240" className="w-full h-auto" fill="none" role="img">
+      <line x1="40" y1="210" x2="560" y2="210" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" />
+      <line x1="40" y1="210" x2="40" y2="30" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" />
+      {/* cat cluster */}
+      {catCluster.map(([x, y], i) => (
+        <circle key={`c${i}`} cx={x} cy={y} r="6" className="fill-blue-500" />
+      ))}
+      <text x="160" y="64" textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="12" fontWeight="600">cat · kitten · feline</text>
+      {/* car cluster */}
+      {carCluster.map(([x, y], i) => (
+        <circle key={`v${i}`} cx={x} cy={y} r="6" className="fill-emerald-500" />
+      ))}
+      <text x="466" y="96" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="12" fontWeight="600">car · vehicle · automobile</text>
+      <text x="300" y="232" textAnchor="middle" className="fill-zinc-400" fontSize="11">similar meanings sit close together</text>
+    </svg>
+  );
+}
+
+/* ── A neural network: layers of neurons ────────────────────────────────── */
+function NeuralLayers() {
+  const layers = [
+    { x: 90, n: 4, label: "input" },
+    { x: 250, n: 5, label: "hidden" },
+    { x: 410, n: 5, label: "hidden" },
+    { x: 540, n: 2, label: "output" },
+  ];
+  const yFor = (n: number, i: number) => 40 + (i * (200 / Math.max(n - 1, 1)));
+  return (
+    <svg viewBox="0 0 600 270" className="w-full h-auto" fill="none" role="img">
+      {layers.slice(0, -1).map((L, li) =>
+        Array.from({ length: L.n }).map((_, i) =>
+          Array.from({ length: layers[li + 1].n }).map((_, j) => (
+            <line key={`${li}-${i}-${j}`} x1={L.x} y1={yFor(L.n, i)} x2={layers[li + 1].x} y2={yFor(layers[li + 1].n, j)} className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="0.75" />
+          ))
+        )
+      )}
+      {layers.map((L, li) =>
+        Array.from({ length: L.n }).map((_, i) => (
+          <circle key={`n${li}-${i}`} cx={L.x} cy={yFor(L.n, i)} r="7"
+            className={li === 0 ? "fill-blue-500" : li === layers.length - 1 ? "fill-emerald-500" : "fill-zinc-300 dark:fill-zinc-600"} />
+        ))
+      )}
+      {layers.map((L, li) => (
+        <text key={`l${li}`} x={L.x} y="258" textAnchor="middle" className="fill-zinc-400" fontSize="11">{L.label}</text>
+      ))}
+    </svg>
+  );
+}
+
+/* ── Gradient descent: learning is walking downhill ─────────────────────── */
+function GradientDescent() {
+  const steps = [[110, 70], [165, 120], [225, 165], [290, 192], [355, 200]];
+  return (
+    <svg viewBox="0 0 600 240" className="w-full h-auto" fill="none" role="img">
+      <path d="M70,40 C 180,300 470,300 560,70" className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="2" />
+      {steps.slice(0, -1).map(([x, y], i) => (
+        <line key={`s${i}`} x1={x} y1={y} x2={steps[i + 1][0]} y2={steps[i + 1][1]} className="stroke-blue-400/60 dark:stroke-blue-500/40" strokeWidth="1.5" strokeDasharray="3 4" />
+      ))}
+      {steps.map(([x, y], i) => (
+        <circle key={`d${i}`} cx={x} cy={y} r={i === steps.length - 1 ? 7 : 5} className={i === steps.length - 1 ? "fill-emerald-500" : "fill-blue-500"} />
+      ))}
+      <text x="96" y="56" className="fill-zinc-400" fontSize="11">start · very wrong</text>
+      <text x="368" y="198" className="fill-emerald-600 dark:fill-emerald-400" fontSize="11" fontWeight="600">lowest error</text>
+      <text x="300" y="228" textAnchor="middle" className="fill-zinc-400" fontSize="11">each step feels the slope and moves a little downhill</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "vectors-space": { node: <VectorsSpace />, caption: "Turn things into numbers, and similar things land near each other — the idea behind search and recommendations." },
+  "neural-layers": { node: <NeuralLayers />, caption: "A neural network is just layers of simple units. Information flows left to right, reshaped at each layer into an answer." },
+  "gradient-descent": { node: <GradientDescent />, caption: "Learning is walking downhill: feel which way reduces the error, take a small step, repeat until you reach the bottom." },
   "client-server": { node: <ClientServer />, caption: "A client and a server talking over one agreed protocol — like two people who've agreed to speak the same language." },
   "nxm-problem": { node: <NxMProblem />, caption: "Without a standard, every app has to build a custom connection to every tool. It explodes fast." },
   "nxm-solved": { node: <NxMSolved />, caption: "With one shared protocol, each tool is wrapped once and every app can use it." },

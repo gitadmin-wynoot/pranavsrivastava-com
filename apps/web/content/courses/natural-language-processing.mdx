@@ -42,21 +42,7 @@ The first practical trick was simple: **count the words.** Represent a document 
 
 The problem: counting words ignores *meaning*. "Great" and "excellent" are treated as totally unrelated, and word order vanishes entirely. The breakthrough was the <KeyTerm definition="A vector of numbers representing a word's meaning, so that similar meanings sit close together.">embedding</KeyTerm> — turning each word into a vector (from the Maths course) positioned so that words with *similar meanings sit near each other.*
 
-<Diagram title="Embeddings place meaning in space" caption="Similar words cluster; relationships become directions">
-
-```
-                 • queen
-        • king          • woman
-                 • man
-        • Paris
-              • France        • dog • puppy
-        • Tokyo               • cat • kitten
-              • Japan
-
-  Similar things cluster. Famously: king - man + woman ≈ queen.
-```
-
-</Diagram>
+<Figure name="vectors-space" caption="Embeddings place words in 'meaning space' — similar words cluster together, so closeness means similarity." />
 
 This was huge: meaning became something you could *measure* with distance. "Find similar documents," "recommend related articles," and semantic search all became possible. Embeddings are still everywhere today — they are exactly what powers the retrieval step in RAG.
 

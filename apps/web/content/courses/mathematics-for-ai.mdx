@@ -32,20 +32,7 @@ Think of describing a person to a computer. You might use: age, height in cm, an
 
 The magic is this: once things are vectors, *closeness means similarity*. Two people with vectors that sit near each other are alike. Two movies whose vectors are close get recommended to the same person. The same word — "king" and "queen" — sit near each other because their vectors are similar.
 
-<Diagram title="Things become points in space" caption="Once described as numbers, similar things land near each other">
-
-```
-        income
-          |
-     52k  •  Anna [34, 178, 52k]
-          |   • Ben [36, 175, 50k]   <- near Anna, so "similar"
-          |
-     20k  |              • Cara [22, 165, 20k]
-          +---------------------------- age
-             20        34   36
-```
-
-</Diagram>
+<Figure name="vectors-space" />
 
 This is the whole idea behind recommendations, search, and "find me more like this." Everything — images, words, songs, users — gets turned into a vector, and then AI works with distances between those points.
 
@@ -106,21 +93,7 @@ Picture yourself on a foggy hillside at night, trying to reach the bottom of the
 
 That is exactly how a model learns:
 
-<Diagram title="Learning is walking downhill" caption="Each step reduces the error a little, until it can't go lower">
-
-```
-  error
-   high  \
-          \•  start (model is wrong)
-           \
-            \•  step... feel the slope... step down
-             \
-              \•
-               \___•___ bottom = model is as right as it can get
-                       (lowest error)
-```
-
-</Diagram>
+<Figure name="gradient-descent" />
 
 - The "height" of the hill is the model's <KeyTerm definition="A number measuring how wrong the model currently is. Learning means making it smaller.">error</KeyTerm> — how wrong it is.
 - The "slope underfoot" is the **gradient** — which direction reduces the error.

@@ -48,26 +48,7 @@ A bank wants an assistant that answers staff questions from its 4,000-page polic
 
 <KeyTerm definition="Retrieval-Augmented Generation — fetching relevant documents and giving them to the model so it answers from real sources.">RAG</KeyTerm> stands for Retrieval-Augmented Generation. Despite the name, the idea is simple: **find the relevant facts, then let the model answer using them.**
 
-<Diagram title="The RAG pipeline" caption="Retrieve the right passages, then let the model answer from them">
-
-```
-  Question: "What is our refund window?"
-       |
-       v
-  1. SEARCH your documents for relevant passages
-       |
-       v
-  2. RETRIEVE the top few:  "...refunds within 30 days..."
-       |
-       v
-  3. GIVE them to the model along with the question
-       |
-       v
-  4. ANSWER from those passages, citing the source
-       "Refunds are accepted within 30 days [Policy 4.2]."
-```
-
-</Diagram>
+<Figure name="rag-flow" />
 
 The clever part is step 1 — finding the *right* passages. This uses the "things become points in space" idea from the Maths course: the question and every document chunk are turned into vectors, and the system grabs the chunks whose vectors sit closest to the question's. (That technique, *semantic search*, has its own hands-on course in Applied AI.)
 

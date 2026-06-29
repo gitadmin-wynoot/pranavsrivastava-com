@@ -30,19 +30,7 @@ The name sounds intimidating, but the idea is gentle. A neural network is built 
 
 One neuron is almost useless. But connect thousands into layers — the output of one layer feeding the next — and something remarkable happens. The network can represent astonishingly complex patterns.
 
-<Diagram title="A neural network is layers of neurons" caption="Numbers flow left to right, transformed at each layer">
-
-```
-  input            hidden layers              output
-  [pixels]                                    [answer]
-    o  \        o        o
-    o ---\---  o  ----  o  ----  o            "cat"  0.91
-    o ----\--  o        o  ----  o            "dog"  0.07
-    o     /    o        o
-        (each line is a weight the model learns)
-```
-
-</Diagram>
+<Figure name="neural-layers" />
 
 Remember from the maths course: the inputs are a *vector*, each layer is a *matrix* that transforms it, and learning the weights is *gradient descent* walking downhill. A neural network is exactly those three ideas, stacked and repeated. Nothing more mysterious than that.
 
