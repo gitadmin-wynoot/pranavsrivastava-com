@@ -50,6 +50,10 @@ export default function ResearchPage() {
         <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-4">
           The areas of AI I keep coming back to
         </h1>
+        <p className="text-xs text-zinc-400 italic mb-4">
+          The rest of this site is in my words, his AI. This page is different —
+          here Pranav takes over and goes deep himself, in his own voice.
+        </p>
         <p className="text-base text-zinc-500 dark:text-zinc-400 leading-relaxed">
           My MSc in AI at MTU Cork was not just a qualification — it was a set
           of disciplines that genuinely changed how I reason about systems,
