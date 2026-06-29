@@ -63,6 +63,19 @@ export interface BlogPost {
   content: string;
 }
 
+// Essays — longer, reflective perspective pieces (a separate, quieter section
+// from the technical posts). They carry a "dek": a one-line standfirst.
+export interface Essay {
+  slug: string;
+  title: string;
+  dek: string;
+  summary: string;
+  published: boolean;
+  publishedAt: string;
+  readingTimeMin: number;
+  content: string;
+}
+
 export interface Track {
   slug: string;
   title: string;
@@ -238,6 +251,39 @@ export function getLab(slug: string): Lab | null {
 /** A lab is "available" (openable) when published. */
 export function isLabAvailable(lab: Lab): boolean {
   return lab.status === "published";
+}
+
+// ─── Essays ───────────────────────────────────────────────────────────────────
+
+function parseEssay(file: string, dir: string): Essay {
+  const slug = file.replace(/\.mdx?$/, "");
+  const { data, content } = matter(fs.readFileSync(path.join(dir, file), "utf-8"));
+  return {
+    slug,
+    title: data.title ?? slug,
+    dek: data.dek ?? "",
+    summary: data.summary ?? "",
+    published: data.published ?? true,
+    publishedAt: data.publishedAt ?? data.date ?? new Date().toISOString(),
+    readingTimeMin: estimateReadingTime(content),
+    content,
+  } satisfies Essay;
+}
+
+export function getEssays(): Essay[] {
+  const dir = getContentDir("essays");
+  return readMdxFiles(dir)
+    .map((file) => parseEssay(file, dir))
+    .filter((e) => e.published)
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
+export function getEssay(slug: string): Essay | null {
+  const dir = getContentDir("essays");
+  const file = [`${slug}.mdx`, `${slug}.md`].find((f) =>
+    fs.existsSync(path.join(dir, f))
+  );
+  return file ? parseEssay(file, dir) : null;
 }
 
 // ─── Courses ──────────────────────────────────────────────────────────────────
