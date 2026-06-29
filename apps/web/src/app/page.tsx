@@ -49,24 +49,21 @@ export default async function HomePage() {
           {/* Label */}
           <div className="flex items-center gap-2 mb-6 fade-up">
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
-              Product Thinkengineer · Applied AI · Netherlands
+              Building · Teaching · Writing · Netherlands
             </span>
           </div>
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl fade-up" style={{ animationDelay: "0.08s" }}>
-            Product thinkengineer.
-            <span className="text-zinc-400 dark:text-zinc-500 font-normal"> Invisible infrastructure,
-            fifteen years, five domains.</span>{" "}
-            Now making it intelligent.
+            I build AI that actually works.
+            <span className="text-zinc-400 dark:text-zinc-500 font-normal">{" "}Then I show how — from the first idea up.</span>
           </h1>
 
           {/* Subheading */}
           <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed fade-up" style={{ animationDelay: "0.2s" }}>
-            Computer vision, fraud detection at scale, speech-to-text,
-            intelligent CPaaS — the AI that has to work without excuses.
-            Building Wynoot on the side. Writing it all down. If you are early
-            here, good timing.
+            Hands-on labs you can build alongside, courses that assume nothing,
+            and essays on the questions under the hype. I&apos;d rather let the
+            work speak — so have a look around.
           </p>
 
           {/* CTAs — work-first: lead into the labs, then the writing */}
