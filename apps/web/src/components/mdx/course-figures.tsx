@@ -255,7 +255,116 @@ function GradientDescent() {
   );
 }
 
+/* ── API request / response cycle ───────────────────────────────────────── */
+function ApiRequest() {
+  return (
+    <svg viewBox="0 0 640 180" className="w-full h-auto" fill="none" role="img">
+      <Box x={40} y={58} w={190} h={64} label="Client" sub="app, browser, phone" accent="blue" />
+      <Box x={410} y={58} w={190} h={64} label="API server" sub="your code + data" accent="emerald" />
+      <line x1="230" y1="78" x2="408" y2="78" className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="2" />
+      <polygon points="408,78 398,73 398,83" className="fill-zinc-400 dark:fill-zinc-500" />
+      <text x="319" y="68" textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="11.5" fontWeight="600">request: GET /users/42</text>
+      <line x1="408" y1="104" x2="232" y2="104" className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="2" />
+      <polygon points="232,104 242,99 242,109" className="fill-zinc-400 dark:fill-zinc-500" />
+      <text x="319" y="120" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="11.5" fontWeight="600">response: {"{ name, email }"}</text>
+    </svg>
+  );
+}
+
+/* ── Cloud responsibility stack: IaaS / PaaS / SaaS ──────────────────────── */
+function CloudStack() {
+  const rows = [
+    { y: 40, label: "SaaS", sub: "just use it — Gmail, Notion", accent: "emerald" },
+    { y: 104, label: "PaaS", sub: "you bring the code — Vercel, App Engine", accent: "blue" },
+    { y: 168, label: "IaaS", sub: "you manage the machine — EC2, VMs", accent: "amber" },
+  ];
+  const fill: Record<string, string> = {
+    emerald: "fill-emerald-50 dark:fill-emerald-950/40 stroke-emerald-300 dark:stroke-emerald-800",
+    blue: "fill-blue-50 dark:fill-blue-950/40 stroke-blue-300 dark:stroke-blue-800",
+    amber: "fill-amber-50 dark:fill-amber-950/40 stroke-amber-300 dark:stroke-amber-800",
+  };
+  return (
+    <svg viewBox="0 0 640 248" className="w-full h-auto" fill="none" role="img">
+      {rows.map((r) => (
+        <g key={r.label}>
+          <rect x="120" y={r.y} width="400" height="52" rx="11" className={fill[r.accent]} strokeWidth="1.5" />
+          <text x="150" y={r.y + 31} className="fill-zinc-800 dark:fill-zinc-100" fontSize="15" fontWeight="700">{r.label}</text>
+          <text x="232" y={r.y + 31} className="fill-zinc-500 dark:fill-zinc-400" fontSize="12">{r.sub}</text>
+        </g>
+      ))}
+      <text x="60" y="48" className="fill-zinc-400" fontSize="11">↑ less</text>
+      <text x="60" y="216" className="fill-zinc-400" fontSize="11">↓ more</text>
+      <text x="44" y="135" className="fill-zinc-400" fontSize="11" transform="rotate(-90 44 135)">you manage</text>
+    </svg>
+  );
+}
+
+/* ── API gateway in front of services ───────────────────────────────────── */
+function ApiGateway() {
+  const clients = [60, 120, 180];
+  const services = [52, 110, 168];
+  return (
+    <svg viewBox="0 0 640 232" className="w-full h-auto" fill="none" role="img">
+      <rect x="276" y="56" width="92" height="118" rx="14" className="fill-sky-100 dark:fill-sky-950/50 stroke-sky-400 dark:stroke-sky-700" strokeWidth="1.5" />
+      <text x="322" y="108" textAnchor="middle" className="fill-sky-700 dark:fill-sky-300" fontSize="13" fontWeight="700">API</text>
+      <text x="322" y="126" textAnchor="middle" className="fill-sky-700 dark:fill-sky-300" fontSize="13" fontWeight="700">Gateway</text>
+      {clients.map((y) => <line key={`c${y}`} x1="150" y1={y} x2="276" y2="115" className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" />)}
+      {services.map((y) => <line key={`s${y}`} x1="368" y1="115" x2="470" y2={y} className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" />)}
+      {clients.map((y, i) => (
+        <g key={`cl${i}`}>
+          <rect x="60" y={y - 17} width="90" height="34" rx="9" className="fill-blue-50 dark:fill-blue-950/40 stroke-blue-300 dark:stroke-blue-800" strokeWidth="1.5" />
+          <text x="105" y={y + 5} textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="11">Client {i + 1}</text>
+        </g>
+      ))}
+      {services.map((y, i) => (
+        <g key={`sv${i}`}>
+          <rect x="470" y={y - 17} width="100" height="34" rx="9" className="fill-emerald-50 dark:fill-emerald-950/40 stroke-emerald-300 dark:stroke-emerald-800" strokeWidth="1.5" />
+          <text x="520" y={y + 5} textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="11">Service {i + 1}</text>
+        </g>
+      ))}
+      <text x="322" y="206" textAnchor="middle" className="fill-zinc-400" fontSize="11">one front door: auth, rate limits, routing, logging</text>
+    </svg>
+  );
+}
+
+/* ── A request's journey through a modern system ────────────────────────── */
+function RequestJourney() {
+  const stages = [
+    { x: 14, label: "User", accent: "zinc" },
+    { x: 150, label: "Gateway", accent: "sky" },
+    { x: 286, label: "Service", accent: "blue" },
+    { x: 422, label: "Database", accent: "emerald" },
+  ];
+  const fill: Record<string, string> = {
+    zinc: "fill-zinc-50 dark:fill-zinc-900 stroke-zinc-300 dark:stroke-zinc-700",
+    sky: "fill-sky-50 dark:fill-sky-950/40 stroke-sky-300 dark:stroke-sky-800",
+    blue: "fill-blue-50 dark:fill-blue-950/40 stroke-blue-300 dark:stroke-blue-800",
+    emerald: "fill-emerald-50 dark:fill-emerald-950/40 stroke-emerald-300 dark:stroke-emerald-800",
+  };
+  return (
+    <svg viewBox="0 0 560 120" className="w-full h-auto" fill="none" role="img">
+      {stages.slice(0, -1).map((s, i) => (
+        <g key={`c${i}`}>
+          <line x1={s.x + 110} y1="56" x2={stages[i + 1].x - 4} y2="56" className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" />
+          <polygon points={`${stages[i + 1].x - 4},56 ${stages[i + 1].x - 13},51 ${stages[i + 1].x - 13},61`} className="fill-zinc-400 dark:fill-zinc-500" />
+        </g>
+      ))}
+      {stages.map((s, i) => (
+        <g key={i}>
+          <rect x={s.x} y="34" width="110" height="44" rx="10" className={fill[s.accent]} strokeWidth="1.5" />
+          <text x={s.x + 55} y="60" textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="12" fontWeight="600">{s.label}</text>
+        </g>
+      ))}
+      <text x="280" y="100" textAnchor="middle" className="fill-zinc-400" fontSize="10">…and the answer travels back the same way</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "api-request": { node: <ApiRequest />, caption: "An API is a contract: the client sends a request, the server sends back a structured response. That's the whole heartbeat." },
+  "cloud-stack": { node: <CloudStack />, caption: "Cloud comes in layers. The higher you go, the less you manage yourself — and the faster you can build." },
+  "api-gateway": { node: <ApiGateway />, caption: "An API gateway is the single front door to your services — handling auth, rate limits, routing, and logging in one place." },
+  "request-journey": { node: <RequestJourney />, caption: "A typical request: from the user, through the gateway, to a service, to the database — and all the way back." },
   "vectors-space": { node: <VectorsSpace />, caption: "Turn things into numbers, and similar things land near each other — the idea behind search and recommendations." },
   "neural-layers": { node: <NeuralLayers />, caption: "A neural network is just layers of simple units. Information flows left to right, reshaped at each layer into an answer." },
   "gradient-descent": { node: <GradientDescent />, caption: "Learning is walking downhill: feel which way reduces the error, take a small step, repeat until you reach the bottom." },

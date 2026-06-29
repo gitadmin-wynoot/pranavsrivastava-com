@@ -1,0 +1,143 @@
+---
+title: "API Fundamentals: What an API Is & How One Is Built"
+slug: "api-fundamentals"
+summary: "Start here, even if you've never built software. What an API actually is, how two programs talk through one, and the simple parts every API is made of — explained with everyday analogies and real examples."
+level: "Beginner"
+status: "published"
+order: 1
+track: "cloud-apis"
+prereqs: []
+tags: ["APIs", "HTTP", "REST", "JSON", "Web"]
+lessonCount: 4
+---
+
+Almost everything you use online is quietly held together by APIs. When your weather app shows the forecast, when you pay with a card, when a website logs you in with Google — an API is doing the work behind the scenes. This course explains what they are and how they're built, from zero. No experience needed.
+
+<Callout type="tip" title="New here? You're in the right place.">
+This assumes no coding background. We define every term as it appears and build up gently. If you'd like to know where these APIs actually *run* once built, that's the [Cloud Foundations](/courses/cloud-foundations) course later in this track — but start here first.
+</Callout>
+
+<LearningObjectives>
+- Understand what an API is, in plain language, with no jargon
+- See how a "request" and a "response" form the heartbeat of every API
+- Know the simple building blocks: endpoints, methods, data, and status codes
+- Be able to read what an API call is doing, even if you've never coded
+</LearningObjectives>
+
+<ChapterHeader number={1} title="What an API actually is" time={11} />
+
+<KeyTerm definition="Application Programming Interface — an agreed way for one program to ask another program for something.">API</KeyTerm> stands for **Application Programming Interface**. Forget the intimidating name. An API is just **an agreed way for one program to ask another program for something** — and get an answer back.
+
+The classic analogy is a restaurant. You (one program) don't walk into the kitchen and cook. You read the **menu** (the list of things you're allowed to ask for), tell the **waiter** (the API) your order, and the waiter brings back your food. You never see the kitchen. You don't need to. The menu and the waiter are the *interface* — a clean, agreed way to get what you want without knowing how it's made.
+
+That's an API. The weather company has all the weather data in its "kitchen." Your phone app reads the "menu" (here's what you can ask: a forecast for a city), sends an order through the API, and gets back the forecast. Your app never touches their database directly — it just asks, politely, in the agreed way.
+
+<Callout type="note" title="Why this matters">
+APIs are why software can be built from pieces. You don't build a maps system, a payment system, and a login system from scratch — you *call their APIs*. Modern building is mostly connecting good APIs together. Understanding them is the foundation of understanding how anything online is made.
+</Callout>
+
+<ChapterSummary>
+- An API is an agreed way for one program to ask another for something and get an answer
+- Like a restaurant: you order from the menu via the waiter, never touching the kitchen
+- APIs let software be built by connecting existing pieces instead of rebuilding everything
+</ChapterSummary>
+
+<ChapterHeader number={2} title="The heartbeat: request and response" time={12} />
+
+Every API works on one simple rhythm: a <KeyTerm definition="A message a client sends to ask an API for something.">request</KeyTerm> goes out, and a <KeyTerm definition="The API's answer, sent back to the client.">response</KeyTerm> comes back. The thing making the request (your app, a browser, a phone) is called the **client**. The thing answering is the **server**.
+
+<Figure name="api-request" />
+
+Let's make it concrete. Your app wants details for user number 42. It sends a request that essentially says *"GET me /users/42"*. The server looks it up and sends back a tidy answer: `{ "name": "Ada", "email": "ada@example.com" }`. Request out, response back. That's the entire cycle, and every API — no matter how complex — is built on it.
+
+The data comes back in a format both sides agree on, almost always <KeyTerm definition="JavaScript Object Notation — a simple, readable text format for data, made of names and values.">JSON</KeyTerm>: a plain-text way of writing data as names and values, readable by humans and machines alike. (It's the [`{ "name": "value" }`](https://www.json.org) style you see above.)
+
+<Callout type="tip" title="You can watch this happen">
+Open [`https://api.github.com/users/torvalds`](https://api.github.com/users/torvalds) in your browser. You just made an API request — your browser was the client, GitHub's server answered, and what you see is the JSON response. No code required. That's a real API call.
+</Callout>
+
+<ChapterSummary>
+- Every API runs on a request → response cycle
+- The client asks; the server answers — with data, usually in JSON
+- You can make a real API request just by opening an API URL in a browser
+</ChapterSummary>
+
+<Checkpoint>
+1. Using the restaurant analogy, what plays the role of the "waiter" and the "menu"?
+2. In "GET /users/42", who is the client and who is the server, and what comes back?
+</Checkpoint>
+
+<ChapterHeader number={3} title="How an API is built: the four parts" time={13} />
+
+When someone "builds an API," they're really defining four simple things. Once you see them, every API becomes readable.
+
+<Steps>
+
+<Step number={1} title="Endpoints — the addresses">
+An <KeyTerm definition="A specific address (URL) on an API that represents one kind of thing you can ask for.">endpoint</KeyTerm> is a web address for one kind of thing. `/users` for users, `/orders` for orders, `/users/42` for one specific user. Building an API starts with deciding these addresses — your "menu."
+</Step>
+
+<Step number={2} title="Methods — the verbs">
+Each request carries a **method** that says what you want to *do*. There are four everyday ones:
+- **GET** — read something ("get me user 42")
+- **POST** — create something ("add a new user")
+- **PUT / PATCH** — update something ("change user 42's email")
+- **DELETE** — remove something ("delete user 42")
+
+Same address, different verb, different action. `GET /users/42` reads; `DELETE /users/42` removes.
+</Step>
+
+<Step number={3} title="Data — what goes in and comes out">
+When you create or update, you send data *in* (the new user's details). The server sends data *back* (the result). Both travel as JSON. Building an API means deciding the shape of this data.
+</Step>
+
+<Step number={4} title="Status codes — did it work?">
+Every response carries a 3-digit <KeyTerm definition="A standard number an API returns to say what happened — e.g. 200 OK, 404 Not Found.">status code</KeyTerm> reporting what happened. You already know one: **404** (not found). The everyday ones:
+- **200** — OK, here's your answer
+- **201** — created successfully
+- **400** — your request was malformed
+- **401 / 403** — you're not allowed
+- **404** — that thing doesn't exist
+- **500** — the server broke
+</Step>
+
+</Steps>
+
+That's it. Endpoints (addresses), methods (verbs), data (JSON), status codes (results). Every API — Google's, your bank's, the one you might build — is made of these four parts. The rest of this track is about doing them *well*.
+
+<Callout type="info" title="The standards underneath">
+None of this is invented per-company — it rides on shared standards. The request/response rules are [HTTP](https://developer.mozilla.org/docs/Web/HTTP) (the same protocol that loads web pages). The data format is [JSON](https://www.json.org). Because everyone agrees on these, any client can talk to any server. That agreement is the quiet miracle that makes the web work.
+</Callout>
+
+<ChapterSummary>
+- Building an API means defining endpoints, methods, data, and status codes
+- Methods are verbs: GET reads, POST creates, PUT/PATCH updates, DELETE removes
+- Status codes report the result (200 OK, 404 Not Found, 500 server error)
+- It all rides on shared standards — HTTP and JSON — so anything can talk to anything
+</ChapterSummary>
+
+<ChapterHeader number={4} title="Putting it together — a tiny mental model" time={9} />
+
+Let's trace one real interaction end to end, so it sticks. You tap "place order" in a shopping app:
+
+1. The app (client) sends **`POST /orders`** with JSON data: the items and your address.
+2. The server receives it, saves the order, and replies **`201 Created`** with JSON: `{ "orderId": 8842, "status": "confirmed" }`.
+3. The app reads that, shows "Order confirmed!", and remembers order 8842.
+
+Later you check on it: the app sends **`GET /orders/8842`**, the server replies **`200 OK`** with the current status. Every feature in every app you use is, underneath, a sequence of these small, well-defined requests and responses.
+
+<Callout type="tip" title="Where this goes next">
+You now understand what an API is and how one is built. But there's more than one *style* of API — REST, GraphQL, gRPC, and others, each suited to different jobs. That's the next course: **The Types of APIs**.
+</Callout>
+
+<ChapterSummary>
+- Real features are sequences of simple requests and responses
+- "Place order" = POST /orders → 201 Created; "check order" = GET /orders/8842 → 200 OK
+- You now have the core mental model every API builds on
+</ChapterSummary>
+
+<Checkpoint>
+1. Which method would you use to create a new order, and what status code signals success?
+2. Name the four building blocks of an API, with one example of each.
+3. Why does it matter that APIs ride on shared standards like HTTP and JSON?
+</Checkpoint>
