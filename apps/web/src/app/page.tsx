@@ -55,8 +55,8 @@ export default async function HomePage() {
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl fade-up" style={{ animationDelay: "0.08s" }}>
-            I build AI that actually works.
-            <span className="text-zinc-400 dark:text-zinc-500 font-normal">{" "}Then I show how — from the first idea up.</span>
+            I build things with AI,
+            <span className="text-zinc-400 dark:text-zinc-500 font-normal">{" "}teach how they work, and write down what I learn along the way.</span>
           </h1>
 
           {/* Subheading */}
