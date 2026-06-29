@@ -6,6 +6,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import { getEssay, getEssays } from "@/lib/content";
 import { mdxCompileOptions } from "@/lib/mdx";
 import { CodeBlock } from "@/components/mdx/code-block";
+import { essayComponents } from "@/components/essays/figures";
 import { ArticleListen } from "@/components/blog/article-listen";
 import { formatDate } from "@/lib/utils";
 
@@ -32,7 +33,7 @@ export default async function EssayPage({ params }: Props) {
   const { content } = await compileMDX({
     source: essay.content,
     options: mdxCompileOptions,
-    components: { pre: CodeBlock },
+    components: { pre: CodeBlock, ...essayComponents },
   });
 
   return (
