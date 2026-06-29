@@ -4,6 +4,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 import {
   ArrowRight,
+  Sparkles,
   MapPin,
   Briefcase,
   Cpu,
@@ -38,7 +39,7 @@ const depthAreas = [
       "Computer vision is the craft of turning pixels into a judgement. A person glances at a photo and knows 'that scan looks abnormal' or 'that document is altered.' A computer only sees millions of coloured dots — teaching it to reach the same judgement, reliably and in poor lighting, is the work.",
     ground:
       "A grounded example: India has roughly one radiologist for every 100,000 people, and many rural districts have none — so scans can wait days to be read. A vision model does not replace the doctor; it triages the queue, surfacing the likely-urgent scans first so a human looks at those sooner. The aim is to order attention, not remove the expert.",
-    mine: "My thesis read a student's attention in real time from an ordinary webcam. The lasting lesson was humility — seeing exactly where these systems stumble (bad light, unfamiliar faces) is what makes you careful about where they can be trusted.",
+    mine: "His thesis read a student's attention in real time from an ordinary webcam. The lasting lesson was humility — seeing exactly where these systems stumble (bad light, unfamiliar faces) is what makes you careful about where they can be trusted.",
     href: "/about/research#computer-vision",
   },
   {
@@ -51,7 +52,7 @@ const depthAreas = [
       "This is about writing down what a system knows — its facts, rules, and assumptions — in a form it can reason over. It is how a machine moves from simply reacting to actually thinking a decision through.",
     ground:
       "A grounded example: from 2024 the EU AI Act places legal obligations on higher-risk AI used here in Europe. If a bank in the Netherlands deploys a support agent, it cannot just hope the model stays within financial rules — the constraints have to be written down explicitly and checked against. That is knowledge representation doing safety work, not theory.",
-    mine: "My Mars-rover project reasoned about an unknown world from a fixed set of facts — deciding where water might be and how to reach it. The same idea now sits under AI guardrails and the recommendation logic I am building into Wynoot.",
+    mine: "His Mars-rover project reasoned about an unknown world from a fixed set of facts — deciding where water might be and how to reach it. The same idea now sits under AI guardrails and the recommendation logic he is building into Wynoot.",
     href: "/about/research#knowledge-representation",
   },
   {
@@ -63,8 +64,8 @@ const depthAreas = [
     plainWords:
       "Some problems have so many possible answers that checking them one by one would outlast the universe. Metaheuristics are smart shortcuts — often borrowed from nature, like how evolution improves a species or how ants converge on the shortest trail — that find a very good answer quickly.",
     ground:
-      "A grounded example I admire: Mumbai's dabbawalas — around 5,000 carriers moving close to 200,000 home-cooked lunchboxes across the city and back every day, coordinated with almost no technology. A Harvard Business School study put their error rate at roughly one in six million deliveries. It is a living, human solution to exactly the routing-and-sorting problem these algorithms tackle.",
-    mine: "I built a genetic-algorithm solver for the travelling-salesman problem from scratch. The same thinking shapes how I approach scheduling in Wynoot and how checks get sequenced in high-volume systems.",
+      "A grounded example he admires: Mumbai's dabbawalas — around 5,000 carriers moving close to 200,000 home-cooked lunchboxes across the city and back every day, coordinated with almost no technology. A Harvard Business School study put their error rate at roughly one in six million deliveries. It is a living, human solution to exactly the routing-and-sorting problem these algorithms tackle.",
+    mine: "He built a genetic-algorithm solver for the travelling-salesman problem from scratch. The same thinking shapes how he approaches scheduling in Wynoot and how checks get sequenced in high-volume systems.",
     href: "/about/research#metaheuristics",
   },
   {
@@ -77,7 +78,7 @@ const depthAreas = [
       "Older language tools matched words; modern ones match meaning. Ask 'how do I stop my plan' and the system finds the 'termination policy' even though you used none of those words. It is the difference between matching spelling and understanding intent.",
     ground:
       "A grounded example: India recognises 22 official languages, and a citizen looking for the right welfare scheme faces hundreds of them across central and state programs — many never claim what they are entitled to simply because they cannot find or name it. Meaning-based search can match a person's situation — 'I am a farmer and need crop cover' — to the right scheme, across languages, without knowing its official title.",
-    mine: "I build these retrieval systems and wrote a full course on how they work end to end — turning text into 'meaning coordinates,' fetching the right passage, and having a model answer from it faithfully.",
+    mine: "He builds these retrieval systems and wrote a full course on how they work end to end — turning text into 'meaning coordinates,' fetching the right passage, and having a model answer from it faithfully.",
     href: "/about/research#deep-learning",
   },
   {
@@ -90,7 +91,7 @@ const depthAreas = [
       "A blockchain, underneath the noise, is just a shared record everyone can write to but no one can secretly rewrite. Once an entry is in, it stays — visible to all. That makes trust something you can verify rather than assume.",
     ground:
       "A grounded example: in India's produce supply chain, food passes through many hands between farmer and consumer. Farmers often receive only around a third of the final price, and by some estimates close to 30% of fruit and vegetables are lost along the way. A shared ledger makes each handoff visible — so origin can be proven and a contamination traced back in minutes rather than weeks.",
-    mine: "At a 2019 hackathon I built farm-to-fork tracking on Hyperledger Fabric. It felt early then and reads as obvious now — and my mind keeps running forward, to a fridge that knows what is inside, where it came from, and when it will spoil.",
+    mine: "At a 2019 hackathon he built farm-to-fork tracking on Hyperledger Fabric. It felt early then and reads as obvious now — and his mind keeps running forward, to a fridge that knows what is inside, where it came from, and when it will spoil.",
     href: "/about/research#decentralized",
   },
 ];
@@ -151,7 +152,7 @@ const milestones: { year: string; type: ArcType; title: string; desc: string }[]
     year: "2011",
     type: "career",
     title: "TCS — Ahmedabad, then Pune",
-    desc: "Consulting across banking, automotive, and finance. Where I learned that every industry has its own constraints — and that the constraints are the interesting part.",
+    desc: "Consulting across banking, automotive, and finance. Where he learned that every industry has its own constraints — and that the constraints are the interesting part.",
   },
   {
     year: "2014",
@@ -187,7 +188,7 @@ const milestones: { year: string; type: ArcType; title: string; desc: string }[]
     year: "2024",
     type: "founder",
     title: "Wynoot",
-    desc: "Launched Wynoot with AI at the core. Same year I picked up skiing at 40 — both needed the same thing: showing up without excuses.",
+    desc: "Launched Wynoot with AI at the core. Same year he picked up skiing at 40 — both needed the same thing: showing up without excuses.",
   },
   {
     year: "Now",
@@ -225,7 +226,7 @@ const workAreas = [
   {
     icon: <Telescope className="w-4 h-4" />,
     label: "Computer vision",
-    desc: "Feature detection, optical flow, facial analysis, CNN classification. Built my MSc thesis on it — from pixels to meaning.",
+    desc: "Feature detection, optical flow, facial analysis, CNN classification. He built his MSc thesis on it — from pixels to meaning.",
     color: "text-purple-500",
   },
   {
@@ -237,7 +238,7 @@ const workAreas = [
   {
     icon: <GraduationCap className="w-4 h-4" />,
     label: "Teaching & writing",
-    desc: "Courses on MCP, AI agents, and semantic search. Ebook in progress. Writing what I actually learn, not what sounds good.",
+    desc: "Courses on MCP, AI agents, and semantic search. Ebook in progress. He writes what he actually learns, not what sounds good.",
     color: "text-sky-500",
   },
 ];
@@ -295,6 +296,16 @@ export default function AboutPage() {
         </div>
       </div>
 
+      {/* ── AI narrator note ─────────────────────────────────────────────── */}
+      <p className="mb-10 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed flex items-start gap-2.5">
+        <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+        <span>
+          I&apos;m Pranav&apos;s AI. He would rather build than write about
+          himself, so he asked me to do it — honestly, and without the usual
+          self-promotion. Here he is, in my words.
+        </span>
+      </p>
+
       {/* ── The quick version ─────────────────────────────────────────────── */}
       <div className="mb-12 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
         <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-4">
@@ -302,26 +313,26 @@ export default function AboutPage() {
         </p>
         <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
           <p>
-            Software engineer and product thinker with fifteen years building
-            the systems businesses depend on — APIs, CPaaS, fraud detection,
-            AI integration — across telecom, banking, automotive, and asset finance.
-            Joined a small KPN incubator in 2017 and helped grow{" "}
+            He&apos;s a software engineer and product thinker with fifteen years
+            building the systems businesses depend on — APIs, CPaaS, fraud
+            detection, AI integration — across telecom, banking, automotive, and
+            asset finance. He joined a small KPN incubator in 2017 and helped grow{" "}
             <a href="https://developer.kpn.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">developer.kpn.com</a>
             {" "}into a revenue-generating enterprise product.
           </p>
           <p>
-            Also a founder. Running{" "}
+            He&apos;s also a founder, running{" "}
             <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Wynoot</a>
-            {" "}(AI-powered platform for service businesses) and{" "}
+            {" "}(an AI-powered platform for service businesses) and{" "}
             <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Qubitsy</a>
-            {" "}(consulting studio). Did an MSc in AI in my 30s because
-            algorithms were always the part I found genuinely interesting, not
+            {" "}(a consulting studio). He did an MSc in AI in his 30s because
+            algorithms were always the part he found genuinely interesting, not
             an add-on.
           </p>
           <p>
-            Grew up in Jhansi. Wrote first code at 13 on a DOS machine.
-            Engineer since 2010. In the Netherlands since 2016. Still building,
-            still curious — recently also on ski slopes.
+            He grew up in Jhansi and wrote his first code at 13 on a DOS machine.
+            An engineer since 2010, in the Netherlands since 2016 — still
+            building, still curious, and (recently) on ski slopes.
           </p>
         </div>
       </div>
@@ -427,7 +438,7 @@ export default function AboutPage() {
               Designed and built API-driven fraud detection systems operating
               at telecom scale — where volume is real, latency matters, and
               false positives cost money. The intersection of domain knowledge,
-              AI, and production engineering that I find most interesting.
+              AI, and production engineering that he finds most interesting.
             </p>
             <div className="flex flex-wrap gap-1.5">
               {["Fraud detection", "High-volume APIs", "AI systems", "Real-time signals", "Telecom scale"].map((t) => (
@@ -446,7 +457,7 @@ export default function AboutPage() {
               <p className="text-xs text-zinc-400 mt-0.5">TCS · Cognizant · KPN · 2010 → present</p>
             </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-              Across fifteen years and several companies, I have built integration
+              Across fifteen years and several companies, he has built integration
               systems for automotive, banking, asset finance, financial
               services, and telecom. Different industries, different
               constraints, same underlying discipline: well-designed APIs and
@@ -467,7 +478,7 @@ export default function AboutPage() {
       {/* ── How I think about products ────────────────────────────────────── */}
       <div className="mb-12">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          How I think about products
+          How he thinks about products
         </h2>
         <p className="text-xs text-zinc-400 mb-6">
           Three moments that show the product thinking more than any job title could
@@ -482,13 +493,13 @@ export default function AboutPage() {
                   The developer who is your user
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  At KPN we had a working SMS API with growing adoption — and
-                  growing support tickets at the same rate. Developers kept
+                  At KPN, his team had a working SMS API with growing adoption —
+                  and growing support tickets at the same rate. Developers kept
                   hitting the same errors and not understanding them. The
                   response codes were technically correct:
                   {" "}<code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">ERR_429_RATE_LIMIT_EXCEEDED</code>.
                   But they said nothing about why it happened, what triggered
-                  it, or how to fix it. We spent one sprint rewriting every
+                  it, or how to fix it. They spent one sprint rewriting every
                   error response — plain English, probable cause, suggested
                   remedy. Support volume dropped. Adoption continued growing.
                   That is product thinking inside API design: the developer
@@ -510,7 +521,7 @@ export default function AboutPage() {
                   Building anti-fraud systems at telecom scale, the hardest
                   decision is never the algorithm. It is the detection
                   threshold. Too sensitive and legitimate businesses get blocked
-                  mid-campaign, call us angry, and churn. Too permissive and
+                  mid-campaign, call in angry, and churn. Too permissive and
                   fraudulent traffic slips through, erodes platform trust, and
                   attracts regulatory attention. Both failure modes have real
                   business costs — different kinds, different stakeholders.
@@ -534,11 +545,11 @@ export default function AboutPage() {
                   payment preference, then show available time slots. Logical
                   from a data-collection perspective. Wrong from a user
                   perspective. People want to know if Thursday 6pm is available
-                  before they commit to anything. We flipped the order —
+                  before they commit to anything. He flipped the order —
                   availability first, payment last. Not a single line of
                   business logic changed. The technology was identical. The
-                  product decision changed the outcome. This is the one I
-                  think about most when someone tells me a feature is not
+                  product decision changed the outcome. This is the one he
+                  thinks about most when someone says a feature is not
                   working: is it engineering, or is it sequencing?
                 </p>
               </div>
@@ -551,7 +562,7 @@ export default function AboutPage() {
       {/* ── What I work on ────────────────────────────────────────────────── */}
       <div className="mb-12">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-          What I work on
+          What he works on
         </h2>
         <div className="grid sm:grid-cols-2 gap-3">
           {workAreas.map((item) => (
@@ -588,8 +599,8 @@ export default function AboutPage() {
           MTU Cork, Ireland · 2019–2021
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6 max-w-2xl">
-          These are the areas I studied during my Master&apos;s — and the real
-          problems I keep mapping them onto. I have written each in plain
+          These are the areas he studied during his Master&apos;s — and the real
+          problems he keeps mapping them onto. Each is written in plain
           language, with a concrete example, because the idea matters more than
           the jargon.
         </p>
@@ -628,7 +639,7 @@ export default function AboutPage() {
               </p>
 
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-2">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">What I did — </span>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">What he did — </span>
                 {a.mine}
               </p>
 
@@ -663,7 +674,7 @@ export default function AboutPage() {
               name: "Qubitsy",
               url: "https://qubitsy.com",
               role: "Founder · Consulting & R&D studio",
-              desc: "I help engineering teams take AI from experiment to production — agent architecture, API design, cloud integration, and the observability layer that tells you when something breaks. Fifteen years of enterprise context, startup mindset.",
+              desc: "He helps engineering teams take AI from experiment to production — agent architecture, API design, cloud integration, and the observability layer that tells you when something breaks. Fifteen years of enterprise context, startup mindset.",
             },
             {
               name: "Wynoot",
@@ -708,7 +719,8 @@ export default function AboutPage() {
           Beyond the code
         </h2>
         <p className="text-xs text-zinc-400 mb-6">
-          The stuff that does not go on a CV but shapes how I think
+          The stuff that does not go on a CV but shapes how he thinks — and, for
+          this part, in his own words
         </p>
 
         <blockquote className="text-base font-medium text-zinc-700 dark:text-zinc-300 border-l-2 border-blue-500 pl-4 mb-8 italic leading-relaxed">
@@ -727,7 +739,7 @@ export default function AboutPage() {
               Picked up skiing in 2024 with zero prior experience and full
               determination. Two complete seasons, four trips, genuine
               technique improvement. Even recorded a podcast episode mid-run
-              from a slope — because why not. Then convinced the wife and son
+              from a slope — because why not. Then he convinced his wife and son
               to try it. They are catching up fast.
             </p>
           </div>
@@ -740,7 +752,7 @@ export default function AboutPage() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
               Travel, camping, history, local culture — the more unfamiliar,
               the better. Moving from Jhansi to Bhopal to Noida to Eindhoven
-              to the Netherlands was not accidental. I like new constraints.
+              to the Netherlands was not accidental. He likes new constraints.
               They make you figure things out differently.
             </p>
           </div>
@@ -753,8 +765,8 @@ export default function AboutPage() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
               Grew up playing badminton and table tennis in Jhansi. Picked up
               tennis in the Netherlands in 2021 with coaching — took time to
-              click, but clicked. Sport has taught me patience with the
-              learning curve, which translates directly to how I approach new
+              click, but clicked. Sport taught him patience with the
+              learning curve, which translates directly to how he approaches new
               technology.
             </p>
           </div>
@@ -765,10 +777,10 @@ export default function AboutPage() {
               <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Teaching & podcasting</p>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              I advise and motivate people more than I talk about it. The
+              He advises and motivates people more than he talks about it. The
               instinct comes from growing up with a teacher for a mum — she
-              shaped how I explain things. I record occasional podcast
-              episodes, write courses, and give people the honest version of
+              shaped how he explains things. He records occasional podcast
+              episodes, writes courses, and gives people the honest version of
               what it takes to build real skills.
             </p>
           </div>
@@ -783,12 +795,12 @@ export default function AboutPage() {
             </p>
           </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            My mum is a retired teacher — the powerhouse of the house. She
-            shaped how I think about learning, sharing, and patience. My dad
+            His mum is a retired teacher — the powerhouse of the house. She
+            shaped how he thinks about learning, sharing, and patience. His dad
             is a scientist turned banker — the solid rock. Between the two of
-            them I got curiosity and groundedness. My wife completed her
-            Masters around the same time I did — she knows what that chapter
-            looks like from the inside. My son is now on the ski slopes too.
+            them he got curiosity and groundedness. His wife completed her
+            Masters around the same time he did — she knows what that chapter
+            looks like from the inside. His son is now on the ski slopes too.
             The explorer gene passes on.
           </p>
         </div>
