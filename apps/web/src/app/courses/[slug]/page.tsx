@@ -9,11 +9,26 @@ import {
   getCourseManifest,
   getCourseModules,
   isMultiModuleCourse,
+  isCourseAvailable,
 } from "@/lib/content";
 import { mdxCompileOptions } from "@/lib/mdx";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { courseComponents } from "@/components/mdx/course-components";
 import { CourseOutline } from "@/components/course/course-outline";
+import { RecommendedNext } from "@/components/course/recommended-next";
+
+// Available courses offered as "what next" recommendations across course pages.
+function recommendationPool() {
+  return getCourses()
+    .filter(isCourseAvailable)
+    .map((c) => ({
+      slug: c.slug,
+      title: c.title,
+      summary: c.summary,
+      track: c.track,
+      lessonCount: c.lessonCount,
+    }));
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -111,8 +126,15 @@ async function MultiModuleCourseIndex({ slug }: { slug: string }) {
         }))}
       />
 
+      {/* What next — a fresh, relevant recommendation each visit */}
+      <RecommendedNext
+        currentSlug={slug}
+        currentTrack={manifest.track}
+        candidates={recommendationPool()}
+      />
+
       {/* Footer */}
-      <div className="mt-16 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+      <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <Link
           href="/learn"
           className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
@@ -206,7 +228,14 @@ async function SingleFileCourse({ slug }: { slug: string }) {
 
       <article className="prose max-w-none course-content">{content}</article>
 
-      <div className="mt-16 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+      {/* What next — a fresh, relevant recommendation each visit */}
+      <RecommendedNext
+        currentSlug={slug}
+        currentTrack={course.track}
+        candidates={recommendationPool()}
+      />
+
+      <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
         <Link
           href="/learn"
           className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"

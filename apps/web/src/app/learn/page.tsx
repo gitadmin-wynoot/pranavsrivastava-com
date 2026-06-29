@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { getTracks, getCourses, isCourseAvailable } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
+import { FeaturedCourses } from "@/components/course/featured-courses";
 
 export const metadata: Metadata = {
   title: "Learn",
@@ -79,28 +80,15 @@ export default function LearnPage() {
               All courses &amp; roadmap →
             </Link>
           </div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {availableCourses.map((course) => (
-              <Link
-                key={course.slug}
-                href={`/courses/${course.slug}`}
-                className="group flex flex-col p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant="green">Available</Badge>
-                  {course.lessonCount && (
-                    <span className="text-xs text-zinc-400">{course.lessonCount} lessons</span>
-                  )}
-                </div>
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm leading-snug mb-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {course.title}
-                </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-3">
-                  {course.summary}
-                </p>
-              </Link>
-            ))}
-          </div>
+          <FeaturedCourses
+            courses={availableCourses.map((c) => ({
+              slug: c.slug,
+              title: c.title,
+              summary: c.summary,
+              track: c.track,
+              lessonCount: c.lessonCount,
+            }))}
+          />
         </div>
       )}
 
