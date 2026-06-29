@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap, PenLine, Clock } from "lucide-react";
-import { getBlogPosts, getProjects, getLabs, isLabAvailable } from "@/lib/content";
+import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap, PenLine, Clock, Feather } from "lucide-react";
+import { getBlogPosts, getProjects, getLabs, isLabAvailable, getEssays } from "@/lib/content";
 import { getMediumPosts } from "@/lib/medium";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { NewsletterSignup } from "@/components/newsletter-signup";
@@ -9,6 +9,7 @@ import { formatDate } from "@/lib/utils";
 export default async function HomePage() {
   const featuredProjects = getProjects().filter((p) => p.featured).slice(0, 2);
   const featuredLabs = getLabs().filter(isLabAvailable).slice(0, 3);
+  const essays = getEssays().slice(0, 2);
 
   // One unified "Writing" stream: native posts + Medium essays, newest first.
   const mediumPosts = await getMediumPosts(6);
@@ -46,14 +47,14 @@ export default async function HomePage() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-24 sm:py-32">
           {/* Label */}
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 mb-6 fade-up">
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
               Product Thinkengineer · Applied AI · Netherlands
             </span>
           </div>
 
           {/* Heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl fade-up" style={{ animationDelay: "0.08s" }}>
             Product thinkengineer.
             <span className="text-zinc-400 dark:text-zinc-500 font-normal"> Invisible infrastructure,
             fifteen years, five domains.</span>{" "}
@@ -61,7 +62,7 @@ export default async function HomePage() {
           </h1>
 
           {/* Subheading */}
-          <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed fade-up" style={{ animationDelay: "0.2s" }}>
             Computer vision, fraud detection at scale, speech-to-text,
             intelligent CPaaS — the AI that has to work without excuses.
             Building Wynoot on the side. Writing it all down. If you are early
@@ -69,7 +70,7 @@ export default async function HomePage() {
           </p>
 
           {/* CTAs — work-first: lead into the labs, then the writing */}
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-wrap gap-3 fade-up" style={{ animationDelay: "0.32s" }}>
             <Link
               href="/labs"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-full hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
@@ -85,7 +86,7 @@ export default async function HomePage() {
           </div>
 
           {/* Meta */}
-          <p className="mt-8 text-sm text-zinc-400">
+          <p className="mt-8 text-sm text-zinc-400 fade-up" style={{ animationDelay: "0.44s" }}>
             Netherlands ·{" "}
             <a href="https://qubitsy.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Qubitsy
@@ -286,6 +287,43 @@ export default async function HomePage() {
                 </Link>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Essays — perspective, shown through the work ─────────────────── */}
+      {essays.length > 0 && (
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <Feather className="w-4 h-4 text-violet-500" />
+              Thinking out loud
+            </h2>
+            <Link
+              href="/essays"
+              className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+            >
+              All essays →
+            </Link>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {essays.map((essay) => (
+              <Link
+                key={essay.slug}
+                href={`/essays/${essay.slug}`}
+                className="group flex flex-col p-5 sm:p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 hover:border-violet-500/30 hover:shadow-sm transition-all"
+              >
+                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                  {essay.title}
+                </h3>
+                {essay.dek && (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-2 italic">
+                    {essay.dek}
+                  </p>
+                )}
+                <span className="mt-4 text-xs text-zinc-400">{essay.readingTimeMin} min read</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}

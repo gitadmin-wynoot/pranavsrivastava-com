@@ -56,11 +56,25 @@
   100% { transform: translate3d(-1.5%, 1%, 0) scale(1.03); }
 }
 
+/* Gentle staggered entrance for hero content — feels polished, not flashy */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-up {
+  opacity: 0;
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Respect users who prefer no motion */
 @media (prefers-reduced-motion: reduce) {
   .dot-grid-drift,
   .hero-aurora {
     animation: none;
+  }
+  .fade-up {
+    animation: none;
+    opacity: 1;
   }
 }
 
