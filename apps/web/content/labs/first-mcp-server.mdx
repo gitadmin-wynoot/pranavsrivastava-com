@@ -14,16 +14,10 @@ updatedAt: "2026-06-23"
 By the end of this lab you will have a small but real **Model Context Protocol (MCP) server** running on your machine, exposing a tool that an AI client can call. Nothing here is a toy snippet — the code runs as-is.
 
 <Callout type="info" title="What is MCP, in one line">
-MCP is a standard way to give an AI model access to tools and data through a small server it can talk to — instead of hard-coding integrations into the model.
+MCP (**Model Context Protocol**) is a standard way to give an AI model access to tools and data through a small server it can talk to — instead of hard-coding integrations into the model. Totally new to it? The first lesson of the [MCP course](/courses/mcp) explains it from scratch in a few minutes; this lab is the hands-on version.
 </Callout>
 
-<Diagram title="What you are building" caption="A client asks the model; the model calls your tool through MCP">
-{`
-  AI client  ──asks──▶  Model  ──tool call──▶  Your MCP server
-      ▲                                              │
-      └──────────────── answer ◀────────────────────┘
-`}
-</Diagram>
+<Figure name="client-server" caption="What you're building: an AI app (client) talking to your tool (server) through MCP." />
 
 ### Before you start
 

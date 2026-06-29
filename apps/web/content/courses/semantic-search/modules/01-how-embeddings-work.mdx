@@ -10,10 +10,14 @@ updatedAt: "2026-06-16"
 
 <ChapterHeader number={1} title="How Dense Embeddings Represent Meaning" time={12} />
 
+<Callout type="tip" title="New to this? Start here.">
+Two plain-English terms before we begin. **Semantic search** means searching by *meaning* rather than exact words — ask "how do I stop my plan" and it finds the "cancel subscription" page. An <KeyTerm definition="A list of numbers that captures the meaning of a piece of text, so similar meanings end up close together.">embedding</KeyTerm> is the trick that makes that possible: turning text into numbers that place similar meanings near each other. If the idea of "turning things into numbers" is new, the free [AI Foundations track](/learn/ai-foundations) explains it gently (see *Mathematics for AI* and *NLP*). Otherwise, read on — we build it up from scratch.
+</Callout>
+
 <LearningObjectives>
 - Understand what an embedding is and why it captures meaning
-- Follow how a sentence becomes a point in vector space
-- Calculate cosine similarity by hand (conceptually)
+- Follow how a sentence becomes a point in "meaning space"
+- Grasp how we measure whether two pieces of text mean similar things
 </LearningObjectives>
 
 ### The problem with keywords

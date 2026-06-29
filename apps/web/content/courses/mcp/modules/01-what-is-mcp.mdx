@@ -1,103 +1,90 @@
 ---
-title: "The Problem MCP Solves"
-summary: "Why AI assistants are trapped in a bubble — and how the Model Context Protocol breaks them free."
+title: "What MCP Is (and What the Letters Mean)"
+summary: "Start here, even if you've never written code. What 'Model Context Protocol' actually means, in plain English — and the simple problem it was built to solve."
 module: 1
-time: 8
+time: 9
 level: "Beginner"
 status: "published"
-updatedAt: "2026-06-16"
+updatedAt: "2026-06-26"
 ---
 
-<ChapterHeader number={1} title="The Problem MCP Solves" time={8} />
+<ChapterHeader number={1} title="What MCP Is (and What the Letters Mean)" time={9} />
 
-<LearningObjectives>
-- Understand why AI assistants are limited without external tools
-- Learn what the N×M integration problem is and how MCP fixes it
-- See two real analogies: USB-C and the Language Server Protocol
-</LearningObjectives>
-
-### AI assistants live in a bubble
-
-When you use Claude, GPT-4, or Gemini in a chat window, the AI can only work with what is inside the conversation. It cannot open files, query your database, check your calendar, or call your internal APIs. Every time you need the AI to do something with real data, you copy-paste it in manually.
-
-This feels like a minor inconvenience at first. Then it compounds:
-
-- You have 50 notes you want summarised — you cannot paste them all
-- You want the AI to check a live price from your system — it has no way in
-- You want an agent to run a multi-step workflow on your machine — it is sealed out
-
-### The old approach: N × M integrations
-
-Before MCP, every AI application had to build its own custom connections to every tool it needed.
-
-<Diagram title="The N×M Integration Problem — before MCP" caption="3 AI apps × 4 tools = 12 separate integrations, each built and maintained differently">
-
-```
-  ┌──────────────┐     custom code     ┌─────────────┐
-  │  AI App 1    │────────────────────►│  File System│
-  │              │────────────────────►│  Database   │
-  │              │────────────────────►│  Slack      │
-  └──────────────┘                     │  Calendar   │
-                                       └─────────────┘
-  ┌──────────────┐     custom code
-  │  AI App 2    │────────────────────► (rebuilds all 4)
-  └──────────────┘
-
-  ┌──────────────┐     custom code
-  │  AI App 3    │────────────────────► (rebuilds all 4)
-  └──────────────┘
-
-  Total: 3 apps × 4 tools = 12 separate custom integrations
-```
-
-</Diagram>
-
-If you have 3 AI apps and 4 tools, you need 12 custom integrations. Every new tool means updating every app. Every new app means wiring up every tool.
-
-### MCP: N + M instead of N × M
-
-MCP fixes this by defining a single protocol that any AI client can use to talk to any MCP server.
-
-<Diagram title="With MCP — one protocol connects everything" caption="Each tool is wrapped once. Every MCP-compatible AI client can use it instantly.">
-
-```
-  ┌──────────────┐                     ┌──────────────────┐
-  │  Claude      │  MCP protocol       │  File Server     │
-  │  Desktop     │◄───────────────────►│  (your Python)   │
-  └──────────────┘                     └──────────────────┘
-                                       ┌──────────────────┐
-  ┌──────────────┐                     │  DB Server       │
-  │  Claude Code │◄───────────────────►│  (your Python)   │
-  └──────────────┘  MCP protocol       └──────────────────┘
-                                       ┌──────────────────┐
-  ┌──────────────┐                     │  Slack Server    │
-  │  Your App    │◄───────────────────►│  (any language)  │
-  └──────────────┘                     └──────────────────┘
-
-  Any MCP client ↔ Any MCP server. Build once, use everywhere.
-```
-
-</Diagram>
-
-<Callout type="tip" title="Two useful analogies">
-**USB-C** unified physical connectors — one port, every device. MCP does the same for AI tool connections.
-
-**The Language Server Protocol (LSP)** unified how code editors connect to language intelligence. Before LSP, every editor had to implement language support itself. After LSP, you write a language server once and every editor uses it. MCP applies the same idea to AI tools.
+<Callout type="tip" title="New here? You're in exactly the right place.">
+This course assumes **no prior knowledge** — not even coding. We define every term the first time it appears, and build up slowly. If you'd like the bigger picture of how AI systems work first, the free [AI Foundations track](/learn/ai-foundations) is a gentle place to start (the **RAG & Tool Use** course there explains the idea of "giving an AI tools," which is exactly what MCP is for). But you can also just start right here.
 </Callout>
 
-### Who made MCP and who uses it?
+<LearningObjectives>
+- Know what the three letters M-C-P actually stand for, and what each word means
+- Understand the simple, everyday problem MCP was created to solve
+- Picture how an AI app and a tool talk to each other through a shared "language"
+- Be ready to build your own — no jargon left undefined
+</LearningObjectives>
 
-MCP was created by Anthropic and released as an open standard in November 2024. It is now supported by Claude Desktop, Claude Code, and many third-party AI applications. There are already MCP servers for GitHub, Google Drive, Notion, Slack, databases, web browsers, and hundreds of other tools.
+### First, the name — let's not skip it
+
+Almost everyone meets "MCP" as three mysterious letters. So before anything else: **MCP stands for Model Context Protocol.** Let's take that apart, one word at a time, in plain English.
+
+- **Model** — the AI itself (like Claude or ChatGPT). When people say "the model," they mean the AI brain doing the thinking.
+- **Context** — the information the model gets to see. An AI can only use what's put in front of it. Give it more useful context — your files, your data — and it can do more.
+- **Protocol** — an agreed way for two things to talk. That's all a <KeyTerm definition="An agreed set of rules for how two systems talk to each other — like both people agreeing to speak the same language.">protocol</KeyTerm> is: a shared set of rules so two systems understand each other. Humans use protocols too — "hello / goodbye" on a phone call is one.
+
+Put it together and MCP is, quite literally, **an agreed way to give an AI model more context** — to connect it to your tools and data through one shared language, instead of a tangle of one-off hacks.
+
+<Figure name="client-server" />
+
+The AI app on one side is the <KeyTerm definition="The thing that asks for something — here, the AI app making requests.">client</KeyTerm>. The tool on the other side is the <KeyTerm definition="The thing that answers requests and does work — here, the program exposing a tool to the AI.">server</KeyTerm>. MCP is the agreed language they speak. That's the whole concept. Everything else in this course is detail on top of this one picture.
+
+### Why we need it — the AI in a bubble
+
+Here's the problem MCP solves, and you've probably felt it. When you chat with an AI, it can only work with what's in the conversation. It cannot open your files, check your calendar, look something up in your database, or run anything on your computer. Every time you want it to use real information, you copy and paste it in by hand.
+
+That's fine for one note. It falls apart quickly:
+
+- You have 50 documents to summarise — you can't paste them all in.
+- You want the AI to check a live number from your own system — it has no way in.
+- You want it to actually *do* a multi-step task on your machine — it's sealed out.
+
+The AI is brilliant but trapped in a bubble. MCP is how we let it reach out — safely, through a proper door instead of copy-paste.
+
+### The mess before a standard
+
+You might think: just connect each AI app to each tool. The trouble is how fast that grows. Every app needs its own custom wiring to every tool — and each one is built and maintained separately.
+
+<Figure name="nxm-problem" />
+
+Three apps and four tools already means twelve separate connections to build and keep working. Add one new tool and you must wire it into every app. It's the kind of mess that quietly eats teams alive. (Engineers call this the "N×M problem" — N apps times M tools.)
+
+### MCP's fix: build once, connect everything
+
+MCP replaces that tangle with one shared protocol. You wrap each tool in a small **MCP server** once, and any **MCP client** (any compatible AI app) can use it immediately — no custom wiring per app.
+
+<Figure name="nxm-solved" />
+
+So instead of 3 × 4 connections, you have 3 + 4. The difference only grows as you add more. Write a tool's server once; every AI that speaks MCP can use it.
+
+<Callout type="tip" title="Two analogies that make it click">
+**USB-C.** Before it, every device had its own charger and cable. Now one port fits everything. MCP is USB-C for connecting AI to tools — one standard plug.
+
+**A common language.** Imagine every pair of people needing their own private language to talk — chaos. Agree on one shared language and anyone can talk to anyone. MCP is that shared language for AI apps and tools.
+</Callout>
+
+### Who made it, and who uses it
+
+MCP was created by **Anthropic** (the company behind Claude) and released as an **open standard** in late 2024 — "open" meaning anyone can use it freely, not owned by one company. It's now supported by Claude Desktop, Claude Code, and a growing list of other AI apps, with ready-made servers for GitHub, Google Drive, Notion, Slack, databases, and hundreds more.
+
+By the end of this course, you'll have built your own.
 
 <ChapterSummary>
-- AI assistants cannot access your local files, databases, or APIs without extra setup
-- Before MCP, each AI app needed custom code for each tool — the N×M problem
-- MCP defines one protocol: write a server once, any compatible AI can use it
-- MCP was created by Anthropic in 2024 and is an open standard
+- **MCP = Model Context Protocol** — an agreed way to give an AI model more context by connecting it to your tools and data
+- A **protocol** is just a shared language; the AI app is the **client**, your tool is the **server**
+- Without a standard, every app needs custom wiring to every tool (the N×M mess)
+- MCP makes it "build once, connect everything" — like USB-C, or a common language
+- It's an open standard from Anthropic, now widely supported
 </ChapterSummary>
 
 <Checkpoint>
-1. What is the N×M integration problem, and why does it matter?
-2. Name one real-world analogy for what MCP does and explain why it fits.
-3. Who created MCP, and in what year was it released?
+1. What do the three words in "Model Context Protocol" each mean, in your own words?
+2. In the AI-in-a-bubble picture, what is MCP letting the AI do?
+3. Why is "build once, connect everything" so much better than wiring each app to each tool?
 </Checkpoint>

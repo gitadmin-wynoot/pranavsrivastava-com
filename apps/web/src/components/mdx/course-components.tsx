@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
+import { Figure } from "./course-figures";
 import {
   Info,
   Lightbulb,
@@ -295,5 +296,6 @@ export const courseComponents = {
   CodeFile,
   Steps,
   Step,
+  Figure,
   pre: CodeBlock,
 };

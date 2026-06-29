@@ -10,15 +10,21 @@ updatedAt: "2026-06-16"
 
 <ChapterHeader number={1} title="What is an AI Agent?" time={10} />
 
+<Callout type="tip" title="New here? No problem.">
+This assumes no prior experience. We'll define every term as it comes up. One acronym up front: an <KeyTerm definition="Large Language Model — the AI behind tools like Claude and ChatGPT. It predicts text and can reason, but on its own it can't take actions.">LLM</KeyTerm> (Large Language Model) is just the AI brain — Claude, ChatGPT, and the like. If the basics of LLMs are new, the free [AI Foundations track](/learn/ai-foundations) explains them gently first. Otherwise, read on.
+</Callout>
+
 <LearningObjectives>
 - Understand the key difference between a chatbot and an agent
 - Know when agents are the right tool and when they are not
-- Recognise the components that make up an agent: LLM, tools, memory, loop
+- Recognise the four parts every agent is built from: model, tools, memory, loop
 </LearningObjectives>
 
 ### The simplest definition
 
-An AI agent is a system where a language model controls a loop — it takes in information, decides what to do next, acts (usually by calling a tool), observes the result, and repeats. It keeps going until the task is done or it runs out of options.
+An AI agent is a system where a language model (an LLM) runs in a *loop* — it takes in information, decides what to do next, acts (usually by using a tool), observes the result, and repeats. It keeps going until the task is done. A chatbot answers once; an agent keeps working.
+
+<Figure name="agent-loop" />
 
 <Diagram title="Chatbot vs Agent — the fundamental difference" caption="A chatbot does one round trip. An agent loops until the task is complete.">
 
