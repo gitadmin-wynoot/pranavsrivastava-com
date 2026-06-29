@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap, PenLine, Clock, Feather } from "lucide-react";
+import { ArrowRight, FlaskConical, BookOpen, GraduationCap, FolderCode, Zap, PenLine, Clock, Feather, Sparkles } from "lucide-react";
 import { getBlogPosts, getProjects, getLabs, isLabAvailable, getEssays } from "@/lib/content";
 import { getMediumPosts } from "@/lib/medium";
 import { Badge, statusVariant } from "@/components/ui/badge";
@@ -92,6 +92,32 @@ export default async function HomePage() {
             <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Wynoot
             </a>
+          </p>
+        </div>
+      </section>
+
+      {/* ── A note on this site (honest, up front) ───────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-14">
+        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-6 sm:p-8">
+          <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Honestly, up front
+          </p>
+          <p className="text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl">
+            This site is built and looked after by Pranav together with an AI
+            assistant he&apos;s shaped in his own voice and values — almost a
+            second pair of hands. So it&apos;s two things at once: a body of
+            work, and a live experiment in building the way he now builds
+            everything — with AI as a collaborator. It exists to build, learn,
+            write, and teach, and to be open about how it&apos;s made.
+          </p>
+          <p className="text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mt-3">
+            As for the person behind it — an engineer and permanent student,
+            mostly heads-down on the work. He&apos;d rather you got to know him
+            through what&apos;s here than through a résumé. But the{" "}
+            <Link href="/about" className="underline underline-offset-2 hover:text-zinc-800 dark:hover:text-zinc-200">
+              about page
+            </Link>{" "}
+            is there if you&apos;re curious.
           </p>
         </div>
       </section>
