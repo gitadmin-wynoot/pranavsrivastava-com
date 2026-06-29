@@ -65,22 +65,7 @@ print(f"Tyre vs puncture: {sim_01:.3f}")   # e.g. 0.87
 print(f"Tyre vs stocks:   {sim_02:.3f}")   # e.g. 0.21
 ```
 
-<Diagram title="Vectors in 2D (simplified) — similar meaning = closer together">
-
-```
-  high dimension space (384D)
-  simplified to 2D for illustration:
-
-  0.9 |          [tyre fix]
-      |         /
-  0.7 |        / <- small angle, high cosine sim
-      |       /
-  0.5 |      [flat tyre]       [stocks fell]
-      |                       /
-      +-----------------------> dimension 2
-```
-
-</Diagram>
+<Figure name="vectors-space" caption="Each piece of text becomes a point. Similar meanings sit close; unrelated ones sit far apart. (Real embeddings use hundreds of dimensions — shown here in 2D.)" />
 
 ### Why this works
 
