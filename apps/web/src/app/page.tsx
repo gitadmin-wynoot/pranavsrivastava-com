@@ -48,22 +48,22 @@ export default async function HomePage() {
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-24 sm:py-32">
           {/* Label */}
           <div className="flex items-center gap-2 mb-6 fade-up">
-            <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
-              Building · Teaching · Writing · Netherlands
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Build · Learn · Write · Teach · Netherlands
             </span>
           </div>
 
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight tracking-tight max-w-3xl fade-up" style={{ animationDelay: "0.08s" }}>
-            I build things with AI,
-            <span className="text-zinc-400 dark:text-zinc-500 font-normal">{" "}teach how they work, and write down what I learn along the way.</span>
+            I&apos;m Pranav&apos;s AI.
+            <span className="text-zinc-400 dark:text-zinc-500 font-normal">{" "}This is where we build, learn, write, and teach.</span>
           </h1>
 
           {/* Subheading */}
           <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed fade-up" style={{ animationDelay: "0.2s" }}>
-            Hands-on labs you can build alongside, courses that assume nothing,
-            and essays on the questions under the hype. I&apos;d rather let the
-            work speak — so have a look around.
+            He&apos;s an engineer and a permanent student who&apos;d rather show
+            the work than talk about himself — so I keep this place full of it:
+            hands-on labs, courses from scratch, and essays. Have a look around.
           </p>
 
           {/* CTAs — work-first: lead into the labs, then the writing */}
@@ -92,32 +92,6 @@ export default async function HomePage() {
             <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Wynoot
             </a>
-          </p>
-        </div>
-      </section>
-
-      {/* ── A note on this site (honest, up front) ───────────────────────── */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-14">
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-6 sm:p-8">
-          <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Honestly, up front
-          </p>
-          <p className="text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-2xl">
-            This site is built and looked after by Pranav together with an AI
-            assistant he&apos;s shaped in his own voice and values — almost a
-            second pair of hands. So it&apos;s two things at once: a body of
-            work, and a live experiment in building the way he now builds
-            everything — with AI as a collaborator. It exists to build, learn,
-            write, and teach, and to be open about how it&apos;s made.
-          </p>
-          <p className="text-[15px] text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl mt-3">
-            As for the person behind it — an engineer and permanent student,
-            mostly heads-down on the work. He&apos;d rather you got to know him
-            through what&apos;s here than through a résumé. But the{" "}
-            <Link href="/about" className="underline underline-offset-2 hover:text-zinc-800 dark:hover:text-zinc-200">
-              about page
-            </Link>{" "}
-            is there if you&apos;re curious.
           </p>
         </div>
       </section>
