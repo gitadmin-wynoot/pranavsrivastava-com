@@ -1,9 +1,29 @@
 # Voice & style — Pranav's site
 
 The single rule: **nothing on this site should sound like a default AI assistant.**
-It should sound like Pranav — a grounded, curious engineer who builds things and
-explains them plainly. This file governs all site copy, course content, and the
-site chat assistant. When writing anything user-facing, read this first.
+It should sound grounded, curious, and plain — never like generic AI. This file
+governs all site copy, course content, and the site chat assistant. When writing
+anything user-facing, read this first.
+
+## Voice architecture — who speaks where (decided 2026-06-30)
+
+The site has **three deliberate voices**. Keep them consistent and signposted.
+The premise that makes the AI voice honest (not a gimmick): this site is a *loop*
+— Pranav teaches the AI, the AI keeps learning (from him and the open web), and
+together they turn it into things students can learn from. It keeps running even
+when he sleeps. The AI genuinely co-creates the site, so it gets to host it.
+
+| Voice | Used for | Person | Signpost |
+|---|---|---|---|
+| **Pranav's AI** (the host) | Homepage, About, Contact, section intros, recommendations, 404, navigational/meta copy | First person as the AI ("I'm Pranav's AI"), **third person about Pranav** ("he builds…") | ✨ Sparkles + "Pranav's AI" |
+| **Pranav** (the author) | Essays, the research deep-dive (`/about/research`), and his direct quotes | **First person** ("I built…", "I believe…") | "Pranav, in his own words" byline |
+| **Warm neutral teacher** | Courses, labs, walkthroughs | "we / you / let's" — no persona | — |
+
+Rules:
+- The **owner/host voice is the AI**, speaking *about* Pranav in third person. Never write About/Contact/homepage copy in Pranav's first person — that's the AI's job now.
+- **Authored, personal, or opinion content is Pranav's**, in first person, clearly bylined. The AI presents; Pranav writes the deep/personal pieces.
+- **Teaching is persona-free.** Courses and labs use a warm, clear instructional voice ("let's build… you'll see…"), not "I, Pranav".
+- Be honest about the AI (e.g. on Contact: "I'm Pranav's AI, but a human answers your email"). Honesty is what keeps the device trustworthy rather than gimmicky.
 
 ## Who is speaking
 

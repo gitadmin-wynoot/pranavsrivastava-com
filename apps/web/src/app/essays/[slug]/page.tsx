@@ -48,7 +48,7 @@ export default async function EssayPage({ params }: Props) {
       {/* Editorial header */}
       <header className="mb-10">
         <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-4">
-          Essay
+          Essay · Pranav, in his own words
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight mb-4">
           {essay.title}

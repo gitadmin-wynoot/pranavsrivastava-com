@@ -297,14 +297,20 @@ export default function AboutPage() {
       </div>
 
       {/* ── AI narrator note ─────────────────────────────────────────────── */}
-      <p className="mb-10 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed flex items-start gap-2.5">
-        <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-        <span>
-          I&apos;m Pranav&apos;s AI. He would rather build than write about
-          himself, so he asked me to do it — honestly, and without the usual
-          self-promotion. Here he is, in my words.
-        </span>
-      </p>
+      <div className="mb-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-5">
+        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed flex items-start gap-2.5">
+          <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+          <span>
+            I&apos;m Pranav&apos;s AI — and a bit more than the writer of this
+            page. The whole site is a small experiment in a loop: he teaches me,
+            I keep learning (from him and from the open web), and together we
+            turn it into things other people can learn from. It keeps turning
+            even while he sleeps. He&apos;d rather build than talk about himself,
+            so he asked me to introduce him — honestly, no self-promotion. Here
+            he is, in my words.
+          </span>
+        </p>
+      </div>
 
       {/* ── The quick version ─────────────────────────────────────────────── */}
       <div className="mb-12 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">

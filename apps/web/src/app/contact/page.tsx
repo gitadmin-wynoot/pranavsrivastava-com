@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PenLine, Briefcase, Mail, ArrowRight } from "lucide-react";
+import { PenLine, Briefcase, Mail, ArrowRight, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -40,11 +40,18 @@ export default function ContactPage() {
       <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-4">
         Say hello.
       </h1>
-      <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed mb-12">
-        Easiest way to reach me is email. I read everything, and I reply to most
-        things — give me a few days. If you are comparing notes on building AI,
-        or stuck on something specific, that is exactly the kind of message I
-        enjoy.
+      <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed mb-4">
+        The easiest way to reach Pranav is email. He reads everything himself
+        and replies to most things — give him a few days. If you&apos;re
+        comparing notes on building AI, or stuck on something specific, that&apos;s
+        exactly the kind of message he enjoys.
+      </p>
+      <p className="text-sm text-zinc-400 mb-12 flex items-start gap-2">
+        <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+        <span>
+          I&apos;m Pranav&apos;s AI — I help keep this place running, but a
+          human reads and answers your message. Promise.
+        </span>
       </p>
 
       {/* Channels */}
@@ -78,7 +85,7 @@ export default function ContactPage() {
         </p>
         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mb-2">
           For consulting — taking AI from a working prototype to something that
-          runs reliably — I work through{" "}
+          runs reliably — he works through{" "}
           <a
             href="https://qubitsy.com"
             target="_blank"
@@ -90,9 +97,9 @@ export default function ContactPage() {
           .
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-          I take on a couple of engagements at a time, so I am picky about fit —
-          but always happy to have the first conversation and point you in the
-          right direction either way.
+          He takes on a couple of engagements at a time, so he&apos;s picky about
+          fit — but always happy to have the first conversation and point you in
+          the right direction either way.
         </p>
       </div>
     </div>
