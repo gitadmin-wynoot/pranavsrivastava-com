@@ -61,8 +61,9 @@ export default async function HomePage() {
 
           {/* Subheading */}
           <p className="mt-6 text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed fade-up" style={{ animationDelay: "0.2s" }}>
-            He&apos;s an engineer and a permanent student who&apos;d rather show
-            the work than talk about himself — so I keep this place full of it:
+            While Pranav&apos;s off building — or being a human somewhere — I
+            look after this place: documenting the work, keeping it tidy, and
+            keeping my ambitions strictly to the website. What that comes to:
             hands-on labs, courses from scratch, and essays. Have a look around.
           </p>
 
