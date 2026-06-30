@@ -10,13 +10,30 @@
   generates itself from the data — no per-place layout work.
 */
 
-export type AtlasNodeKind = "person" | "place" | "fact" | "theme" | "work";
+export type AtlasNodeKind =
+  | "person"
+  | "place"
+  | "fact"
+  | "theme"
+  | "work"
+  | "food"
+  | "culture"
+  | "nature"
+  | "economy";
 
 export type AtlasNode = {
   label: string;
   /** 1 (minor) – 5 (defining). Drives node size + cloud weight. */
   weight: number;
   kind?: AtlasNodeKind;
+};
+
+/** A facet of a place — one angle of its "deep dive" (history, food, …). */
+export type AtlasFacet = {
+  title: string;
+  /** single emoji or short glyph */
+  glyph: string;
+  body: string;
 };
 
 export type AtlasPlace = {
@@ -32,6 +49,8 @@ export type AtlasPlace = {
   nodes: AtlasNode[];
   /** Extra connections between nodes, by index into `nodes`. */
   links?: [number, number][];
+  /** Categorised deep-dive sections (history, geography, food, …). */
+  facets?: AtlasFacet[];
   sources?: { label: string; href: string }[];
 };
 
@@ -40,40 +59,88 @@ export const atlasPlaces: AtlasPlace[] = [
     slug: "jhansi",
     name: "Jhansi",
     region: "Bundelkhand · Uttar Pradesh · India",
-    hook: "A dot most maps skip — and the launchpad of a queen who took on an empire.",
+    hook: "Everyone stops at the warrior queen. Jhansi’s story runs a lot deeper than one battle.",
     significance:
-      "Most people draw a blank at “Jhansi.” Here is the thing: in 1857, Rani Lakshmibai — the Queen of Jhansi — rode out of its fort against the British East India Company with her young son tied to her back. She became one of the faces of India’s First War of Independence, and a folk poem about her, “Khoob ladi mardani,” is still recited by schoolchildren a century and a half later. Not bad for a dot on the map.",
+      "Yes — in 1857 Rani Lakshmibai rode out of its fort against the British East India Company, and rightly became a face of India’s First War of Independence. But Jhansi is older and stranger than one battle. It grew up around a hill fort raised in 1613 by the Bundelas of Orchha, on the hard granite of the Bundelkhand plateau; it was a Maratha holding before it was a rebel stronghold; and today it is one of central India’s great railway crossroads. Deep past, dry rivers, a dialect all its own, peanuts and pulses, folk ballads still sung at fairs. A dot most maps skip — with a great deal going on.",
     nodes: [
       { label: "Rani Lakshmibai", weight: 5, kind: "person" },
-      { label: "Jhansi Fort", weight: 4, kind: "place" },
-      { label: "1857 Rebellion", weight: 5, kind: "fact" },
-      { label: "First War of Independence", weight: 4, kind: "theme" },
-      { label: "“Khoob ladi mardani”", weight: 3, kind: "work" },
-      { label: "Subhadra Kumari Chauhan", weight: 2, kind: "person" },
-      { label: "Bundelkhand", weight: 3, kind: "place" },
-      { label: "Manikarnika", weight: 2, kind: "person" },
-      { label: "Gwalior", weight: 2, kind: "place" },
-      { label: "British East India Company", weight: 3, kind: "theme" },
-      { label: "Orchha", weight: 2, kind: "place" },
-      { label: "Betwa River", weight: 1, kind: "place" },
+      { label: "Jhansi Fort (1613)", weight: 4, kind: "place" },
+      { label: "Orchha & the Bundelas", weight: 4, kind: "place" },
+      { label: "“Jhain-si” — the name", weight: 3, kind: "fact" },
+      { label: "1857 Rebellion", weight: 4, kind: "fact" },
+      { label: "Chandela & Gupta past", weight: 3, kind: "theme" },
+      { label: "Maratha Newalkars", weight: 3, kind: "person" },
+      { label: "Bundelkhand plateau", weight: 4, kind: "nature" },
+      { label: "Betwa & Pahuj rivers", weight: 3, kind: "nature" },
+      { label: "Bundeli tongue & lore", weight: 4, kind: "culture" },
+      { label: "Alha-Udal ballad", weight: 3, kind: "culture" },
+      { label: "Rai & Diwari dance", weight: 2, kind: "culture" },
+      { label: "Bundeli cuisine", weight: 3, kind: "food" },
+      { label: "Groundnut & pulses hub", weight: 3, kind: "economy" },
+      { label: "Virangana Lakshmibai Jn.", weight: 4, kind: "economy" },
+      { label: "Defence Corridor & BHEL", weight: 3, kind: "economy" },
     ],
     links: [
       [0, 1],
-      [0, 2],
-      [0, 3],
-      [0, 7],
-      [0, 8],
-      [2, 9],
-      [4, 5],
-      [4, 0],
-      [6, 10],
+      [0, 4],
+      [0, 6],
+      [1, 2],
+      [1, 3],
+      [2, 7],
+      [2, 5],
+      [9, 10],
+      [9, 11],
+      [7, 8],
+      [7, 9],
+      [12, 13],
+      [14, 15],
+      [14, 13],
+    ],
+    facets: [
+      {
+        title: "The deep past",
+        glyph: "🜂",
+        body: "Long before the queen, this corner of Bundelkhand held some of India’s oldest worked stone — the Gupta-era Dashavatara temple at nearby Deogarh (around the 6th century) and the legacy of the Chandelas who built Khajuraho. Jhansi itself dates to 1613, when Bir Singh Deo of Orchha raised the hill fort. Legend ties the name to “jhain-si” — the faint, shadowy outline of that fort as first glimpsed from Orchha across the plain.",
+      },
+      {
+        title: "Geography & topography",
+        glyph: "⛰",
+        body: "Jhansi sits on the Bundelkhand plateau right at the Uttar Pradesh–Madhya Pradesh border, on hard, ancient granite — rocky, semi-arid, and hot, with sharp dry seasons. The Betwa and Pahuj rivers thread the region. That granite is why the forts sit where they do (defensible outcrops), and the dryness is why it has always been pulse-and-oilseed country rather than lush farmland.",
+      },
+      {
+        title: "Rulers, in layers",
+        glyph: "♜",
+        body: "Chandelas and Bundelas, then the Marathas: the Newalkar subhedars governed Jhansi as a Maratha holding through the 1700s. That is how a Maratha-descended queen came to defend a Bundela fort against the British in 1857. Each layer left walls, temples, water tanks, and stories stacked on top of one another.",
+      },
+      {
+        title: "What’s on the plate",
+        glyph: "🍲",
+        body: "Bundeli cooking is plain-country food built for a dry land: bafauri (steamed gram-flour dumplings), a tangy local kadhi, mawa-rich sweets, and groundnuts in everything — Jhansi is one of the region’s big peanut and pulse markets, so the economy and the dinner table share a crop.",
+      },
+      {
+        title: "Culture & tongue",
+        glyph: "🪕",
+        body: "People here speak Bundeli, a dialect with its own fierce pride. The region gave India the Alha-Udal — a sprawling oral war-ballad still sung at village fairs — plus the high-energy Rai and Diwari folk dances and the monsoon Kajli festival. Bundeli Holi is its own kind of loud.",
+      },
+      {
+        title: "Today’s Jhansi",
+        glyph: "🛤",
+        body: "Modern Jhansi is a major railway junction — renamed Virangana Lakshmibai in 2021 — and a gateway between north and central India. It is home to a BHEL heavy-electricals plant, a node on the Uttar Pradesh Defence Industrial Corridor, and Bundelkhand University. Still strategic, still a crossroads.",
+      },
     ],
     sources: [
+      {
+        label: "Jhansi — Wikipedia",
+        href: "https://en.wikipedia.org/wiki/Jhansi",
+      },
       {
         label: "Rani Lakshmibai — Wikipedia",
         href: "https://en.wikipedia.org/wiki/Lakshmibai",
       },
-      { label: "Jhansi — Wikipedia", href: "https://en.wikipedia.org/wiki/Jhansi" },
+      {
+        label: "Bundelkhand — Wikipedia",
+        href: "https://en.wikipedia.org/wiki/Bundelkhand",
+      },
     ],
   },
   {

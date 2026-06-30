@@ -55,6 +55,32 @@ export default async function AtlasPlacePage({ params }: Props) {
         {place.significance}
       </p>
 
+      {place.facets && place.facets.length > 0 && (
+        <div className="mt-12">
+          <p className="font-mono text-xs uppercase tracking-widest text-cyan-600 dark:text-cyan-400 mb-5">
+            ▸ deep dive
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {place.facets.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-5"
+              >
+                <h2 className="flex items-center gap-2 text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                  <span aria-hidden="true" className="text-lg">
+                    {f.glyph}
+                  </span>
+                  {f.title}
+                </h2>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                  {f.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {place.sources && place.sources.length > 0 && (
         <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           {place.sources.map((s) => (

@@ -15,6 +15,22 @@ const KIND_COLOR: Record<AtlasNodeKind, string> = {
   fact: "#86efac", // green
   theme: "#fcd34d", // amber
   work: "#93c5fd", // blue
+  food: "#fdba74", // orange
+  culture: "#c4b5fd", // violet
+  nature: "#6ee7b7", // emerald
+  economy: "#fda4af", // rose
+};
+
+const KIND_LABEL: Record<AtlasNodeKind, string> = {
+  person: "people",
+  place: "places",
+  fact: "history",
+  theme: "themes",
+  work: "works",
+  food: "food",
+  culture: "culture",
+  nature: "land",
+  economy: "economy",
 };
 
 const W = 900;
@@ -35,6 +51,15 @@ export function PlaceWeb({
   nodes: AtlasNode[];
   links?: [number, number][];
 }) {
+  // Distinct kinds present, in a stable order — for the legend.
+  const legend = useMemo(() => {
+    const seen: AtlasNodeKind[] = [];
+    for (const n of nodes) {
+      if (n.kind && !seen.includes(n.kind)) seen.push(n.kind);
+    }
+    return seen;
+  }, [nodes]);
+
   // Deterministic radial layout: bigger weight → closer to the core.
   const placed = useMemo(() => {
     const n = nodes.length;
@@ -180,6 +205,21 @@ export function PlaceWeb({
           );
         })}
       </svg>
+
+      {/* legend */}
+      {legend.length > 0 && (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-t border-cyan-500/15 px-5 py-3 font-mono text-[10px] uppercase tracking-wider text-slate-400">
+          {legend.map((k) => (
+            <span key={k} className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ backgroundColor: KIND_COLOR[k] }}
+              />
+              {KIND_LABEL[k]}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* significance cloud */}
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-t border-cyan-500/15 px-5 py-5">
