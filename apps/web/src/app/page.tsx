@@ -347,25 +347,31 @@ export default async function HomePage() {
               About
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed">
-              I call myself a product thinkengineer because the product
-              question and the engineering question happen in the same thought
-              — I am building the system and already wondering what it should
+              He calls himself a product thinkengineer because the product
+              question and the engineering question happen in the same thought —
+              he&apos;s building the system and already wondering what it should
               become. Fifteen years of that, across domains with genuinely
               different constraints: telecom fraud at volume, banking
-              integrations, automotive APIs, asset-finance platforms. Went back for
-              an AI Masters in my 30s because the algorithms were always the
-              part I found interesting, not an add-on. Started{" "}
+              integrations, automotive APIs, asset-finance platforms. He went
+              back for an AI Masters in his 30s because the algorithms were
+              always the part he found interesting, not an add-on. He started{" "}
               <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
-              {" "}because a problem kept showing up. Consult through{" "}
+              {" "}because a problem kept showing up, and consults through{" "}
               <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Qubitsy</a>
               {" "}for teams that need someone who has done enterprise at scale
               and product from scratch.
             </p>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mt-3">
-              Grew up in Jhansi, in the Netherlands since 2016. Usually on a
-              bike or mid-conversation when not building something. People who
-              know me say I always have three projects running and one more
-              idea forming. They are not wrong.
+              He grew up in Jhansi and has been in the Netherlands since 2016.
+              Most people can&apos;t place Jhansi on a map — which is a little
+              funny, given the queen who once rode out of it to take on the
+              British Empire.{" "}
+              <Link href="/atlas/jhansi" className="text-cyan-600 dark:text-cyan-400 underline underline-offset-2 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
+                See why it matters →
+              </Link>{" "}
+              When he&apos;s not building, he&apos;s usually on a bike or
+              mid-conversation. People who know him say he always has three
+              projects running and one more idea forming. They&apos;re not wrong.
             </p>
             <Link
               href="/about"
@@ -383,11 +389,11 @@ export default async function HomePage() {
               The proof of concept worked. Now comes the hard part.
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-5">
-              I help engineering teams take AI from experiment to something that
-              runs reliably — agent architecture, API design, cloud integration,
-              and the observability that tells you when it breaks. Fourteen
-              years in enterprise, three years building my own products. I know
-              both sides.
+              He helps engineering teams take AI from experiment to something
+              that runs reliably — agent architecture, API design, cloud
+              integration, and the observability that tells you when it breaks.
+              Fourteen years in enterprise, three building his own products. He
+              knows both sides.
             </p>
             <Link
               href="/contact"

@@ -336,9 +336,13 @@ export default function AboutPage() {
             an add-on.
           </p>
           <p>
-            He grew up in Jhansi and wrote his first code at 13 on a DOS machine.
-            An engineer since 2010, in the Netherlands since 2016 — still
-            building, still curious, and (recently) on ski slopes.
+            He grew up in{" "}
+            <Link href="/atlas/jhansi" className="text-cyan-600 dark:text-cyan-400 underline underline-offset-2 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
+              Jhansi
+            </Link>{" "}
+            and wrote his first code at 13 on a DOS machine. An engineer since
+            2010, in the Netherlands since 2016 — still building, still curious,
+            and (recently) on ski slopes.
           </p>
         </div>
       </div>

@@ -7,6 +7,7 @@ import {
   getCourses,
   getTracks,
 } from "@/lib/content";
+import { atlasPlaces } from "@/lib/atlas";
 
 const BASE = "https://pranavsrivastava.com";
 
@@ -25,7 +26,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/ai-lab",
     "/contact",
     "/circle",
+    "/atlas",
   ].map((path) => ({ url: `${BASE}${path}`, lastModified: now }));
+
+  const places = atlasPlaces.map((p) => ({ url: `${BASE}/atlas/${p.slug}`, lastModified: now }));
 
   const tracks = getTracks().map((t) => ({ url: `${BASE}/learn/${t.slug}`, lastModified: now }));
   const courses = getCourses().map((c) => ({ url: `${BASE}/courses/${c.slug}`, lastModified: now }));
@@ -41,5 +45,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(e.publishedAt),
   }));
 
-  return [...staticRoutes, ...tracks, ...courses, ...labs, ...posts, ...essays];
+  return [...staticRoutes, ...places, ...tracks, ...courses, ...labs, ...posts, ...essays];
 }

@@ -78,6 +78,47 @@
   will-change: top, left;
 }
 
+/*
+  Atlas — sci-fi relation diagram reveal. Lines draw themselves in, nodes pop,
+  the centre pulses. Uses pathLength="1" so one keyframe draws any line length.
+*/
+@keyframes atlas-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes atlas-pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes atlas-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+@keyframes atlas-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  94% { opacity: 0.4; }
+  96% { opacity: 1; }
+}
+.atlas-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: atlas-draw 1s ease forwards;
+}
+.atlas-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.atlas-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-pulse 3.4s ease-in-out infinite;
+}
+.atlas-cursor {
+  animation: atlas-flicker 4s steps(1) infinite;
+}
+
 /* Gentle staggered entrance for hero content — feels polished, not flashy */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(14px); }
@@ -100,6 +141,18 @@
   .fade-up {
     animation: none;
     opacity: 1;
+  }
+  .atlas-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .atlas-node {
+    animation: none;
+    opacity: 1;
+  }
+  .atlas-core,
+  .atlas-cursor {
+    animation: none;
   }
 }
 
