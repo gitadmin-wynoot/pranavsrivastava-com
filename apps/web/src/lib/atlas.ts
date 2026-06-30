@@ -212,6 +212,34 @@ export const atlasPlaces: AtlasPlace[] = [
   },
 ];
 
+export const KIND_COLOR: Record<AtlasNodeKind, string> = {
+  person: "#f0abfc", // fuchsia
+  place: "#7dd3fc", // sky
+  fact: "#86efac", // green
+  theme: "#fcd34d", // amber
+  work: "#93c5fd", // blue
+  food: "#fdba74", // orange
+  culture: "#c4b5fd", // violet
+  nature: "#6ee7b7", // emerald
+  economy: "#fda4af", // rose
+};
+
+export const KIND_LABEL: Record<AtlasNodeKind, string> = {
+  person: "people",
+  place: "places",
+  fact: "history",
+  theme: "themes",
+  work: "works",
+  food: "food",
+  culture: "culture",
+  nature: "land",
+  economy: "economy",
+};
+
+export function colorFor(kind?: AtlasNodeKind): string {
+  return kind ? KIND_COLOR[kind] : "#7dd3fc";
+}
+
 export function getPlace(slug: string): AtlasPlace | undefined {
   return atlasPlaces.find((p) => p.slug === slug);
 }

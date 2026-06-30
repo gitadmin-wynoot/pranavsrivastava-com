@@ -1,46 +1,28 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AtlasNode, AtlasNodeKind } from "@/lib/atlas";
+import {
+  colorFor,
+  KIND_COLOR,
+  KIND_LABEL,
+  type AtlasNode,
+  type AtlasNodeKind,
+} from "@/lib/atlas";
+import { PlaceCloud } from "./place-cloud";
 
 /*
   PlaceWeb — renders a place's curated knowledge graph as a sci-fi relation
-  diagram + a significance cloud. Layout is computed deterministically from the
-  data (no randomness → SSR-stable), so it "generates itself" for any place.
+  diagram + an interactive significance cloud. The diagram layout is computed
+  deterministically from the data (SSR-stable), so it "generates itself" for
+  any place; the cloud (<PlaceCloud>) handles drag/spin/spotlight interaction.
 */
-
-const KIND_COLOR: Record<AtlasNodeKind, string> = {
-  person: "#f0abfc", // fuchsia
-  place: "#7dd3fc", // sky
-  fact: "#86efac", // green
-  theme: "#fcd34d", // amber
-  work: "#93c5fd", // blue
-  food: "#fdba74", // orange
-  culture: "#c4b5fd", // violet
-  nature: "#6ee7b7", // emerald
-  economy: "#fda4af", // rose
-};
-
-const KIND_LABEL: Record<AtlasNodeKind, string> = {
-  person: "people",
-  place: "places",
-  fact: "history",
-  theme: "themes",
-  work: "works",
-  food: "food",
-  culture: "culture",
-  nature: "land",
-  economy: "economy",
-};
 
 const W = 900;
 const H = 660;
 const CX = W / 2;
 const CY = H / 2 + 8;
 
-function color(kind?: AtlasNodeKind) {
-  return kind ? KIND_COLOR[kind] : "#7dd3fc";
-}
+const color = colorFor;
 
 export function PlaceWeb({
   name,
@@ -221,22 +203,8 @@ export function PlaceWeb({
         </div>
       )}
 
-      {/* significance cloud */}
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-t border-cyan-500/15 px-5 py-5">
-        {nodes.map((node, i) => (
-          <span
-            key={`cloud-${i}`}
-            className="font-mono leading-none transition-opacity"
-            style={{
-              fontSize: `${0.72 + node.weight * 0.2}rem`,
-              color: color(node.kind),
-              opacity: 0.5 + node.weight * 0.1,
-            }}
-          >
-            {node.label}
-          </span>
-        ))}
-      </div>
+      {/* interactive significance sphere */}
+      <PlaceCloud nodes={nodes} />
     </figure>
   );
 }
