@@ -45,6 +45,14 @@ export default async function HomePage() {
         {/* Gradient fade at bottom */}
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white dark:from-zinc-950" />
 
+        {/* Sentinel — a small light snake patrolling the hero perimeter */}
+        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+          <span className="hero-snake" style={{ width: 7, height: 7 }} />
+          <span className="hero-snake" style={{ width: 5, height: 5, opacity: 0.6, animationDelay: "-0.22s" }} />
+          <span className="hero-snake" style={{ width: 4, height: 4, opacity: 0.4, animationDelay: "-0.44s" }} />
+          <span className="hero-snake" style={{ width: 3, height: 3, opacity: 0.25, animationDelay: "-0.66s" }} />
+        </div>
+
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-24 sm:py-32">
           {/* Label */}
           <div className="flex items-center gap-2 mb-6 fade-up">

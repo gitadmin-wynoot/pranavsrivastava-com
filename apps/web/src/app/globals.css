@@ -56,6 +56,28 @@
   100% { transform: translate3d(-1.5%, 1%, 0) scale(1.03); }
 }
 
+/*
+  Hero "sentinel" — a small light snake that patrols the perimeter of the hero.
+  A quiet sci-fi nod: the AI keeping an eye on its little corner of the world.
+  Pure CSS, responsive (% of the hero box), and off for reduced-motion.
+*/
+@keyframes snake-perimeter {
+  0%, 100% { top: 0%; left: 0%; }
+  25% { top: 0%; left: 100%; }
+  50% { top: 100%; left: 100%; }
+  75% { top: 100%; left: 0%; }
+}
+.hero-snake {
+  position: absolute;
+  border-radius: 9999px;
+  background: #3b82f6;
+  box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.5);
+  transform: translate(-50%, -50%);
+  animation: snake-perimeter 13s linear infinite;
+  pointer-events: none;
+  will-change: top, left;
+}
+
 /* Gentle staggered entrance for hero content — feels polished, not flashy */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(14px); }
@@ -71,6 +93,9 @@
   .dot-grid-drift,
   .hero-aurora {
     animation: none;
+  }
+  .hero-snake {
+    display: none;
   }
   .fade-up {
     animation: none;
