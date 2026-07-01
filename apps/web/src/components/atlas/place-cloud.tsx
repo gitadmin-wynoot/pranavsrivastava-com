@@ -1,29 +1,47 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Shuffle, Hand } from "lucide-react";
+import { Shuffle, Hand, X } from "lucide-react";
 import { colorFor, KIND_LABEL, type AtlasNode } from "@/lib/atlas";
 
 /*
   PlaceCloud — an interactive 3D "significance sphere".
 
-  Terms are scattered on a sphere (Fibonacci distribution) that auto-rotates,
-  can be grabbed and flung (with momentum), and clicked. Clicking a term spins
-  it to the front and zooms it; the "spotlight" button surfaces a random aspect.
-  Depth drives size + opacity, so it reads as a rotating cloud of light.
+  Terms scatter on a sphere (Fibonacci distribution) that auto-rotates, can be
+  grabbed and flung (with momentum), and clicked. Clicking a term spins it to
+  the front, zooms it, lights up its connected terms across the sphere, and
+  opens a detail panel with a real blurb + clickable connections. The spotlight
+  button surfaces a random aspect.
 
-  All animation runs by mutating refs/styles inside a rAF loop — React only
-  re-renders when the highlighted term changes. Static fallback for reduced
-  motion.
+  Animation mutates refs/styles inside a rAF loop; React only re-renders when
+  the selection changes. Static fallback for reduced motion.
 */
 
 const BASE_SPIN = 0.0016;
 
-export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
+export function PlaceCloud({
+  nodes,
+  links = [],
+}: {
+  nodes: AtlasNode[];
+  links?: [number, number][];
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const [highlight, setHighlight] = useState<number | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
   const [hint, setHint] = useState(true);
+
+  // adjacency: which terms each term connects to
+  const adjacency = useMemo(() => {
+    const adj: number[][] = nodes.map(() => []);
+    for (const [a, b] of links) {
+      if (adj[a] && adj[b]) {
+        adj[a].push(b);
+        adj[b].push(a);
+      }
+    }
+    return adj;
+  }, [nodes, links]);
 
   // Fibonacci-sphere unit positions — deterministic, SSR-stable.
   const points = useMemo(() => {
@@ -53,9 +71,9 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
     const cy = h / 2;
     const now = performance.now();
     const focusing = now < focus.current.until;
+    const neighbors = sel !== null ? adjacency[sel] : null;
 
     if (focusing) {
-      // ease rotation so the chosen term faces the viewer
       let dy = focus.current.ty - rot.current.y;
       dy = Math.atan2(Math.sin(dy), Math.cos(dy)); // shortest path
       rot.current.y += dy * 0.12;
@@ -80,24 +98,35 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
       const y2 = p.y * cxr - z1 * sx;
       const z2 = p.y * sx + z1 * cxr;
       const depth = (z2 + 1) / 2; // 0 (back) .. 1 (front)
-      const isHi = i === highlight;
-      const scale = (0.62 + depth * 0.6) * (isHi ? 1.5 : 1);
+
+      const isSel = i === sel;
+      const isNbr = !!neighbors && neighbors.includes(i);
+      const dimmed = sel !== null && !isSel && !isNbr;
+
+      const scale =
+        (0.62 + depth * 0.6) * (isSel ? 1.55 : isNbr ? 1.12 : 1);
+      let opacity = 0.34 + depth * 0.66;
+      if (isSel) opacity = 1;
+      else if (isNbr) opacity = Math.max(0.7, depth);
+      else if (dimmed) opacity *= 0.28;
+
       el.style.left = `${cx + x1 * R}px`;
       el.style.top = `${cy + y2 * R}px`;
       el.style.transform = `translate(-50%, -50%) scale(${scale})`;
-      el.style.opacity = `${isHi ? 1 : 0.34 + depth * 0.66}`;
-      el.style.zIndex = `${Math.round(depth * 100) + (isHi ? 200 : 0)}`;
-      el.style.textShadow = isHi
-        ? `0 0 14px ${colorFor(nodes[i].kind)}`
-        : depth > 0.72
-          ? `0 0 8px rgba(34,211,238,0.25)`
-          : "none";
+      el.style.opacity = `${opacity}`;
+      el.style.zIndex = `${Math.round(depth * 100) + (isSel ? 300 : isNbr ? 150 : 0)}`;
+      el.style.textShadow = isSel
+        ? `0 0 16px ${colorFor(nodes[i].kind)}`
+        : isNbr
+          ? `0 0 10px ${colorFor(nodes[i].kind)}88`
+          : depth > 0.72
+            ? `0 0 8px rgba(34,211,238,0.25)`
+            : "none";
     });
-  }, [points, nodes, highlight]);
+  }, [points, nodes, sel, adjacency]);
 
   renderRef.current = render;
 
-  // animation loop (skipped for reduced motion → single static layout)
   useEffect(() => {
     const reduced =
       typeof window !== "undefined" &&
@@ -115,10 +144,9 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // re-apply on highlight change (covers the reduced-motion case)
   useEffect(() => {
     renderRef.current();
-  }, [highlight]);
+  }, [sel]);
 
   const focusOn = useCallback(
     (i: number) => {
@@ -129,7 +157,7 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
         ty: Math.atan2(p.x, p.z),
         tx: Math.atan2(p.y, rho),
       };
-      setHighlight(i);
+      setSel(i);
       setHint(false);
     },
     [points],
@@ -137,11 +165,10 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
 
   const spotlight = useCallback(() => {
     let i = Math.floor(Math.random() * nodes.length);
-    if (i === highlight) i = (i + 1) % nodes.length;
+    if (i === sel) i = (i + 1) % nodes.length;
     focusOn(i);
-  }, [nodes.length, highlight, focusOn]);
+  }, [nodes.length, sel, focusOn]);
 
-  // pointer drag → spin with momentum
   const onPointerDown = (e: React.PointerEvent) => {
     drag.current = { active: true, moved: false, x: e.clientX, y: e.clientY };
     focus.current.until = 0;
@@ -162,6 +189,9 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
   const onPointerUp = () => {
     drag.current.active = false;
   };
+
+  const selected = sel !== null ? nodes[sel] : null;
+  const selNeighbors = sel !== null ? adjacency[sel] : [];
 
   return (
     <div className="border-t border-cyan-500/15">
@@ -195,11 +225,10 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
             onClick={() => {
               if (!drag.current.moved) focusOn(i);
             }}
-            className="absolute left-1/2 top-1/2 whitespace-nowrap font-mono leading-none transition-[font-weight] will-change-transform"
+            className="absolute left-1/2 top-1/2 whitespace-nowrap font-mono leading-none will-change-transform"
             style={{
               fontSize: `${0.66 + node.weight * 0.13}rem`,
               color: colorFor(node.kind),
-              fontWeight: i === highlight ? 700 : 400,
               opacity: 0,
             }}
           >
@@ -209,34 +238,75 @@ export function PlaceCloud({ nodes }: { nodes: AtlasNode[] }) {
 
         {hint && (
           <div className="pointer-events-none absolute inset-x-0 bottom-2 text-center font-mono text-[10px] text-slate-500">
-            ✦ rotating live
+            ✦ rotating live — grab it
           </div>
         )}
       </div>
 
-      {/* highlighted aspect caption */}
-      <div className="min-h-[3.25rem] border-t border-cyan-500/15 px-5 py-3">
-        {highlight !== null ? (
-          <p className="font-mono text-xs text-slate-300">
-            <span style={{ color: colorFor(nodes[highlight].kind) }}>✦ </span>
-            <span className="font-semibold text-slate-100">
-              {nodes[highlight].label}
-            </span>
-            <span className="text-slate-500">
-              {" "}
-              — {KIND_LABEL[nodes[highlight].kind ?? "theme"]}
-            </span>
-          </p>
+      {/* detail panel */}
+      <div className="border-t border-cyan-500/15 px-5 py-4">
+        {selected ? (
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-slate-400">
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: colorFor(selected.kind) }}
+                />
+                {KIND_LABEL[selected.kind ?? "theme"]}
+              </span>
+              <button
+                onClick={() => setSel(null)}
+                className="text-slate-500 hover:text-slate-300 transition-colors"
+                aria-label="Close detail"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <h3
+              className="font-mono text-base font-semibold"
+              style={{ color: colorFor(selected.kind) }}
+            >
+              {selected.label}
+            </h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+              {selected.note ??
+                "A thread in this place’s story — more detail coming as the map fills in."}
+            </p>
+
+            {selNeighbors.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                  connects to
+                </span>
+                {selNeighbors.map((j) => (
+                  <button
+                    key={j}
+                    onClick={() => focusOn(j)}
+                    className="rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-colors hover:bg-white/5"
+                    style={{
+                      color: colorFor(nodes[j].kind),
+                      borderColor: `${colorFor(nodes[j].kind)}44`,
+                    }}
+                  >
+                    {nodes[j].label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
-          <p className="font-mono text-xs text-slate-500">
-            Spin it. Tap a term to zoom in, or hit{" "}
-            <span className="text-cyan-300">spotlight</span> for a random one.
-          </p>
+          <div>
+            <p className="font-mono text-xs text-slate-400">
+              Spin the sphere. Tap any term to zoom in and read about it, or hit{" "}
+              <span className="text-cyan-300">spotlight</span> for a random one.
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-slate-600">
+              one day this map will assemble itself — new places, live, from the
+              open web.
+            </p>
+          </div>
         )}
-        <p className="mt-1 font-mono text-[10px] text-slate-600">
-          one day this map will assemble itself — new places, live, from the
-          open web.
-        </p>
       </div>
     </div>
   );

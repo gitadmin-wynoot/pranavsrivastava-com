@@ -204,7 +204,7 @@ export function PlaceWeb({
       )}
 
       {/* interactive significance sphere */}
-      <PlaceCloud nodes={nodes} />
+      <PlaceCloud nodes={nodes} links={links} />
     </figure>
   );
 }
