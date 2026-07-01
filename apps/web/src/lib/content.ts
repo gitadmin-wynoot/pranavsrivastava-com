@@ -73,6 +73,8 @@ export interface Essay {
   published: boolean;
   publishedAt: string;
   readingTimeMin: number;
+  /** Topic classification, e.g. "AI & Society", "Economics", "Product". */
+  category?: string;
   /** Optional: groups essays into a numbered series. */
   series?: string;
   seriesPart?: number;
@@ -269,6 +271,7 @@ function parseEssay(file: string, dir: string): Essay {
     published: data.published ?? true,
     publishedAt: data.publishedAt ?? data.date ?? new Date().toISOString(),
     readingTimeMin: estimateReadingTime(content),
+    category: data.category ?? undefined,
     series: data.series ?? undefined,
     seriesPart: data.seriesPart ?? undefined,
     content,
