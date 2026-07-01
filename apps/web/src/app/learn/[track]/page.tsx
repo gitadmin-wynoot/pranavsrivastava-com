@@ -5,6 +5,10 @@ import { ArrowLeft, ArrowRight, BookOpen, ChevronRight } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { getTrack, getTracks, getCoursesByTrack, isCourseAvailable } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
+import { AIOSBrain } from "@/components/learn/ai-os-brain";
+import { AIOSWordmap } from "@/components/learn/ai-os-wordmap";
+
+const trackComponents = { AIOSBrain, AIOSWordmap };
 
 interface Props {
   params: Promise<{ track: string }>;
@@ -41,6 +45,7 @@ export default async function TrackPage({ params }: Props) {
   const { content } = await compileMDX({
     source: track.content,
     options: { parseFrontmatter: false },
+    components: trackComponents,
   });
 
   return (
