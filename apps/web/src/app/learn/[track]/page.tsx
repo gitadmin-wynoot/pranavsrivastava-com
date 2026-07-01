@@ -7,8 +7,9 @@ import { getTrack, getTracks, getCoursesByTrack, isCourseAvailable } from "@/lib
 import { Badge } from "@/components/ui/badge";
 import { AIOSBrain } from "@/components/learn/ai-os-brain";
 import { AIOSWordmap } from "@/components/learn/ai-os-wordmap";
+import { AIOSSphere } from "@/components/learn/ai-os-sphere";
 
-const trackComponents = { AIOSBrain, AIOSWordmap };
+const trackComponents = { AIOSBrain, AIOSWordmap, AIOSSphere };
 
 interface Props {
   params: Promise<{ track: string }>;
