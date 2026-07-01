@@ -1,0 +1,64 @@
+---
+title: "What RAG Is (and the Problem It Solves)"
+summary: "Start here, even if RAG is a new acronym. What 'Retrieval-Augmented Generation' actually means in plain English, the problem it fixes, and a playground where you can watch retrieval happen."
+module: 1
+time: 10
+level: "Beginner"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={1} title="What RAG Is (and the Problem It Solves)" time={10} />
+
+<Callout type="tip" title="New here? You're in exactly the right place.">
+This course starts from the beginning — no prior RAG experience needed — and builds all the way to a production system. If you'd like the gentlest possible hands-on warm-up first, the [minimal RAG lab](/labs/minimal-rag-in-one-file) builds a tiny one in 45 minutes. But you can also just start right here.
+</Callout>
+
+<LearningObjectives>
+- Say what the three letters R-A-G stand for, and what each word means
+- Understand the exact problem RAG was built to solve
+- Watch retrieval happen — and see why a good system sometimes says "I don't know"
+</LearningObjectives>
+
+## The problem, first
+
+A large language model is trained once, on data with a cutoff date. That gives it a problem with two faces:
+
+1. **It doesn't know your stuff.** Your company handbook, your product docs, your database, last week's meeting notes — none of that was in its training data.
+2. **When it doesn't know, it often guesses anyway.** A confident, wrong answer — a <KeyTerm definition="When a model states something false as if it were fact, usually because it has no real source for the answer.">hallucination</KeyTerm> — is the most damaging thing an AI product can do.
+
+You *could* retrain the model on your data, but that's slow, expensive, and out of date the moment a document changes. There's a far simpler idea.
+
+## The idea: look it up, then answer
+
+<KeyTerm definition="Retrieval-Augmented Generation: fetch the relevant passages from your own documents, put them in the prompt, and have the model answer from them.">RAG</KeyTerm> stands for **Retrieval-Augmented Generation**. Read it right to left and it explains itself:
+
+- **Generation** — the model writes the answer (what LLMs do).
+- **Augmented** — but we *augment* it with extra information first.
+- **Retrieval** — that information is *retrieved* from your own documents, chosen because it's relevant to the question.
+
+<Callout type="info" title="The one-line version">
+RAG = **look up the relevant passages from your documents, hand them to the model, and have it answer using them** — like an open-book exam instead of a memory test.
+</Callout>
+
+That open-book framing is the whole thing. Instead of asking the model to recall a fact it may never have known, you *put the source on the desk in front of it* and ask it to answer from that. It can now cite where the answer came from — and admit when the answer isn't in the book.
+
+## See it happen
+
+Enough words. Below is a tiny "company handbook." Ask it a question and watch which passages get **retrieved** — the ones the model would then answer from. Try the suggestions, then try your own. (Notice it matches *meaning*: ask about "vacation" and it finds "leave.")
+
+<RetrievalPlayground />
+
+Try the last suggestion — *"What is the dental insurance plan?"* — and watch what happens: nothing relevant comes back, and a good RAG system answers **“I don't know”** rather than inventing a plan. That honest refusal is exactly the behaviour that makes RAG *trustworthy*, and we'll keep coming back to it.
+
+<ChapterSummary>
+- LLMs don't know your private/changing data, and tend to guess when they don't know
+- RAG fixes this by retrieving relevant passages and having the model answer from them — an open-book exam
+- Retrieval matches meaning, not just keywords, and enables citations
+- When nothing relevant is retrieved, the right answer is an honest "I don't know"
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, what do the three words in "Retrieval-Augmented Generation" each contribute?
+2. Why is RAG a better fit than retraining the model when your documents change every week?
+</Checkpoint>

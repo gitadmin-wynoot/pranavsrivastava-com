@@ -1,0 +1,66 @@
+---
+title: "When to Use RAG — and Which Projects Should"
+summary: "RAG is not always the answer. The clear decision guide: RAG vs long context vs fine-tuning, the project types that genuinely need it, and the ones that don't."
+module: 2
+time: 10
+level: "Beginner"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={2} title="When to Use RAG — and Which Projects Should" time={10} />
+
+<LearningObjectives>
+- Choose correctly between RAG, long context, and fine-tuning
+- Recognise the project types that genuinely need RAG
+- Spot the cases where RAG is the wrong (over-engineered) choice
+</LearningObjectives>
+
+## Three ways to give a model knowledge
+
+RAG is one of three ways to get a model to answer using information it wasn't trained on. Picking the wrong one wastes months, so learn the difference first.
+
+| Approach | What it does | Best when | Weak at |
+|---|---|---|---|
+| **Long context** | Paste all the docs into the prompt | The corpus is small and fits the window | Cost/latency per call; no scale; no freshness |
+| **Fine-tuning** | Train the model further on examples | Teaching a *style, format, or skill* | Facts (it blurs them); slow to update; no citations |
+| **RAG** | Retrieve the relevant bits, then answer | Knowledge is large, changing, or must be cited | More moving parts; retrieval can miss |
+
+<Callout type="important" title="The rule of thumb">
+Use **RAG** when the knowledge is **large, changing, or must be attributable**. Use **long context** when the whole corpus comfortably fits in the prompt and rarely changes. Use **fine-tuning** to change *how* the model behaves, not *what facts* it knows. They also combine — many real systems fine-tune for tone and use RAG for facts.
+</Callout>
+
+## Which projects genuinely need RAG
+
+RAG earns its complexity when at least one of these is true:
+
+- **The knowledge is too big to fit in a prompt** — a documentation site, a wiki, thousands of support tickets, a code base.
+- **It changes** — prices, policies, inventory, this quarter's numbers. Retrieval reads the current document; a fine-tuned or long-context snapshot goes stale.
+- **Answers must be traceable** — legal, medical, finance, compliance. "Says who?" needs a citation to a real source, and RAG gives you exactly that.
+- **It's private or per-user** — a customer's own documents, an employee's own files. You retrieve only what *this* user is allowed to see.
+
+Classic fits: **support assistants** over your help centre, **internal search** ("where's the policy on X?"), **docs Q&A**, **research assistants** over papers or reports, and **customer-data copilots**.
+
+## When RAG is the wrong choice
+
+Just as important — don't reach for it reflexively:
+
+- **A tiny, stable corpus.** If everything you need fits in the context window and rarely changes, RAG is pure overhead. Just paste it in.
+- **No knowledge lookup at all.** Summarising a document the user pasted, translating, rewriting — the content is already in the prompt. There's nothing to retrieve.
+- **You need reasoning, not facts.** RAG feeds the model *information*; it doesn't make the model *smarter*. If the task is hard logic over data you already have, RAG won't help.
+
+<Callout type="tip" title="A quick self-test">
+Ask: *"To answer well, does the model need to look something up that isn't already in front of it — and that's too big or too fresh to just paste in?"* If yes, build RAG. If no, you're probably over-engineering.
+</Callout>
+
+<ChapterSummary>
+- RAG vs long context vs fine-tuning: large/changing/cited → RAG; small/static → long context; behaviour → fine-tuning
+- RAG fits support, internal search, docs Q&A, research, and per-user data copilots
+- Skip RAG for tiny static corpora, pasted-in content, or pure-reasoning tasks
+- The self-test: does the model need to look something up that's too big or too fresh to paste?
+</ChapterSummary>
+
+<Checkpoint>
+1. A team wants an assistant that answers HR questions from a 400-page handbook that's updated monthly. RAG, long context, or fine-tuning — and why?
+2. Give one project where reaching for RAG would be over-engineering.
+</Checkpoint>

@@ -1,0 +1,55 @@
+---
+title: "Evaluation — You Can't Improve What You Don't Measure"
+summary: "The step that turns RAG from prompt-roulette into engineering: retrieval vs generation metrics, the golden set, LLM-as-judge, and gating changes in CI."
+module: 8
+time: 15
+level: "Advanced"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={8} title="Evaluation — You Can't Improve What You Don't Measure" time={15} />
+
+<LearningObjectives>
+- Measure retrieval and generation separately, because they fail differently
+- Build a golden set — the highest-leverage asset in a RAG project
+- Use LLM-as-judge for the fuzzy quality metrics
+- Gate every change on the eval set so regressions never reach users
+</LearningObjectives>
+
+Every choice in this course — chunk size, embedding model, `k`, re-ranker, prompt — either helps or hurts, and you *cannot tell by vibes*. Evaluation is what makes RAG an engineering discipline instead of prompt roulette.
+
+## Measure the two stages separately
+
+Retrieval and generation fail for different reasons, so score them apart:
+
+| Stage | Question it answers | Metrics |
+|---|---|---|
+| **Retrieval** | Did we fetch the right passages? | recall@k, precision@k, MRR, nDCG |
+| **Generation** | Did the answer use them faithfully? | faithfulness (no hallucination), answer relevance, citation accuracy |
+
+This split is diagnostic gold. If the right passage *was* retrieved but the answer is still wrong, it's a generation problem — no amount of retrieval tuning will fix it, and vice versa.
+
+## Build a golden set
+
+<KeyTerm definition="A curated set of real questions with known-good answers and the passages that should be retrieved — your regression suite for RAG.">A golden set</KeyTerm> of 50 to a few hundred real questions — each with a known-good answer and the passages that *should* surface — is the single highest-leverage asset in a RAG project. Grow it from real user queries and from every bug you fix. It's your regression suite: the thing that tells you a change helped or hurt.
+
+## Use LLM-as-judge for fuzzy metrics
+
+Faithfulness and relevance are hard to score with rules. A strong model — given the question, the answer, and the sources — grades them surprisingly well. Calibrate it against a handful of human labels so you trust its scores, then let it run at scale.
+
+<Callout type="important" title="Gate changes on the eval set">
+Wire the golden set into CI. No change to chunking, retrieval, or prompts ships without running it — a 3% recall regression should **fail the build**, not surprise a user in production. And watch *online* signals too (thumbs, follow-up rate, "that's wrong" clicks); offline and online evaluation catch different problems.
+</Callout>
+
+<ChapterSummary>
+- Evaluate retrieval and generation separately — they fail for different reasons
+- A golden set of real Q&A-with-sources is your most valuable RAG asset and regression suite
+- Use LLM-as-judge, calibrated to humans, for faithfulness and relevance
+- Gate every change on the eval set in CI, and watch online signals too
+</ChapterSummary>
+
+<Checkpoint>
+1. Your answers are wrong but the correct passage *was* in the retrieved context. Retrieval or generation problem — and which metric flags it?
+2. Why is a golden set more valuable than simply having a larger document corpus?
+</Checkpoint>

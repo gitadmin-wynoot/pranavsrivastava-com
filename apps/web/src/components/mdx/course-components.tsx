@@ -2,6 +2,8 @@ import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
 import { Figure } from "./course-figures";
 import { RelationMap } from "./relation-map";
+import { RetrievalPlayground } from "./retrieval-playground";
+import { ChunkSizer } from "./chunk-sizer";
 import {
   Info,
   Lightbulb,
@@ -299,5 +301,7 @@ export const courseComponents = {
   Step,
   Figure,
   RelationMap,
+  RetrievalPlayground,
+  ChunkSizer,
   pre: CodeBlock,
 };

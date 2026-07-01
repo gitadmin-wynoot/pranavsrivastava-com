@@ -1,0 +1,58 @@
+---
+title: "The Strange Scenarios (Where Naïve RAG Breaks)"
+summary: "The edge cases that quietly break RAG in production — stale and contradictory data, access control, PII, out-of-scope questions, duplicates, and adversarial documents — and how to handle each."
+module: 9
+time: 16
+level: "Advanced"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={9} title="The Strange Scenarios (Where Naïve RAG Breaks)" time={16} />
+
+<LearningObjectives>
+- Handle contradictory and stale sources without silently picking wrong
+- Enforce access control at retrieval time — the security case people forget
+- Refuse out-of-scope questions and cope with empty or huge retrieval
+- Deal with duplicates, tables, and adversarial documents deliberately
+</LearningObjectives>
+
+This is where naïve RAG quietly breaks. Every one of these *will* happen in production — design for them now, not after the incident.
+
+## Stale & contradictory sources
+
+Two documents disagree — an old policy and a new one. Filter by recency, prefer authoritative sources, and when a genuine conflict remains, have the model **surface both with their dates** rather than silently pick one.
+
+## Access control & multi-tenancy
+
+<Callout type="warning" title="The failure that ends projects">
+A retriever with no permission filter will happily return another tenant's — or another employee's — confidential document. **Enforce access at query time:** tag every chunk with who may see it (Module 4), and filter on the *current user's identity before ranking*. A wrong answer is embarrassing; leaking one customer's data to another is a breach. If your RAG serves more than one user or team, build this **first**, not last — retro-fitting it is painful and error-prone.
+</Callout>
+
+## PII
+
+Detect and redact sensitive data at ingestion, and again on output. Know what you're storing and where — and be able to delete a person's data on request.
+
+## Out-of-scope, empty, and huge retrieval
+
+- **Out-of-scope questions.** Users ask things your corpus can't answer. A confidence threshold on retrieval scores — plus the honest "I don't know" from Module 7 — keeps the system from bluffing. (You watched this in the Module 1 playground.)
+- **Empty retrieval.** No good matches → say so; don't force an answer from weak context.
+- **Huge retrieval.** Hundreds of matches → re-rank hard and cap `k`; never dump everything into the window.
+
+## Duplicates, tables, and adversaries
+
+- **Near-duplicate chunks.** The same boilerplate appears in fifty documents and floods your top-k. De-duplicate at ingestion and diversify results (e.g. MMR) so the context isn't five copies of one sentence.
+- **Tables & numbers.** Prose-tuned embeddings are weak on tabular data. Keep tables intact, handle them deliberately, and never trust a number the model "remembered" — cite the row.
+- **Adversarial documents.** Content designed to manipulate the model (the injection from Module 7). Sanitise inputs, sandbox permissions, and validate outputs.
+
+<ChapterSummary>
+- Resolve contradictions by recency and authority; surface genuine conflicts with dates
+- Enforce access control at query time — a security boundary, build it first
+- Redact PII in and out; threshold retrieval to refuse out-of-scope questions
+- De-duplicate and diversify; handle tables and adversarial documents deliberately
+</ChapterSummary>
+
+<Checkpoint>
+1. Your RAG serves multiple companies from one index. What must happen *before* ranking, and why is it non-negotiable?
+2. Two documents give different answers because one is outdated. What's a better response than silently returning one of them?
+</Checkpoint>

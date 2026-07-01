@@ -1,0 +1,65 @@
+---
+title: "From Demo to System: The Production Architecture"
+summary: "A prototype is a straight line; production is two pipelines and a feedback loop. The full architecture at a glance, before we build each piece."
+module: 3
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={3} title="From Demo to System: The Production Architecture" time={12} />
+
+<LearningObjectives>
+- See the full production RAG architecture end to end
+- Distinguish the offline (indexing) pipeline from the online (serving) pipeline
+- Understand why the evaluation loop is a first-class part of the system
+</LearningObjectives>
+
+## A prototype is a line; a system is a loop
+
+The RAG you met in Module 1 is a straight line: embed some docs, search, answer. That's perfect for learning and useless in production, because it has no way to stay fresh, no way to know if it's any good, and no way to improve.
+
+A production RAG is **two pipelines and a feedback loop**:
+
+<Figure name="rag-flow" caption="The serving path most people picture — retrieve, then generate. Production wraps it in an ingestion pipeline and an evaluation loop." />
+
+<Diagram title="Production RAG, end to end" caption="Two pipelines feeding a shared index, plus the loop that keeps you honest">
+
+```
+  OFFLINE  ┌──────────────────────────────────────────────┐
+  sources ►│ parse → chunk → embed → upsert (with metadata)│► INDEX
+           └──────────────────────────────────────────────┘   (vector +
+                                                                keyword)
+  ONLINE            ┌───────────────────────────────────┐        │
+  user query ─────► │ rewrite → retrieve → re-rank →     │◄───────┘
+                    │ assemble context → generate → cite │──► answer
+                    └───────────────────────────────────┘        │
+  LOOP                            eval set ◄── feedback / logs ◄──┘
+```
+
+</Diagram>
+
+- **The offline pipeline** turns your ever-changing sources into a searchable index. It runs on a schedule (or on document change), not per request. Modules 4–5 build it.
+- **The online pipeline** answers a query in real time against that index. It's what your users hit. Modules 6–7 build it.
+- **The evaluation loop** measures whether the whole thing actually works, and feeds failures back in. Module 8 builds it — and it's what turns RAG from guesswork into engineering.
+
+<Callout type="note" title="Why separate offline from online">
+Indexing is heavy and occasional; serving is light and constant. Keeping them apart means you can re-index a million documents overnight without touching the live query path, and scale each independently. Blur them together and every user query waits on ingestion work.
+</Callout>
+
+## The mental model to hold
+
+Everything in the rest of this course slots into one of those three boxes. When a RAG system misbehaves, the first diagnostic question is always: *which box?* Did ingestion prepare the data badly, did retrieval fetch the wrong thing, did generation ignore what it was given — or did evaluation never catch it? Knowing the box narrows the fix enormously.
+
+<ChapterSummary>
+- Production RAG = an offline indexing pipeline + an online serving pipeline + an evaluation loop
+- Keep indexing and serving separate so each scales independently and re-indexing doesn't block queries
+- Evaluation is a first-class part of the system, not an afterthought
+- Debugging starts by asking which box failed: ingestion, retrieval, generation, or evaluation
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does indexing belong in a separate pipeline from serving?
+2. A user reports a wrong answer. What's the first question you ask to narrow down where it went wrong?
+</Checkpoint>

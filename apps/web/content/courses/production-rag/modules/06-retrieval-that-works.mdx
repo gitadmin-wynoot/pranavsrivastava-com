@@ -1,0 +1,75 @@
+---
+title: "Retrieval That Actually Works"
+summary: "Naïve top-k is the floor. The stacking techniques that win most of your quality: hybrid search, re-ranking, and query transformation."
+module: 6
+time: 16
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={6} title="Retrieval That Actually Works" time={16} />
+
+<LearningObjectives>
+- Combine vector and keyword search to catch meaning *and* exact terms
+- Retrieve wide, then re-rank to a small, precise set
+- Transform messy real-world queries before searching
+- Tune k to the smallest reliable value
+</LearningObjectives>
+
+Plain top-k over one embedding model is the *floor*, not the ceiling. Most real-world quality gains live right here, and they stack.
+
+<Diagram title="A production retrieval pipeline" caption="Each stage recovers a class of misses the previous one made">
+
+```
+  query
+    │  rewrite / expand   (fix vague or conversational queries)
+    ▼
+  ┌──────────────┬───────────────┐
+  │ vector search│ keyword (BM25) │   ← hybrid: catch meaning AND exact terms
+  └──────┬───────┴───────┬───────┘
+         └──── merge ─────┘
+                │  re-rank        (a cross-encoder reorders the top ~50)
+                ▼
+        metadata filter          (tenant, date, access)
+                │
+                ▼
+        top-k passages  ──►  generation
+```
+
+</Diagram>
+
+## Hybrid search — the biggest single win
+
+Vectors match meaning but fumble exact strings — product codes, names, error IDs, acronyms. Ask for `ERR_2041` and a pure embedding search may drift to "similar-sounding errors" and miss the exact one. **Keyword search (BM25)** nails exact terms but misses paraphrases. Run both and merge the results, and you catch what either alone would drop. For most corpora this is the largest quality jump you can make.
+
+## Re-ranking — cheap precision
+
+The embedding search is fast but coarse. So **retrieve wide** — grab ~50 candidates cheaply — then run a <KeyTerm definition="A model that scores a (query, passage) pair together for relevance, more accurately but more slowly than embedding search. Used to reorder a shortlist.">cross-encoder re-ranker</KeyTerm> that reads each candidate *against the query* and reorders them, keeping the true top 5. It's a small addition with a large lift, because it judges relevance directly instead of by vector distance.
+
+## Query transformation — meet the messy query
+
+Real queries are vague, conversational, or overloaded. A few high-value fixes:
+
+- **Rewrite** a follow-up ("and the second one?") into a standalone question using the conversation.
+- **Expand** acronyms and add synonyms so retrieval has more to match.
+- **HyDE** — have the model write a *hypothetical* answer and search with that; a fake answer is often closer to the real passage than the terse question is.
+- **Sub-queries** — split a multi-part question and retrieve for each part.
+
+## Tune k to your generator
+
+<Callout type="tip" title="More chunks is not better">
+Stuffing 20 passages into the prompt doesn't help — irrelevant context actively *degrades* answers and burns tokens. Find the smallest `k` that reliably contains the answer (you'll measure this in Module 8) and stop there.
+</Callout>
+
+<ChapterSummary>
+- Hybrid (vector + keyword/BM25) search catches meaning and exact terms — usually the biggest win
+- Retrieve ~50 candidates, then re-rank with a cross-encoder to a precise top-k
+- Transform messy queries: rewrite, expand, HyDE, sub-queries
+- Filter by metadata before ranking; tune k to the smallest reliable value
+</ChapterSummary>
+
+<Checkpoint>
+1. A user searches for the exact code "ERR_2041" and pure vector search misses it. Which technique fixes this, and why?
+2. Why is retrieving 50 candidates and re-ranking to 5 often better than retrieving 5 directly?
+</Checkpoint>

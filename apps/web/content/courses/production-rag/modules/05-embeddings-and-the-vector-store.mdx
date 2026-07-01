@@ -1,0 +1,61 @@
+---
+title: "Embeddings & the Vector Store"
+summary: "How text becomes searchable geometry, how to choose an embedding model without regret, and what a production vector store must do."
+module: 5
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={5} title="Embeddings & the Vector Store" time={12} />
+
+<LearningObjectives>
+- Understand what an embedding is and why similar meanings sit close together
+- Choose an embedding model with the trade-offs that matter
+- Know what a production vector store must provide
+- Avoid the most expensive mistake in RAG: the re-embedding trap
+</LearningObjectives>
+
+## Meaning as geometry
+
+<Figure name="vectors-space" caption="An embedding turns text into a point in space, placed so that similar meanings land near each other. Retrieval is just finding the nearest points to your query." />
+
+An <KeyTerm definition="A list of numbers representing a piece of text's meaning, positioned so that similar meanings are close together.">embedding</KeyTerm> converts text into a vector — a long list of numbers — arranged so that "vacation policy" and "how much leave do I get" land near each other, even with no shared words. That's the magic you saw in the Module 1 playground, made concrete. Retrieval is then just: embed the query, find the nearest document vectors.
+
+## Choosing an embedding model
+
+This is a trade-off across a few axes:
+
+- **Quality** — how well it captures meaning *on your kind of text* (legal, code, and casual prose differ).
+- **Dimension** — bigger vectors can be richer but cost more to store and search.
+- **Context length** — the longest chunk it can embed at once.
+- **Hosted vs local** — an API call per embedding, or a model you run yourself.
+
+<Callout type="important" title="Benchmark on your data, not a leaderboard">
+A model that tops a public benchmark may do worse on *your* documents. Take 50 real questions with known-good passages and measure retrieval quality with each candidate model. Then write the choice down — because changing it later is painful.
+</Callout>
+
+## The vector store
+
+The store is where chunks live and get searched. Managed (Pinecone, Weaviate), self-hosted (Qdrant, Milvus), or bolted onto your existing database (`pgvector`). The right pick depends on scale and how much you want to operate — but every serious store must provide the same three things:
+
+- **Approximate nearest-neighbour (ANN) index** — usually HNSW — for sub-second search across millions of vectors (checking every vector exactly would be too slow).
+- **Metadata filtering** at query time — by source, date, tenant, access level.
+- **Upsert and delete** — so the freshness work from Module 4 actually lands.
+
+<Callout type="warning" title="The re-embedding trap">
+The single most expensive mistake in production RAG: changing your embedding model (or chunking) *after* indexing millions of documents. Queries and documents **must** be embedded by the same model, so a switch means re-processing the entire corpus — sometimes days of compute and cost. Version your index, benchmark before you commit, and treat "which embedding model" as a long-term decision.
+</Callout>
+
+<ChapterSummary>
+- Embeddings place text in space so similar meanings are neighbours; retrieval finds the nearest
+- Choose an embedding model by benchmarking on your own data — the choice is sticky
+- A production store needs ANN search, metadata filtering, and upsert/delete
+- Query and document embeddings must use the same model version; plan for costly re-embeds
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can an embedding match "how much leave do I get" to a document about "vacation policy" that shares no words?
+2. Why is switching embedding models after indexing a million documents so costly?
+</Checkpoint>

@@ -1,0 +1,59 @@
+---
+title: "Operating It: Cost, Observability & the Frontier"
+summary: "A live RAG system is something you operate, not just ship — tracing, caching, cost control, the feedback loop — plus where RAG is heading next."
+module: 10
+time: 13
+level: "Advanced"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={10} title="Operating It: Cost, Observability & the Frontier" time={13} />
+
+<LearningObjectives>
+- Trace requests so any bad answer can be replayed and debugged
+- Control cost and latency with caching and right-sized models
+- Close the feedback loop from real failures back into your eval set
+- Know where RAG is heading: agentic RAG and GraphRAG
+</LearningObjectives>
+
+A live RAG system is a system to *operate*, not just ship.
+
+## Observability — replay any answer
+
+Trace every request end to end: the query, what was retrieved (with scores), the exact prompt assembled, the answer, and the cost/latency of each stage. When someone reports a bad answer, you must be able to **replay exactly what happened** — otherwise you're debugging blind. Log to a tool like Langfuse.
+
+## Cost & latency
+
+Retrieval, re-ranking, and generation each add time and money. Two levers:
+
+- **Cache aggressively** — embeddings for repeated queries, and full answers for common ones.
+- **Right-size the model per stage** — a small, cheap model for query rewriting; your best model only for the final answer.
+
+## Close the loop
+
+Capture thumbs, corrections, and "that's wrong" signals, and feed the failures back into the golden set from Module 8. Your evaluation suite should grow every week — that's how the system gets better instead of drifting.
+
+<Callout type="tip" title="Where RAG is heading">
+Two frontiers build directly on everything here. **Agentic RAG** turns retrieval into a *tool the model calls* — deciding when and what to search, and searching again if the first pass was thin — instead of a fixed pre-step. **GraphRAG** adds a knowledge graph over your chunks so the system can answer questions that need connecting facts across many documents (the [Knowledge Graphs](/courses/knowledge-graphs) course goes deep on that idea). Both are small steps from the foundation you now have.
+</Callout>
+
+## You've got the whole picture
+
+Two pipelines and a loop; the quality levers at each stage; and the edge cases that decide whether people trust the thing. Build it in this order — ingestion, retrieval, grounding, evaluation, then the hard cases — and measure every step.
+
+<ChapterSummary>
+- Trace every request so any bad answer can be replayed and debugged
+- Control cost and latency with caching and right-sized models per stage
+- Turn real failures into golden-set cases every week — the loop is how it improves
+- Agentic RAG and GraphRAG are the next steps, built on these foundations
+</ChapterSummary>
+
+<Checkpoint>
+1. Name two things you must log for every request so a bad answer can be debugged later.
+2. How does agentic RAG change the pipeline compared to the fixed one in this course?
+</Checkpoint>
+
+---
+
+**Where to go next:** do the [minimal RAG lab](/labs/minimal-rag-in-one-file) for the hands-on starting point, the [guardrails lab](/labs/guardrails-on-an-llm-endpoint) for the safety layer, and the [AI Ops](/courses/ai-ops) course for running AI systems reliably at scale.

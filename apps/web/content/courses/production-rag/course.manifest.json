@@ -1,0 +1,93 @@
+{
+  "course_id": "production-rag",
+  "title": "RAG in Production",
+  "summary": "Start from 'what is RAG and why' and go all the way to a retrieval system you can trust in production — ingestion, chunking, retrieval quality, grounding, evaluation, and the hard edge cases (stale data, access control, prompt injection, cost). With interactive playgrounds to make it click.",
+  "level": "Beginner to Advanced",
+  "track": "applied-ai",
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-07-01",
+  "tags": ["RAG", "Vector Search", "Retrieval", "Embeddings", "Evaluation", "Production", "LLMs"],
+  "modules": [
+    {
+      "id": "01-what-is-rag",
+      "title": "What RAG Is (and the Problem It Solves)",
+      "time_minutes": 10,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "02-when-to-use-rag",
+      "title": "When to Use RAG — and Which Projects Should",
+      "time_minutes": 10,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "03-the-production-architecture",
+      "title": "From Demo to System: The Production Architecture",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "04-ingestion-and-chunking",
+      "title": "Ingestion & Chunking — Where Quality Is Won",
+      "time_minutes": 14,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "05-embeddings-and-the-vector-store",
+      "title": "Embeddings & the Vector Store",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "06-retrieval-that-works",
+      "title": "Retrieval That Actually Works",
+      "time_minutes": 16,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "07-generation-and-grounding",
+      "title": "Generation & Grounding — Making Answers Trustworthy",
+      "time_minutes": 13,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "08-evaluation",
+      "title": "Evaluation — You Can't Improve What You Don't Measure",
+      "time_minutes": 15,
+      "level": "Advanced",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "09-strange-scenarios",
+      "title": "The Strange Scenarios (Where Naïve RAG Breaks)",
+      "time_minutes": 16,
+      "level": "Advanced",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    },
+    {
+      "id": "10-operating-in-production",
+      "title": "Operating It: Cost, Observability & the Frontier",
+      "time_minutes": 13,
+      "level": "Advanced",
+      "status": "published",
+      "last_updated": "2026-07-01"
+    }
+  ]
+}

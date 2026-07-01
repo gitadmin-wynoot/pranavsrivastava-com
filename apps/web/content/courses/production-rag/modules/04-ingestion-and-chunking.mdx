@@ -1,0 +1,60 @@
+---
+title: "Ingestion & Chunking — Where Quality Is Won"
+summary: "Retrieval can only find what ingestion prepared well. Structure-aware parsing, chunking (with an interactive sizer), metadata, and keeping the index fresh."
+module: 4
+time: 14
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-07-01"
+---
+
+<ChapterHeader number={4} title="Ingestion & Chunking — Where Quality Is Won" time={14} />
+
+<LearningObjectives>
+- Parse documents while preserving their structure
+- Chunk on meaning, not character count — and feel the size trade-off
+- Attach the metadata that retrieval and citations depend on
+- Make ingestion incremental so the index doesn't rot
+</LearningObjectives>
+
+This stage decides more of your final quality than any clever model downstream. Retrieval can only surface what ingestion prepared well.
+
+## Parse for meaning, not just text
+
+A PDF flattened to a wall of characters loses its tables, headings, and reading order. Use structure-aware parsers, keep tables intact, and preserve the document hierarchy — headings and sections become both better chunk boundaries and useful metadata.
+
+## Chunk on structure, then cap the size
+
+The naïve "every 500 characters" splitter cuts sentences and tables in half. Split on natural boundaries — headings, paragraphs, list items — and only *then* cap the size. Size is a genuine trade-off; drag it and see:
+
+<ChunkSizer />
+
+Small chunks match precisely but may not hold enough to answer; large chunks carry context but make retrieval vague and waste the model's window. Somewhere in the middle — roughly one idea with its surrounding context — is the sweet spot. And **overlap** (10–20%) means an idea split across a boundary still survives whole in one chunk.
+
+<Callout type="tip" title="Bad chunking is the #1 cause of fuzzy answers">
+Before blaming the embedding model or the LLM, look at your chunks. If a chunk is half a table, or three unrelated topics glued together, no downstream cleverness will rescue it.
+</Callout>
+
+## Attach metadata to every chunk
+
+A chunk is not just text. Store structured fields alongside it — and you'll use every one:
+
+- **source, title, section** → for citations and filtering
+- **timestamp / version** → to prefer fresh docs and resolve conflicts (Module 9)
+- **access tag** → *who is allowed to see this* (Module 9 — this is a security boundary)
+
+<Callout type="warning" title="Plan for change from day one">
+Documents get edited and deleted. If your pipeline can only *add*, your index rots — old versions linger and contradict the new ones. Give every chunk a **stable ID** derived from its source, so re-ingesting a document **replaces** its chunks (an *upsert*) and deletions remove them. Incremental, idempotent ingestion is a production requirement, not a nice-to-have.
+</Callout>
+
+<ChapterSummary>
+- Parse with structure preserved; chunk on natural boundaries, then cap size
+- Medium chunks (~one idea) with 10–20% overlap are the usual starting point
+- Attach source, title, section, timestamp, and an access tag to every chunk
+- Use stable IDs so re-ingesting upserts and deletions remove — keep the index fresh and idempotent
+</ChapterSummary>
+
+<Checkpoint>
+1. Why split on paragraphs/headings before capping the character count, instead of just slicing every N characters?
+2. What breaks over time if your ingestion pipeline can only add chunks, never replace or delete them?
+</Checkpoint>
