@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { NetworkUseCases } from "./network-use-cases";
+import { TelcoEraSlider } from "./telco-era-slider";
+import { GuardrailSim } from "./guardrail-sim";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -338,4 +341,9 @@ export function EssayFigure({ name, caption }: { name: string; caption?: string 
   return <Frame caption={caption ?? fig.caption}>{fig.node}</Frame>;
 }
 
-export const essayComponents = { EssayFigure };
+export const essayComponents = {
+  EssayFigure,
+  NetworkUseCases,
+  TelcoEraSlider,
+  GuardrailSim,
+};

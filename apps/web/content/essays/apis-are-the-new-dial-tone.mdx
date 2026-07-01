@@ -1,62 +1,52 @@
 ---
-title: "APIs are the new dial tone"
+title: "The network grew superpowers (and handed you the remote)"
 slug: "apis-are-the-new-dial-tone"
-dek: "A phone network's deepest powers — where a device is, how good its connection is, whether its SIM was just swapped — are becoming things any developer can call. The standards making it happen, and the mess they're cleaning up."
-summary: "The programmable-telecom present up close: CPaaS, CAMARA and the GSMA Open Gateway, IoT, and the standards (OpenAPI, AsyncAPI, TM Forum, 3GPP exposure) turning network capabilities into API calls — with the goods and the bads."
+dek: "Knowing where a device really is. Sensing that a SIM was just swapped. Promising a fast connection on demand. These used to be telco magic. Now they're a function call — and there's a 'universal remote' making it work everywhere."
+summary: "The programmable-network present, told through vivid examples: the capabilities becoming APIs, the 'universal remote' standards (CAMARA, Open Gateway) that make them work across operators, IoT and the software SIM — with the upside and the honest catches."
 series: "The Programmable Network"
 seriesPart: 2
 published: true
 publishedAt: "2026-07-02"
 ---
 
-The dial tone was a promise you could hear: pick up the phone, and it works, anywhere, without you understanding a thing about how. The API is the same promise, made to developers instead of callers — call this endpoint, and a phone network’s deepest capability answers, without you needing a telco degree. This essay is about how that happened, and the standards quietly doing the heavy lifting.
+The old dial tone was a promise you could *hear*: pick up, and it works, anywhere, without understanding a thing about how. What's happening now is the same promise, made to builders instead of callers — call this, and a genuine superpower answers.
 
-## CPaaS was the gateway drug
+It started with a small, addictive magic. With the right service, sending a text or placing a call became a single line of code — a snippet runs, and a stranger's phone buzzes on the far side of the planet. (I'll tell you the unglamorous half, because I've lived it: the instant something is callable, someone abuses it. There's a whole fraud — "SMS pumping" — where bots trigger millions of pointless verification texts because each one quietly pays the attacker a cut. Every beautiful API has a shadow like that.)
 
-The first taste was communications. **CPaaS** — a Communications Platform as a Service — turned sending an SMS or placing a call into an API request. A `POST`, and a device on the other side of the planet buzzes. **RCS** is now upgrading that plain SMS into something richer — verified senders, media, read receipts — the texting experience finally catching up to the apps.
+But messaging was just the doorway. The real shift is that the network's *own* powers are opening up. Rather than describe them, let me just let you play with them — tap for a scenario, and keep tapping:
 
-It’s genuinely magical, and — because I worked close to this — I’ll tell you the unglamorous half too. The moment a capability is callable, it’s abusable. “SMS pumping” (also called artificially inflated traffic) is a fraud where bots trigger floods of verification texts to numbers that quietly earn the fraudster a cut. Every beautiful API has a shadow like this, and handling it is most of the real work.
+<NetworkUseCases />
 
-## From messaging to the network itself
+## The four superpowers worth knowing
 
-The bigger shift is that the *network’s own* capabilities are now becoming APIs — not just messaging bolted on top.
+Strip away the jargon and most of what's opening up is four "senses" the network can now lend your app:
+
+- **"Is this really you?"** — silently confirm someone controls their phone number, with no clumsy SMS code to copy or intercept.
+- **"Was this account just hijacked?"** — check whether a SIM was swapped recently, the classic fingerprint of an account takeover.
+- **"Where is this device, really?"** — a network-verified location that's far harder to fake than the GPS chip in a phone.
+- **"Can you promise me speed?"** — ask for a guaranteed-quality connection for a set window, instead of hoping for the best.
 
 <EssayFigure name="network-as-api" />
 
-Through **CAMARA** (an open-source project under the Linux Foundation, backed by the GSMA) and the **GSMA Open Gateway** initiative rolling it out across operators, you can now call things that used to be locked deep inside the network:
+Each of those used to require a bespoke deal with a carrier. Now it's an ordinary request in your code. That's the whole revolution in one sentence.
 
-- **Number Verification** — confirm a user controls a phone number, silently, without an SMS code.
-- **SIM Swap** — check whether a number’s SIM was changed recently (a classic account-takeover signal).
-- **Device Location** — a network-verified location, harder to spoof than GPS.
-- **Quality-on-Demand** — ask the network for a guaranteed level of service for a window of time.
+## The "universal remote" that makes it work everywhere
 
-Sit with that. A capability that used to require a bespoke integration with each operator becomes a documented API call. That is the whole revolution in one sentence.
+Here's the problem that almost killed this in the cradle. Picture every app needing a *different plug* for every phone network on Earth — one shape for this carrier, another for that one, thousands of one-off integrations. Total chaos. Nobody builds on that.
 
-## The mess the standards are cleaning up
+So the industry did the boring, heroic thing: it agreed on a standard. A project called **CAMARA** (open-source, run under the Linux Foundation with the GSMA behind it) defines these network APIs *once*, and the **GSMA Open Gateway** initiative — launched in 2023 and since signed by operators covering a huge share of the world's connections — rolls them out the same way across carriers. Think of it as a **universal remote**: one set of buttons that works no matter whose network you're on.
 
-Here’s the problem standards exist to solve. Without them, every developer times every operator is a fresh, custom integration — an **N×M** explosion of one-off connections that never scales. A shared standard collapses that into *one contract many operators honour* — exactly what SS7 did for calls a century ago, now for capabilities.
+There's more fine print underneath — the contract language (OpenAPI), the business-system standards (TM Forum) — and I'll spare you the acronym parade. Just know this: the unglamorous standards work is exactly what turns "a cool demo on one network" into "a product that works everywhere." Standards are boring the way foundations are boring.
 
-That’s why this era has a whole alphabet working underneath it:
+## And then there are the machines
 
-- **OpenAPI** — the standard way to *describe* a REST API precisely, so it can be documented, generated, tested, and governed. The contract.
-- **AsyncAPI** — OpenAPI’s event-driven twin, for the streams and webhooks that IoT and real-time telecom run on.
-- **TM Forum Open APIs** — standard interfaces for the business and operational guts of a telco (billing, ordering, inventory).
-- **3GPP network exposure (the NEF)** — the part of the mobile-network architecture whose *job* is to safely expose internal capabilities outward.
-
-None of these is glamorous. All of them are the reason any of this works across companies that compete.
-
-## And then there’s IoT
-
-The other half of programmable telecom is the machines. Billions of devices — sensors, trackers, meters — connect over telco-grade IoT (NB-IoT, LTE-M), increasingly with **eSIM/iSIM** so a SIM is a piece of software you provision remotely, not a card someone posts to you. Connectivity itself becomes an API: activate a fleet, set a data policy, watch usage — programmatically, at scale, over event streams.
-
-- **The good:** you can manage a million devices like you manage a cloud service.
-- **The bad:** a long tail of cheap, rarely-updated devices is a security nightmare, and “manage a million things” is a genuinely hard operational problem.
+The other half of the programmable network isn't phones at all — it's *things*. Billions of sensors, trackers, and meters, increasingly carrying a **software SIM** (an eSIM) you provision remotely instead of a plastic card someone posts to you. Managing a million devices starts to feel like managing a cloud service: activate a fleet, set a data policy, watch usage — all in code. It's how a farm waters itself and a city predicts a flood.
 
 ## The honest ledger
 
-Where the programmable network stands today, without the hype:
+Because I promised grounded, not breathless:
 
-- **The good:** telco superpowers democratised; composable building blocks; entirely new products (fraud checks, on-demand quality, silent verification) that were previously impossible for ordinary developers.
-- **The bad:** decades of legacy to drag along; uneven rollout, so an API that works on one operator may not on the next; real questions about whether developers will *pay* for network features; and a security surface that grows with every endpoint.
+- **The upside is real and large.** Powers that were locked inside carriers are now Lego bricks for any builder — fraud checks, silent verification, on-demand quality, planet-scale sensing. Genuinely new products become possible.
+- **The catches are real too.** Rollout is uneven, so a feature that works on one network may not on the next. It's unproven whether developers will *pay* for network powers at scale. The long tail of cheap, rarely-updated IoT devices is a security headache. And every new endpoint is a new door.
 
-That last one is not a footnote — it’s the whole next essay. The network learned to talk, then handed developers its powers. Now we have to make sure only the right callers get through. **Next: why the API is the attack surface, what I heard about it at apidays, and what AI does to the whole picture.**
+That last one — the doors — is the whole next essay. The network grew superpowers and handed out the remote. Now we have to make sure only the right people can press the buttons. **Next: what happens when we give those keys to AI, and how not to get robbed.**

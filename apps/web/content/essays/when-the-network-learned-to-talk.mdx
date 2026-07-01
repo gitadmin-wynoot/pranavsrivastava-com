@@ -1,57 +1,50 @@
 ---
-title: "When the network learned to talk"
+title: "Your phone network is quietly getting a brain"
 slug: "when-the-network-learned-to-talk"
-dek: "Telecom spent a century as a closed, reliable machine. In one decade it became programmable. In the next, it becomes intelligent. A roadmap — and a few bets."
-summary: "A roadmap of telecom's three eras — the closed signalling network, the programmable API network, and the coming intelligent one where AI senses and acts through it — with the goods, the bads, and some probabilistic futures."
+dek: "For a century it was a dumb, reliable pipe. In one decade it learned to take instructions. In the next, it starts to think. Here's the whole arc — no telco degree required."
+summary: "A plain-English, interactive roadmap of telecom's three acts — the closed pipe, the programmable network, and the intelligent one AI can sense and act through — with data, examples, and a few opinionated bets."
 series: "The Programmable Network"
 seriesPart: 1
 published: true
 publishedAt: "2026-07-01"
 ---
 
-I have spent a good chunk of my career inside telecom, and I know how it looks from the outside: plumbing. Unsexy infrastructure that the interesting people build *on top of*. For a long time that was fair. But somewhere in the last decade the plumbing started doing something strange — it began to expose itself, to become programmable, and now, to become intelligent. This is a short roadmap of that shift, in three acts, because I think it’s one of the more underrated stories in technology.
+Let me confess something about my own field: telecom sounds boring. It's the plumbing behind the plumbing — the thing the *interesting* people build on top of. For most of my career that was a fair description.
 
-<EssayFigure name="telco-eras" />
+It isn't anymore. The plumbing is waking up. And almost nobody outside the industry has noticed, which is exactly when the boring thing quietly becomes magic.
 
-## Act one — the closed network
+Here's the whole idea in one breath: **for a hundred years the phone network was a dumb, reliable pipe. Now it's becoming a smart, programmable one — something your apps, and increasingly AI, can actually talk to and give instructions.** That's it. Everything else is detail.
 
-For most of its life, the phone network was a marvel of reliability and a fortress of closedness. Underneath it ran signalling protocols — **SS7** and its descendants — that let a call in Amsterdam find a phone in Mumbai in seconds, across operators that had never met. That interoperability was a genuine engineering triumph, standardised to the bone. The *dial tone* was a promise: pick up, and it works, anywhere, every time.
+Don't take my word for the arc. Drag through it:
 
-But it was a walled garden. You could use the network; you could not *build* on it. And its openness was the wrong kind — SS7 trusted every operator by default, which is why, years later, attackers learned to abuse it to intercept text messages and drain bank accounts protected by SMS codes. That’s the pattern to hold onto: **the network’s greatest strength and its deepest flaw were the same property.** Reliable because rigid; universal because trusting.
+<TelcoEraSlider />
 
-- **The good:** rock-solid reliability, true global interoperability, a standard everyone honoured.
-- **The bad:** you couldn’t innovate on it, and its trust model aged into a security liability.
+## Why you should care (some numbers)
 
-## Act two — the programmable network
+When something *this* big changes shape, it's worth a look. Reports from the GSMA — the industry's own body — put it at roughly **5.5 billion people** on mobile and **8-billion-plus connections**, a system that accounts for something like **5% of global GDP**. On top of that sit an estimated **15 billion connected "things"** — sensors, trackers, meters — heading toward **30 billion by 2030**.
 
-Then telecom did something it had never really done: it handed out the keys.
+So this isn't a niche. It's the nervous system of the modern world, and it's mid-upgrade.
 
-It started small and slightly magical. With **CPaaS** — communications as a service — sending a text message to any phone on Earth became a few lines of code. I still find that a little wondrous: a `POST` request, and a device in someone’s pocket buzzes. I spent years close to this world at KPN, where an API developer portal grew from a small incubator into a real, revenue-generating product, and where a lot of the hard, unglamorous work was anti-fraud — because the moment you make something callable, someone tries to abuse it.
+## The story in three acts
 
-The bigger shift is happening now. Through efforts like **CAMARA** and the **GSMA Open Gateway**, the network’s *deepest* capabilities are becoming ordinary APIs: ask where a device is, request guaranteed quality for the next ten minutes, check whether a SIM was swapped an hour ago, verify a phone number silently. Capabilities that used to need a six-month telco integration project are turning into an API call with an OpenAPI contract. The network is becoming *code*.
+**Act one — the closed pipe.** For decades the network was a marvel of reliability and a fortress of closedness. A call from Amsterdam found a phone in Mumbai in seconds — genuinely miraculous engineering — but you could only *use* it, never build on it. And its trust ran on the honour system: the old signalling underneath simply believed whatever another operator told it. Which is why, famously, security researchers once intercepted a sitting US congressman's calls and texts on live television, just by abusing that trust. Hold onto that, because it's the pattern of the whole story: **the network's greatest strength and its deepest flaw kept turning out to be the same thing.** Reliable because rigid. Universal because trusting.
 
-- **The good:** telco superpowers, democratised to any developer; whole new product categories.
-- **The bad:** the weight of legacy, uneven adoption across operators, and an attack surface that explodes the instant everything is callable. (That last one gets its own essay in this series.)
+**Act two — the programmable network.** Then telecom did something it had never done: it handed out keys. First the small magic — sending a text became a single line of code (I still find that a little wondrous: a snippet runs, and a device in someone's pocket buzzes). Then the big shift, happening right now — the network's *deepest* powers opening up as ordinary APIs. Where a device really is. Whether its SIM was swapped an hour ago. A guaranteed-fast connection for the next ten minutes. Things that used to need a six-month telco integration are becoming a function call.
 
-## Act three — the intelligent network
+**Act three — the intelligent network.** Now add AI, and the arrows point both ways. AI *for* the network (spotting fraud, predicting where it'll buckle, eventually healing itself), and — the part I find genuinely thrilling — the network *for* AI.
 
-Here’s where it turns from history into a bet. Add AI, and the arrows point two ways.
+## The fun part: it's starting to *do* things
 
-**AI *for* the network:** operators sit on enormous streams of signal — traffic, faults, fraud patterns — and AI is the natural tool for them. Detecting fraud at machine speed, predicting where capacity will buckle, and eventually networks that tune and heal themselves. Some of this is already real; more is close.
+Enough theory. Tap for a real (or nearly-real) scenario, and keep tapping:
 
-**The network *for* AI:** this is the part I find genuinely exciting. If the network exposes trustworthy, real-time facts — where a device is, whether its identity just changed, how good its connection is — those become *inputs an AI agent can act on*. An agent that checks a SIM-swap before authorising a payment. A telemedicine stream that requests guaranteed bandwidth for the duration of a consult. The network stops being dumb pipe and becomes a **sensor and an actuator** that intelligence can reach through.
+<NetworkUseCases />
 
-I’ll put rough odds on it, because a roadmap should be honest about uncertainty:
+Every one of those is the same move: a capability that used to be locked inside the network, handed to an app or an AI to *act on*.
 
-| Future | My rough read |
-|---|---|
-| AI-driven fraud detection and network operations, at scale | **Very likely** — already underway |
-| Agents composing network APIs (quality-on-demand, SIM-swap gates) into new flows | **Plausible this decade** — the pieces exist; adoption is the question |
-| “Intent-based” networks you configure in plain language | **A longer shot** — real research, hard reality |
-| Fully autonomous, self-healing networks | **Watch it, don’t bank on it** |
+## My slightly opinionated bet
 
-## The thread that runs through all three
+Here's where I'll stick my neck out. I think the network becomes a **sense organ for AI** — a source of trustworthy, real-time facts that a model can't get anywhere else. Where you are (verified by the network, not a spoofable GPS chip). Whether your identity just changed. How good your connection is, right now. Give an AI agent those senses and it stops guessing about the physical world and starts *knowing*.
 
-Every act is the same trade made again: telecom gives up a little control in exchange for reach, gains enormous new power, loses a little safety, and then has to earn the safety back. Closed and reliable became open and programmable; open and programmable is becoming intelligent and autonomous. Each step is a gift and a liability wearing the same coat.
+That's the optimistic case, and I mostly believe it. But every act of this story trades a little safety for a lot of reach — the closed pipe became open, the open network is becoming intelligent, and each step is a gift and a liability wearing the same coat. The gifts are worth chasing. The liabilities are worth naming out loud.
 
-That’s the story I want to tell across this series. Next, the middle act up close — **how a phone network turned its deepest powers into APIs, and the standards making it work.** Then the price of all that openness — **why the API is now the attack surface, and what AI does to that.**
+So that's the plan for this little series. Next, the middle act up close — **the actual superpowers the network is handing out, and the "universal remote" standard making them work everywhere.** Then the bill that comes due — **what happens when we give AI the keys, and how not to get robbed.**
