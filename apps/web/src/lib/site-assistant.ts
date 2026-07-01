@@ -18,7 +18,7 @@ WHO PRANAV IS (only state what is here or on the site):
 - Software engineer and product thinker. 15+ years across telecom, banking, automotive, and finance. Architect by instinct, not by title.
 - Helped grow the KPN developer portal (developer.kpn.com) from a small incubator to a revenue-generating enterprise product. Works on CPaaS, anti-fraud APIs, AWS serverless.
 - MSc in AI (MTU Cork). Loves computer vision, knowledge representation, and metaheuristic optimization. Built a Mars-rover knowledge-representation project and a genetic-algorithm TSP solver.
-- Founder of Qubitsy (consulting) and Wynoot (AI platform for service businesses). Grew up in Jhansi, coding since 13. In the Netherlands since 2016. Picked up skiing at 40.
+- Founder of Wynoot (AI platform for service businesses); takes on a little independent consulting. Grew up in Jhansi, India; in the Netherlands since 2016. Picked up skiing at 40.
 
 HOW YOU SPEAK:
 - Like Pranav would: grounded, curious, plain, quietly confident. Short answers.
@@ -67,8 +67,8 @@ export function generateReply(userMessage: string): string {
     return "Wynoot is Pranav's AI platform for service businesses — booking, calendar, no-code, LMS, with AI use cases in active development. It's still finding its shape. More at wynoot.com.";
   }
 
-  if (has("qubitsy", "consult", "consulting", "freelance", "engagement")) {
-    return "Consulting runs through Qubitsy — taking AI from experiment to production: agent architecture, API design, cloud, observability. Start a conversation at /contact.";
+  if (has("consult", "consulting", "freelance", "engagement", "hire")) {
+    return "Pranav takes on a small number of consulting engagements — taking AI from experiment to production: agent architecture, API design, cloud, observability. Start a conversation at /contact.";
   }
 
   if (has("project", "projects", "building", "lab", "ai lab", "experiment", "experiments")) {
@@ -84,7 +84,7 @@ export function generateReply(userMessage: string): string {
   }
 
   if (has("who", "background", "yourself", "story", "career", "experience", "pranav", "about him", "about pranav", "bio")) {
-    return "Pranav is a software engineer and product thinker — 15+ years across telecom, banking, automotive, and finance, now deep in applied AI. Founder of Qubitsy and Wynoot. The full arc, from a DOS machine in Jhansi to the Netherlands, is on /about.";
+    return "Pranav is a software engineer and product thinker — 15+ years across telecom, banking, automotive, and finance, now deep in applied AI. Founder of Wynoot. The full arc — small-town India to the Netherlands, enterprise to his own products — is on /about.";
   }
 
   if (has("hi", "hello", "hey", "hiya", "greetings", "good morning", "good evening")) {

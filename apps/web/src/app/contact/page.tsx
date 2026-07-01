@@ -4,7 +4,7 @@ import { PenLine, Briefcase, Mail, ArrowRight, Sparkles } from "lucide-react";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch — consulting through Qubitsy, a question about the work, or just to compare notes on building AI.",
+    "Get in touch — a consulting enquiry, a question about the work, or just to compare notes on building AI.",
 };
 
 const channels = [
@@ -84,17 +84,9 @@ export default function ContactPage() {
           Working together
         </p>
         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mb-2">
-          For consulting — taking AI from a working prototype to something that
-          runs reliably — he works through{" "}
-          <a
-            href="https://qubitsy.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Qubitsy
-          </a>
-          .
+          For consulting, he takes AI from a working prototype to something that
+          runs reliably — agent architecture, API design, cloud integration, and
+          the observability that tells you when it breaks.
         </p>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
           He takes on a couple of engagements at a time, so he&apos;s picky about

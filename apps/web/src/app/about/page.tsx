@@ -99,7 +99,7 @@ const depthAreas = [
 export const metadata: Metadata = {
   title: "About — Pranav Srivastava",
   description:
-    "Product thinkengineer. 15+ years across telecom, banking, automotive, and asset finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Qubitsy and Wynoot. Netherlands.",
+    "Product thinkengineer. 15+ years across telecom, banking, automotive, and asset finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Wynoot. Netherlands.",
 };
 
 // type drives the colour + chip so education, career and founder chapters are
@@ -181,8 +181,8 @@ const milestones: { year: string; type: ArcType; title: string; desc: string }[]
   {
     year: "2022",
     type: "founder",
-    title: "Qubitsy + Gravitii",
-    desc: "Founded the consulting studio. Started Gravitii — the product chapter that taught me, in detail, what market fit is not.",
+    title: "Out on my own",
+    desc: "Started consulting independently and building products of my own — Gravitii was the chapter that taught me, in detail, what market fit is not.",
   },
   {
     year: "2024",
@@ -329,20 +329,18 @@ export default function AboutPage() {
           <p>
             He&apos;s also a founder, running{" "}
             <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Wynoot</a>
-            {" "}(an AI-powered platform for service businesses) and{" "}
-            <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Qubitsy</a>
-            {" "}(a consulting studio). He did an MSc in AI in his 30s because
-            algorithms were always the part he found genuinely interesting, not
-            an add-on.
+            {" "}(an AI-powered platform for service businesses), and takes on
+            a little independent consulting on the side. He did an MSc in AI in
+            his 30s because algorithms were always the part he found genuinely
+            interesting, not an add-on.
           </p>
           <p>
             He grew up in{" "}
             <Link href="/atlas/jhansi" className="text-cyan-600 dark:text-cyan-400 underline underline-offset-2 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
               Jhansi
-            </Link>{" "}
-            and wrote his first code at 13 on a DOS machine. An engineer since
-            2010, in the Netherlands since 2016 — still building, still curious,
-            and (recently) on ski slopes.
+            </Link>
+            , has been an engineer since 2010, in the Netherlands since 2016 —
+            still building, still curious, and (recently) on ski slopes.
           </p>
         </div>
       </div>
@@ -680,12 +678,6 @@ export default function AboutPage() {
         </h2>
         <div className="space-y-3">
           {[
-            {
-              name: "Qubitsy",
-              url: "https://qubitsy.com",
-              role: "Founder · Consulting & R&D studio",
-              desc: "He helps engineering teams take AI from experiment to production — agent architecture, API design, cloud integration, and the observability layer that tells you when something breaks. Fifteen years of enterprise context, startup mindset.",
-            },
             {
               name: "Wynoot",
               url: "https://wynoot.com",

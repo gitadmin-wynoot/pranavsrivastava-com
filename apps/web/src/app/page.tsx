@@ -94,10 +94,6 @@ export default async function HomePage() {
           {/* Meta */}
           <p className="mt-8 text-sm text-zinc-400 fade-up" style={{ animationDelay: "0.44s" }}>
             Netherlands ·{" "}
-            <a href="https://qubitsy.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-              Qubitsy
-            </a>{" "}
-            &amp;{" "}
             <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Wynoot
             </a>
@@ -356,10 +352,9 @@ export default async function HomePage() {
               back for an AI Masters in his 30s because the algorithms were
               always the part he found interesting, not an add-on. He started{" "}
               <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
-              {" "}because a problem kept showing up, and consults through{" "}
-              <a href="https://qubitsy.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Qubitsy</a>
-              {" "}for teams that need someone who has done enterprise at scale
-              and product from scratch.
+              {" "}because a problem kept showing up, and takes on a handful of
+              consulting engagements for teams that need someone who has done
+              enterprise at scale and product from scratch.
             </p>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mt-3">
               He grew up in Jhansi and has been in the Netherlands since 2016.
@@ -383,7 +378,7 @@ export default async function HomePage() {
 
           <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
             <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3">
-              Consulting via Qubitsy
+              Consulting
             </p>
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-base mb-3">
               The proof of concept worked. Now comes the hard part.

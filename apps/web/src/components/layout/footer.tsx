@@ -19,14 +19,6 @@ export function Footer() {
             </p>
             <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1">
               <a
-                href="https://qubitsy.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-              >
-                Qubitsy ↗
-              </a>
-              <a
                 href="https://wynoot.com"
                 target="_blank"
                 rel="noopener noreferrer"

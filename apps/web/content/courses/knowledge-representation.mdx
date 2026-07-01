@@ -1,0 +1,149 @@
+---
+title: "Knowledge Representation"
+slug: "knowledge-representation"
+summary: "How machines store what they *know* — facts, rules, and meaning encoded so a computer can reason over them, not just pattern-match. The symbolic half of AI, from Aristotle's syllogisms to ontologies and today's neuro-symbolic systems."
+level: "Intermediate"
+status: "published"
+order: 13
+track: "ai-foundations"
+prereqs: ["machine-learning-fundamentals"]
+tags: ["Knowledge Representation", "Symbolic AI", "Logic", "Ontologies", "Reasoning"]
+lessonCount: 4
+---
+
+Most of this track is about machines that *learn* — that soak up patterns from data. This course is about the other half of artificial intelligence, the older half: machines that *know*. Knowledge representation (KR) is the study of how to encode facts, rules, and meaning in a form a computer can store, query, and — crucially — reason over. It is how a system can be *told* that a dog is a mammal and *work out*, on its own, that a dog therefore breathes air.
+
+<Callout type="info" title="The one-line idea">
+Knowledge representation is how you write down what a machine knows so it can reason with it — not just store data, but capture the *meaning* and *connections* that let it draw new conclusions.
+</Callout>
+
+<LearningObjectives>
+- Understand the difference between data, information, and knowledge
+- See the main ways to represent knowledge — networks, frames, rules, logic, ontologies
+- Follow how logic lets a machine *infer* facts nobody stored directly
+- Recognise KR in real systems, and how it now teams up with LLMs
+</LearningObjectives>
+
+<ChapterHeader number={1} title="From data to knowledge" time={11} />
+
+Not everything a computer stores is knowledge. There is a ladder worth keeping in your head:
+
+<Diagram title="The knowledge ladder" caption="Each rung adds meaning the machine can act on">
+
+```
+   DATA          "37.8"                      a raw symbol, no meaning
+     │
+     ▼
+  INFORMATION    "body temp = 37.8°C"        data with context
+     │
+     ▼
+  KNOWLEDGE      "37.8°C is a normal          facts + rules that
+                  human temperature;          connect to other facts
+                  above 38°C = fever"
+```
+
+</Diagram>
+
+A <KeyTerm definition="A scheme for encoding facts and their relationships so a machine can store, query, and reason over them.">knowledge representation</KeyTerm> always has two halves that work together: a way to *write down* what is true (the representation), and a way to *derive* new truths from it (the reasoning). One without the other is useless — a filing cabinet with no clerk, or a clerk with no files.
+
+This is one of the oldest ideas in human thought, not a computing invention. Aristotle, 2,300 years ago, built the first formal KR system: *categories* to classify things and *syllogisms* to reason about them. "All men are mortal; Socrates is a man; therefore Socrates is mortal" is a knowledge representation and an inference engine in one sentence. Leibniz later dreamed of a *calculus ratiocinator* — a universal symbolic language in which disputes could be settled by calculation. AI inherited the dream and gave it a keyboard.
+
+<ChapterSummary>
+- Knowledge is data plus the context and rules that connect it to other facts
+- Every KR has two halves: a representation, and a way to reason over it
+- The idea is ancient — Aristotle's categories and syllogisms were the first KR
+</ChapterSummary>
+
+<ChapterHeader number={2} title="The ways to say what you know" time={13} />
+
+Over the decades, a handful of representation schemes emerged. They are different *notations* for the same goal — capturing things and how they relate. Here is one fact — *a canary is a bird that can sing and fly* — shown three ways:
+
+<Diagram title="One fact, three representations" caption="Semantic network, frame, and rule — different notations, same knowledge">
+
+```
+ SEMANTIC NETWORK          FRAME                    PRODUCTION RULE
+ (a web of links)          (a labelled record)      (an if–then)
+
+   [Animal]                Canary                    IF   x is a Bird
+      ▲ is-a               ├─ is-a:   Bird           THEN x can fly
+   [Bird] ──can──►[Fly]    ├─ colour: yellow              AND x has feathers
+      ▲ is-a               ├─ can:    sing, fly
+   [Canary]                └─ colour inherited? no
+```
+
+</Diagram>
+
+Each scheme has a personality:
+
+| Scheme | Good at | Used in |
+|---|---|---|
+| **Semantic networks** | showing *connections*, inheritance | early AI, today's knowledge graphs |
+| **Frames** | describing an object's *attributes* | object modelling, expert systems |
+| **Production rules** | *if–then* expertise, procedures | expert systems, business logic |
+| **Logic** | *precise*, provable statements | formal reasoning, verification |
+| **Ontologies** | shared, formal *vocabularies* | the Semantic Web, biology, medicine |
+
+<Callout type="tip" title="Inheritance: the quiet superpower">
+Notice the semantic network never stored "a canary can fly." It stored "a canary is a bird" and "a bird can fly," and the machine *inherits* the rest down the is-a links. Representing knowledge well means storing less and deriving more.
+</Callout>
+
+<ChapterSummary>
+- The same knowledge can be written as a network, a frame, a rule, or logic
+- Networks show connections; frames show attributes; rules capture if–then expertise
+- Good representation lets a machine inherit and derive facts it was never told
+</ChapterSummary>
+
+<ChapterHeader number={3} title="Logic: the precise backbone" time={13} />
+
+When you need knowledge that is *provably* correct, you reach for logic. <KeyTerm definition="A formal language of statements (predicates), objects, and quantifiers that supports rigorous, mechanical inference.">First-order logic</KeyTerm> lets you write facts and rules with real precision:
+
+<Diagram title="Reasoning with logic" caption="From two known facts, a machine derives a third — mechanically">
+
+```
+  RULE   ∀x  ( Human(x) → Mortal(x) )      "every human is mortal"
+  FACT        Human(Socrates)              "Socrates is a human"
+  ───────────────────────────────────────
+  INFER       Mortal(Socrates)             derived, never stored
+```
+
+</Diagram>
+
+That last step — *modus ponens* — is a rule of inference: given "A implies B" and "A," a machine may conclude "B." Chain thousands of these and a computer can prove conclusions no human wrote down. This is the engine behind an <KeyTerm definition="A formal, shared specification of the concepts in a domain and the relationships between them.">ontology</KeyTerm> — a rigorously defined vocabulary. The web has a standard for exactly this: **OWL** (the Web Ontology Language), built on *description logics*, so that "a `Parent` is a `Person` with at least one `child`" is a statement a machine can check and reason with.
+
+<Callout type="warning" title="The catch: knowledge is expensive to write">
+Logic is exact, but every fact and rule must be authored by hand, and the real world is gloriously messy — exceptions, common sense, "it depends." This *knowledge-acquisition bottleneck* is exactly the weakness that machine learning, which reads patterns straight from data, was invented to escape. Each half covers the other's blind spot.
+</Callout>
+
+<ChapterSummary>
+- Logic represents knowledge as precise statements a machine can prove over
+- Inference rules like *modus ponens* derive new, guaranteed-correct facts
+- Ontologies (e.g. OWL) are formal vocabularies that power rigorous reasoning
+- The cost: knowledge must be hand-authored, and the world resists tidy rules
+</ChapterSummary>
+
+<ChapterHeader number={4} title="KR in the wild — and the comeback" time={12} />
+
+Knowledge representation is not a museum piece; it runs quietly under systems you use:
+
+- **Expert systems** — *MYCIN* (1970s) diagnosed blood infections from ~600 if–then rules, at times outperforming junior doctors. Rule-based systems still run credit decisions, tax software, and configurators.
+- **Cyc** — a decades-long project to hand-encode millions of pieces of human *common sense* ("you can't be in two places at once"), tackling the knowledge nobody bothers to write down.
+- **WordNet & ontologies** — lexical and domain knowledge that structures search and biology; the *Gene Ontology* lets researchers reason across species.
+- **The Google Knowledge Graph** — the panel on the right of your search results is a giant KR, answering "who directed the film that won…" by following links.
+
+<Callout type="important" title="Neuro-symbolic: the two halves reunite">
+LLMs are astonishing pattern-matchers but they *hallucinate* — they have fuzzy knowledge and no guaranteed facts. Knowledge representation is the opposite: exact, checkable, but hand-built and brittle. The frontier, *neuro-symbolic AI*, marries them — an LLM proposes, a knowledge base verifies. It is why symbolic KR is having a serious revival right now.
+</Callout>
+
+Which is exactly where you head next. The **Knowledge Graphs** course takes the network idea from this course and scales it to millions of facts — the practical, modern face of knowledge representation, and one of the best ways to keep an LLM honest.
+
+<ChapterSummary>
+- KR powers expert systems, common-sense projects, ontologies, and search panels
+- Its strength — exact, checkable facts — is precisely the LLM's weakness
+- Neuro-symbolic AI combines learned patterns with represented knowledge
+- Knowledge graphs are the modern, scaled form of these ideas
+</ChapterSummary>
+
+<Checkpoint>
+1. A system stores "a penguin is a bird" and "a bird has feathers," but not "a penguin has feathers." How can it still answer that a penguin has feathers?
+2. Give one strength of logic-based KR and one strength of machine learning, and explain why a system might want both.
+</Checkpoint>
