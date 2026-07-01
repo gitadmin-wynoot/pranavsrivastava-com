@@ -73,6 +73,9 @@ export interface Essay {
   published: boolean;
   publishedAt: string;
   readingTimeMin: number;
+  /** Optional: groups essays into a numbered series. */
+  series?: string;
+  seriesPart?: number;
   content: string;
 }
 
@@ -266,8 +269,17 @@ function parseEssay(file: string, dir: string): Essay {
     published: data.published ?? true,
     publishedAt: data.publishedAt ?? data.date ?? new Date().toISOString(),
     readingTimeMin: estimateReadingTime(content),
+    series: data.series ?? undefined,
+    seriesPart: data.seriesPart ?? undefined,
     content,
   } satisfies Essay;
+}
+
+/** All published essays in a series, ordered by part. */
+export function getEssaysInSeries(series: string): Essay[] {
+  return getEssays()
+    .filter((e) => e.series === series)
+    .sort((a, b) => (a.seriesPart ?? 0) - (b.seriesPart ?? 0));
 }
 
 export function getEssays(): Essay[] {

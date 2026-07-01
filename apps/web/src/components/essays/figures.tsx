@@ -204,7 +204,105 @@ function OldSchools() {
   );
 }
 
+/* ── Telco's three eras: closed → programmable → intelligent ────────────── */
+function TelcoEras() {
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      {/* timeline */}
+      <line x1="40" y1="150" x2="540" y2="150" className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" />
+      <line x1="540" y1="150" x2="600" y2="150" className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" strokeDasharray="4 5" />
+      <path d="M600,150 l-8,-4 l0,8 z" className="fill-zinc-400 dark:fill-zinc-500" />
+      <text x="596" y="172" textAnchor="end" className="fill-zinc-400" fontSize="10" fontStyle="italic">the future is dashed</text>
+
+      {/* Phase 1 — closed */}
+      <circle cx="120" cy="150" r="6" className="fill-amber-500" />
+      <text x="120" y="96" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="13" fontWeight="600">Closed</text>
+      <text x="120" y="114" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">SS7 · the dial tone</text>
+      <text x="120" y="129" textAnchor="middle" className="fill-zinc-400" fontSize="10">reliable, rigid, walled</text>
+
+      {/* Phase 2 — programmable */}
+      <circle cx="320" cy="150" r="7" className="fill-blue-500" />
+      <text x="320" y="96" textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="13" fontWeight="600">Programmable</text>
+      <text x="320" y="114" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">CPaaS · CAMARA · APIs</text>
+      <text x="320" y="129" textAnchor="middle" className="fill-zinc-400" fontSize="10">the network as code</text>
+
+      {/* Phase 3 — intelligent */}
+      <circle cx="510" cy="150" r="6" className="fill-emerald-500" />
+      <text x="510" y="96" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="13" fontWeight="600">Intelligent</text>
+      <text x="510" y="114" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">AI + the network</text>
+      <text x="510" y="129" textAnchor="middle" className="fill-zinc-400" fontSize="10">sensing & acting</text>
+    </svg>
+  );
+}
+
+/* ── Network-as-API: capabilities exposed up the stack ──────────────────── */
+function NetworkAsApi() {
+  const layer = (y: number, cls: string, title: string, sub: string) => (
+    <>
+      <rect x="120" y={y} width="400" height="46" rx="10" className={cls} strokeWidth="1.5" />
+      <text x="140" y={y + 22} className="fill-zinc-800 dark:fill-zinc-100" fontSize="13" fontWeight="600">{title}</text>
+      <text x="140" y={y + 38} className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">{sub}</text>
+    </>
+  );
+  return (
+    <svg viewBox="0 0 640 250" className="w-full h-auto" fill="none" role="img">
+      {layer(20, "fill-emerald-500/10 stroke-emerald-500/50", "Developers & apps", "call an API — no telco degree required")}
+      {layer(102, "fill-blue-500/10 stroke-blue-500/50", "Open Gateway · CAMARA · TM Forum", "one standard contract across operators")}
+      {layer(184, "fill-amber-500/10 stroke-amber-500/50", "The mobile network (4G/5G, NEF)", "location · quality · SIM-swap · verify")}
+      {/* upward arrows */}
+      <path d="M320,184 L320,150" className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="1.5" markerEnd="" />
+      <path d="M320,150 l-4,8 l8,0 z" className="fill-zinc-400 dark:fill-zinc-500" />
+      <path d="M320,102 L320,68" className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="1.5" />
+      <path d="M320,68 l-4,8 l8,0 z" className="fill-zinc-400 dark:fill-zinc-500" />
+    </svg>
+  );
+}
+
+/* ── The API as attack surface: an agent, many doors ────────────────────── */
+function ApiAttackSurface() {
+  const apis = [
+    { y: 46, label: "Network API", risk: "over-broad token" },
+    { y: 118, label: "Payments API", risk: "broken authz (BOLA)" },
+    { y: 190, label: "Customer data API", risk: "injected instruction" },
+  ];
+  return (
+    <svg viewBox="0 0 640 250" className="w-full h-auto" fill="none" role="img">
+      {/* agent */}
+      <rect x="40" y="102" width="120" height="46" rx="10" className="fill-violet-500/10 stroke-violet-500/60" strokeWidth="1.5" />
+      <text x="100" y="124" textAnchor="middle" className="fill-zinc-800 dark:fill-zinc-100" fontSize="13" fontWeight="600">AI agent</text>
+      <text x="100" y="140" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="10">acts on your behalf</text>
+
+      {apis.map((a, i) => (
+        <g key={i}>
+          <line x1="160" y1="125" x2="360" y2={a.y + 23} className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" />
+          {/* risk marker */}
+          <circle cx={260} cy={(125 + a.y + 23) / 2} r="4.5" className="fill-rose-500" />
+          <rect x="360" y={a.y} width="150" height="46" rx="10" className="fill-blue-500/10 stroke-blue-500/50" strokeWidth="1.5" />
+          <text x="435" y={a.y + 22} textAnchor="middle" className="fill-zinc-800 dark:fill-zinc-100" fontSize="12" fontWeight="600">{a.label}</text>
+          <text x="435" y={a.y + 38} textAnchor="middle" className="fill-rose-600/90 dark:fill-rose-400/90" fontSize="10">{a.risk}</text>
+        </g>
+      ))}
+      <text x="260" y="235" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11" fontStyle="italic">● every call is a door someone can walk through</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "telco-eras": {
+    node: <TelcoEras />,
+    caption:
+      "Telecom in three acts: a closed, reliable network; then a programmable one you call like any API; and — probably next — an intelligent one that AI can sense and act through.",
+  },
+  "network-as-api": {
+    node: <NetworkAsApi />,
+    caption:
+      "The quiet revolution: a mobile network's deepest capabilities — location, quality, SIM-swap checks — handed up to any developer as a standard API, no telco degree required.",
+  },
+  "api-attack-surface": {
+    node: <ApiAttackSurface />,
+    caption:
+      "Give an AI agent API keys and every capability becomes a door. The more doors, the more locks you have to get right — which is why API security is now AI security.",
+  },
   "falling-forward": {
     node: <FallingForward />,
     caption:
