@@ -7,8 +7,201 @@ level: "Intermediate"
 durationMin: 45
 tools: ["Python", "sentence-transformers", "Anthropic API"]
 tags: ["RAG", "Semantic Search", "LLMs"]
-status: "coming-soon"
-updatedAt: "2026-06-23"
+status: "published"
+updatedAt: "2026-07-01"
 ---
 
-Coming soon.
+By the end of this lab you will have a complete **Retrieval-Augmented Generation (RAG)** system in one readable Python file — it takes your own documents, finds the passages relevant to a question, and has an LLM answer *grounded in those passages, with citations*. Every line runs as-is.
+
+<Callout type="info" title="What RAG is, in one line">
+RAG = **retrieve** the passages from your own documents that are relevant to a question, put them in the prompt, and have the model **answer from them** — so it cites real sources instead of guessing from memory.
+</Callout>
+
+<Diagram title="The RAG pipeline" caption="Build the index once (top); answer any question against it (bottom)">
+
+```
+  BUILD ONCE
+  docs ──chunk──► passages ──embed──► vectors ──► index (in memory)
+
+  PER QUESTION
+  question ──embed──► vector ──similarity──► top-k passages
+                                                   │
+                                                   ▼
+                                    prompt (question + passages)
+                                                   │
+                                                   ▼
+                                      LLM ──► answer + [citations]
+```
+
+</Diagram>
+
+<Callout type="important" title="“Isn’t RAG dead?” — the honest answer">
+You’ll hear this a lot. It isn’t — but the picture matured. Three things changed: (1) **long-context models** (million-token windows) mean for a *small* corpus you can sometimes just paste everything in and skip retrieval; (2) retrieval is increasingly a **tool an agent calls** when it decides it needs facts (“agentic RAG”), not a fixed pre-step; (3) naïve top-k over one embedding model is now the *floor*, not the ceiling — production adds re-ranking, hybrid keyword+vector search, and evaluation. What has **not** changed is the foundation you build here: chunk, embed, retrieve, ground, cite. Learn this and every newer variant is a small step from it.
+</Callout>
+
+<LearningObjectives>
+- Turn documents into searchable vectors with an embedding model
+- Retrieve the most relevant passages for a question using cosine similarity
+- Ground an LLM's answer in those passages and force citations
+- Understand where naïve RAG breaks and what production adds
+</LearningObjectives>
+
+### Before you start
+
+You need Python 3.10+ and an Anthropic API key in your environment (`export ANTHROPIC_API_KEY=...`). About 45 minutes.
+
+<CodeFile filename="terminal">
+```bash
+uv init tiny-rag && cd tiny-rag
+uv add anthropic sentence-transformers numpy
+# or: pip install anthropic sentence-transformers numpy
+```
+</CodeFile>
+
+<Steps>
+
+<Step number={1} title="Start with some documents">
+
+Real systems load files; we’ll use a tiny company handbook so the retrieval is easy to sanity-check. Create `rag.py`:
+
+<CodeFile filename="rag.py">
+```python
+# A tiny knowledge base. In real life you'd load .txt / .md / PDFs here.
+DOCS = [
+    "Employees accrue 25 days of paid leave per year, accrued monthly.",
+    "Remote work is allowed up to 3 days per week with manager approval.",
+    "The meal reimbursement limit when travelling is 40 EUR per day.",
+    "Parental leave is 16 weeks, fully paid, for every parent.",
+    "The Eindhoven office is open 08:00-19:00 on weekdays.",
+    "Laptops are replaced every 3 years; request a swap via the IT portal.",
+    "Sick leave requires no doctor's note for the first 3 days.",
+]
+```
+</CodeFile>
+
+<Callout type="note" title="Chunking — the step people underrate">
+Our facts are already one idea each. Long documents aren’t — you must split them into <KeyTerm definition="A small, self-contained passage of text — the unit you embed and retrieve. Too big and retrieval is vague; too small and it loses context.">chunks</KeyTerm> of a few hundred words, ideally on paragraph or heading boundaries. Bad chunking is the single most common reason RAG gives fuzzy answers.
+</Callout>
+
+</Step>
+
+<Step number={2} title="Embed the documents into vectors">
+
+An <KeyTerm definition="A list of numbers representing a piece of text's meaning, so that similar meanings sit close together in space.">embedding</KeyTerm> turns text into a vector where similar meanings land near each other. We compute one per document, once.
+
+<CodeFile filename="rag.py (continued)">
+```python
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
+# A small, fast, local embedding model — no API call needed.
+embedder = SentenceTransformer("all-MiniLM-L6-v2")
+
+# normalize_embeddings=True lets us use a plain dot product as cosine similarity.
+doc_vectors = embedder.encode(DOCS, normalize_embeddings=True)
+print("Indexed", len(DOCS), "documents into", doc_vectors.shape, "vectors")
+```
+</CodeFile>
+
+That NumPy array *is* your vector index. For thousands of docs you'd reach for a vector database (FAISS, Chroma, pgvector); for a few hundred, an array in memory is genuinely fine.
+
+</Step>
+
+<Step number={3} title="Retrieve the most relevant passages">
+
+To answer a question, embed it the same way, then find the closest document vectors by cosine similarity.
+
+<CodeFile filename="rag.py (continued)">
+```python
+def retrieve(question: str, k: int = 3) -> list[str]:
+    q_vector = embedder.encode([question], normalize_embeddings=True)[0]
+    # Cosine similarity = dot product of normalized vectors.
+    scores = doc_vectors @ q_vector
+    top_k = np.argsort(scores)[::-1][:k]
+    return [DOCS[i] for i in top_k]
+
+
+for hit in retrieve("how many vacation days do I get?"):
+    print(" -", hit)
+```
+</CodeFile>
+
+Run it (`uv run rag.py`). You’ll see the leave and sick-leave facts surface for a vacation question — even though the word “vacation” never appears in the documents. That’s the point of embeddings: they match *meaning*, not keywords.
+
+</Step>
+
+<Step number={4} title="Answer — grounded, with citations">
+
+Now hand the retrieved passages to the model with a strict instruction: answer only from these sources, cite them, and admit when the answer isn’t there.
+
+<CodeFile filename="rag.py (continued)">
+```python
+from anthropic import Anthropic
+
+client = Anthropic()  # reads ANTHROPIC_API_KEY from the environment
+
+
+def answer(question: str) -> str:
+    passages = retrieve(question)
+    sources = "\n".join(f"[{i + 1}] {p}" for i, p in enumerate(passages))
+
+    system = (
+        "Answer the question using ONLY the numbered sources below. "
+        "Cite the sources you use like [1] or [2]. "
+        "If the sources don't contain the answer, say you don't know — "
+        "do not use outside knowledge.\n\n"
+        f"Sources:\n{sources}"
+    )
+
+    response = client.messages.create(
+        model="claude-opus-4-8",
+        max_tokens=1024,
+        system=system,
+        messages=[{"role": "user", "content": question}],
+    )
+    return response.content[0].text
+
+
+print(answer("How many vacation days do I get, and do I need a doctor's note if I'm sick?"))
+```
+</CodeFile>
+
+You’ll get something like: *“You accrue 25 days of paid leave per year [1]. You don’t need a doctor’s note for the first 3 sick days [2].”* Ask it something not in the handbook (“what’s the parking policy?”) and it will tell you it doesn’t know — which is exactly the behaviour that makes RAG trustworthy.
+
+</Step>
+
+<Step number={5} title="Prove the grounding works">
+
+The whole value of RAG is that the model *stops making things up*. Test both sides:
+
+<CodeFile filename="terminal">
+```bash
+# In the sources → answered with a citation
+uv run python -c "import rag; print(rag.answer('What is the meal limit when travelling?'))"
+
+# Not in the sources → an honest 'I don't know', not a guess
+uv run python -c "import rag; print(rag.answer('What is the dental insurance provider?'))"
+```
+</CodeFile>
+
+<Callout type="tip" title="That second test is the real one">
+Anyone can get a right answer. A trustworthy system also gets the *“I don’t know”* right. When you evaluate RAG, weight refusals-on-missing-info as heavily as correct answers.
+</Callout>
+
+</Step>
+
+</Steps>
+
+<Callout type="important" title="You built the whole foundation">
+Chunk → embed → retrieve → ground → cite. That five-step spine is what sits under every RAG product, from a docs chatbot to an enterprise search tool. Everything “advanced” is a swap-in on one of these five steps.
+</Callout>
+
+### Where to go next
+
+The moment you outgrow this file, here’s the upgrade path — each is one honest step up:
+
+- **Scale the index** — swap the NumPy array for a vector database (Chroma, FAISS, pgvector) when you pass a few thousand chunks.
+- **Retrieve better** — add a **re-ranker** (a model that reorders the top-k), or **hybrid search** (combine keyword BM25 with vectors) for names, codes, and exact terms embeddings miss.
+- **Make it agentic** — instead of always retrieving, give the model retrieval *as a tool* it calls only when it needs facts. This is where “RAG” and “agents” merge.
+- **Evaluate it** — measure retrieval hit-rate and answer faithfulness on a fixed question set before and after every change.
+- **Go deeper on the theory** — the [RAG & Tool Use](/courses/rag-and-tool-use) and [Knowledge Representation](/courses/knowledge-representation) courses cover why grounding an LLM in real, structured facts is one of the most reliable ways to keep it honest.

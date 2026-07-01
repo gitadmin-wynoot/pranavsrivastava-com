@@ -7,8 +7,204 @@ level: "Intermediate"
 durationMin: 45
 tools: ["Python", "LangGraph", "SQLite"]
 tags: ["AI Agents", "LangGraph", "Memory"]
-status: "coming-soon"
-updatedAt: "2026-06-23"
+status: "published"
+updatedAt: "2026-07-01"
 ---
 
-Coming soon.
+By default, an LLM is a goldfish — it remembers nothing between calls. By the end of this lab your agent will **remember**: within a conversation, and across separate runs of the program, using LangGraph checkpoints saved to SQLite. Real, persistent memory in about 30 lines.
+
+<Callout type="info" title="What agent memory is, in one line">
+Memory = **persisting the agent's state** so it survives to the next turn. A *checkpointer* saves the conversation after every step, keyed by a `thread_id`, and reloads it when that thread speaks again.
+</Callout>
+
+<Diagram title="How a checkpointer remembers" caption="State is saved to disk after each turn and reloaded by thread_id">
+
+```
+  turn 1 ─►┌───────────┐─► reply      ┌──────────────┐
+  "I'm     │   agent   │──save state─►│  SQLite      │
+   Pranav" │  (graph)  │              │  memory.db   │
+           └───────────┘              │  thread:     │
+  turn 2 ─►┌───────────┐◄─load state──│   "user-1"   │
+  "what's  │   agent   │              └──────────────┘
+   my name"│  (graph)  │─► "Pranav"
+           └───────────┘
+```
+
+</Diagram>
+
+<Callout type="important" title="Why memory is having a moment">
+It’s the difference between a chatbot and an *agent*. An agent that can’t remember re-asks the same questions, re-does work, and never improves. The field now splits memory three ways: **short-term** (this conversation), **long-term** (across sessions — what you’ll persist here), and **semantic** (facts distilled and stored for recall). Get the foundation — state, checkpoints, threads — and all three are the same idea at different lifespans.
+</Callout>
+
+<LearningObjectives>
+- Build a minimal LangGraph agent with conversational state
+- Add a SQLite checkpointer so it remembers within a conversation
+- Persist memory across separate runs of the program
+- Keep different users' memories isolated with thread IDs
+</LearningObjectives>
+
+### Before you start
+
+Python 3.10+, an Anthropic API key (`export ANTHROPIC_API_KEY=...`), about 45 minutes.
+
+<CodeFile filename="terminal">
+```bash
+uv init remembering-agent && cd remembering-agent
+uv add langgraph langgraph-checkpoint-sqlite langchain-anthropic
+# or: pip install langgraph langgraph-checkpoint-sqlite langchain-anthropic
+```
+</CodeFile>
+
+<Steps>
+
+<Step number={1} title="A stateless agent (the goldfish)">
+
+First, an agent with no memory, so you can feel the problem. Create `agent.py`:
+
+<CodeFile filename="agent.py">
+```python
+from langchain_anthropic import ChatAnthropic
+from langgraph.graph import StateGraph, MessagesState, START
+
+llm = ChatAnthropic(model="claude-opus-4-8", max_tokens=1024)
+
+
+def chat(state: MessagesState):
+    # MessagesState carries the running list of messages.
+    return {"messages": [llm.invoke(state["messages"])]}
+
+
+builder = StateGraph(MessagesState)
+builder.add_node("chat", chat)
+builder.add_edge(START, "chat")
+
+graph = builder.compile()  # no checkpointer yet — no memory
+```
+</CodeFile>
+
+Each `graph.invoke(...)` starts from an empty slate. Tell it your name in one call and it won’t know it in the next. Let’s fix that.
+
+</Step>
+
+<Step number={2} title="Add a checkpointer — instant short-term memory">
+
+A checkpointer saves the state after every step. Swap the compile line to use one backed by a SQLite file:
+
+<CodeFile filename="agent.py (replace the compile line)">
+```python
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+# from_conn_string is a context manager; the graph lives inside the `with`.
+with SqliteSaver.from_conn_string("memory.db") as checkpointer:
+    graph = builder.compile(checkpointer=checkpointer)
+
+    # A thread_id names the conversation the memory belongs to.
+    config = {"configurable": {"thread_id": "user-1"}}
+
+    graph.invoke({"messages": [{"role": "user", "content": "Hi, I'm Pranav."}]}, config)
+    result = graph.invoke(
+        {"messages": [{"role": "user", "content": "What's my name?"}]}, config
+    )
+    print(result["messages"][-1].content)
+```
+</CodeFile>
+
+Run it (`uv run agent.py`). The second call answers **“Pranav”** — because the checkpointer reloaded everything from the first call. Notice you only sent the *new* message; LangGraph merged it onto the saved history for you.
+
+</Step>
+
+<Step number={3} title="Persist across runs — real long-term memory">
+
+Here’s the part that makes it more than a chat loop: the memory is on **disk**. Split the two turns into separate scripts and run them minutes apart.
+
+<CodeFile filename="remember.py">
+```python
+from langchain_anthropic import ChatAnthropic
+from langgraph.graph import StateGraph, MessagesState, START
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+llm = ChatAnthropic(model="claude-opus-4-8", max_tokens=1024)
+builder = StateGraph(MessagesState)
+builder.add_node("chat", lambda s: {"messages": [llm.invoke(s["messages"])]})
+builder.add_edge(START, "chat")
+
+with SqliteSaver.from_conn_string("memory.db") as checkpointer:
+    graph = builder.compile(checkpointer=checkpointer)
+    config = {"configurable": {"thread_id": "user-1"}}
+    graph.invoke(
+        {"messages": [{"role": "user", "content": "Remember: my favourite language is Python."}]},
+        config,
+    )
+    print("Saved.")
+```
+</CodeFile>
+
+<CodeFile filename="recall.py">
+```python
+from langchain_anthropic import ChatAnthropic
+from langgraph.graph import StateGraph, MessagesState, START
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+llm = ChatAnthropic(model="claude-opus-4-8", max_tokens=1024)
+builder = StateGraph(MessagesState)
+builder.add_node("chat", lambda s: {"messages": [llm.invoke(s["messages"])]})
+builder.add_edge(START, "chat")
+
+with SqliteSaver.from_conn_string("memory.db") as checkpointer:
+    graph = builder.compile(checkpointer=checkpointer)
+    config = {"configurable": {"thread_id": "user-1"}}
+    result = graph.invoke(
+        {"messages": [{"role": "user", "content": "What's my favourite language?"}]}, config
+    )
+    print(result["messages"][-1].content)
+```
+</CodeFile>
+
+<CodeFile filename="terminal">
+```bash
+uv run remember.py    # writes to memory.db, then exits
+uv run recall.py      # a brand-new process — still answers "Python"
+```
+</CodeFile>
+
+The second process was never told your favourite language. It read it from `memory.db`. That’s long-term memory: it outlives the program.
+
+</Step>
+
+<Step number={4} title="Keep users apart with thread IDs">
+
+The `thread_id` is what isolates memories. Different IDs are different, private conversations — sharing one SQLite file, never leaking into each other.
+
+<CodeFile filename="threads.py">
+```python
+# ... same graph setup, inside the `with SqliteSaver...` block ...
+alice = {"configurable": {"thread_id": "alice"}}
+bob = {"configurable": {"thread_id": "bob"}}
+
+graph.invoke({"messages": [{"role": "user", "content": "I live in Delft."}]}, alice)
+graph.invoke({"messages": [{"role": "user", "content": "I live in Cork."}]}, bob)
+
+# Ask each — they never see each other's memory.
+print(graph.invoke({"messages": [{"role": "user", "content": "Where do I live?"}]}, alice)["messages"][-1].content)  # Delft
+print(graph.invoke({"messages": [{"role": "user", "content": "Where do I live?"}]}, bob)["messages"][-1].content)    # Cork
+```
+</CodeFile>
+
+<Callout type="tip" title="Thread IDs are your memory keys">
+In a real app, the `thread_id` is usually your user ID or session ID. That single string decides whose memory the agent loads — get it right and multi-user memory is basically free.
+</Callout>
+
+</Step>
+
+</Steps>
+
+<Callout type="note" title="Short-term vs long-term, side by side">
+Both use the *same* checkpointer — the only difference is lifespan. Within one run, the checkpointer gives you short-term memory. Because it writes to disk, that same memory becomes long-term across runs. Semantic memory (distilling “the user likes Python” into a facts store) is the next layer up — but it starts here.
+</Callout>
+
+### Where to go next
+
+- **Trim the history** — long conversations grow the state forever; add summarisation or context trimming so old turns don’t balloon your token bill.
+- **Semantic / long-term store** — distil durable facts (“prefers Python”, “timezone CET”) into a separate store the agent can search, instead of replaying every past message.
+- **Swap the backend** — `SqliteSaver` is perfect locally; move to Postgres for production with the same interface.
+- **Go deeper** — the [Harness Engineering](/courses/harness-engineering) and [Loop Engineering](/courses/loop-engineering) courses cover memory, tools, and control loops as one system.
