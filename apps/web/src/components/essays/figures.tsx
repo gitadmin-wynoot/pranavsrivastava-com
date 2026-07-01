@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { NetworkUseCases } from "./network-use-cases";
 import { TelcoEraSlider } from "./telco-era-slider";
 import { GuardrailSim } from "./guardrail-sim";
+import { NarrativeEpidemic, ViralLottery, NarrativeGenerator } from "./narrative-viz";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -290,7 +291,74 @@ function ApiAttackSurface() {
   );
 }
 
+/* ── Story as compression: a messy world squeezed into one causal tale ───── */
+function StoryCompression() {
+  const dots: Array<[number, number]> = [];
+  for (let i = 0; i < 44; i++) dots.push([30 + (i % 11) * 16, 40 + Math.floor(i / 11) * 40]);
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      <text x="110" y="24" textAnchor="middle" className="fill-zinc-400" fontSize="11">the world (messy, high-dimensional)</text>
+      {dots.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="3" className="fill-zinc-300 dark:fill-zinc-600" />
+      ))}
+      {/* funnel */}
+      <path d="M230,40 L300,95 L300,125 L230,180" className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1.25" strokeDasharray="4 5" />
+      <text x="330" y="106" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11" fontStyle="italic">compressed into</text>
+      {/* the story */}
+      <rect x="430" y="86" width="180" height="48" rx="10" className="fill-blue-500/10 stroke-blue-500/50" strokeWidth="1.5" />
+      <text x="520" y="108" textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="13" fontWeight="600">“X causes Y”</text>
+      <text x="520" y="124" textAnchor="middle" className="fill-zinc-400" fontSize="10">one shareable story</text>
+    </svg>
+  );
+}
+
+/* ── The reflexive loop: story → belief → action → reality → story ───────── */
+function NarrativeLoop() {
+  const cx = 320;
+  const cy = 130;
+  const R = 74;
+  const nodes = [
+    { a: -90, label: "Story", color: "fill-blue-600 dark:fill-blue-400" },
+    { a: -18, label: "Belief", color: "fill-violet-600 dark:fill-violet-400" },
+    { a: 54, label: "Action", color: "fill-emerald-600 dark:fill-emerald-400" },
+    { a: 126, label: "Reality", color: "fill-amber-600 dark:fill-amber-400" },
+    { a: 198, label: "New story", color: "fill-rose-600 dark:fill-rose-400" },
+  ];
+  const pos = (a: number) => [cx + R * Math.cos((a * Math.PI) / 180), cy + R * Math.sin((a * Math.PI) / 180)];
+  return (
+    <svg viewBox="0 0 640 260" className="w-full h-auto" fill="none" role="img">
+      <circle cx={cx} cy={cy} r={R} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1.5" strokeDasharray="4 6" />
+      {nodes.map((n, i) => {
+        const [x, y] = pos(n.a);
+        return (
+          <g key={i}>
+            <circle cx={x} cy={y} r="5" className="fill-zinc-400 dark:fill-zinc-500" />
+            <text x={x} y={y - 12} textAnchor="middle" className={n.color} fontSize="12" fontWeight="600">{n.label}</text>
+          </g>
+        );
+      })}
+      {/* AI amplifier */}
+      <text x={cx} y={cy - 6} textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="12" fontWeight="600">AI</text>
+      <text x={cx} y={cy + 10} textAnchor="middle" className="fill-zinc-400" fontSize="10">amplifies the loop</text>
+      {[-90, -18, 54, 126, 198].map((a, i) => {
+        const [x, y] = pos(a);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" />;
+      })}
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "story-compression": {
+    node: <StoryCompression />,
+    caption:
+      "A narrative is how a human compresses a messy, high-dimensional world into one portable, causal story — a lossy model you can carry and pass on. Knowledge representation, done in prose instead of graphs.",
+  },
+  "narrative-loop": {
+    node: <NarrativeLoop />,
+    caption:
+      "Narratives don't just describe the economy — they feed back into it. Story shapes belief, belief drives action, action becomes reality, reality seeds the next story. AI now sits in the middle, amplifying every turn.",
+  },
   "telco-eras": {
     node: <TelcoEras />,
     caption:
@@ -346,4 +414,7 @@ export const essayComponents = {
   NetworkUseCases,
   TelcoEraSlider,
   GuardrailSim,
+  NarrativeEpidemic,
+  ViralLottery,
+  NarrativeGenerator,
 };

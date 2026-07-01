@@ -1,0 +1,81 @@
+---
+title: "The economy runs on stories (and now the machines write them)"
+slug: "narrative-economics"
+dek: "Robert Shiller's uncomfortable idea: markets move on contagious stories, not just fundamentals. Add knowledge representation, the randomness of what goes viral, and the algorithms now amplifying it all — and you get the real operating system of the modern economy."
+summary: "A deep, interactive tour of narrative economics — stories as epidemics and as human knowledge representation, why what goes viral is partly random, how ranking algorithms and AI now shape which narratives win, and the reflexive loops that make some stories come true. Data-backed, with sources."
+category: "Economics"
+published: true
+publishedAt: "2026-07-02"
+---
+
+In the 1930s, a rumour that a bank *might* fail was often enough to make it fail. Depositors, hearing the story, rushed to pull their money out — and a bank that could survive calm could not survive everyone withdrawing at once. The story didn't describe reality. It *manufactured* it. Economists later modelled this precisely (Diamond and Dybvig, 1983, a piece of work that won a Nobel in 2022): a bank run is a self-fulfilling prophecy, and which outcome you get — calm or collapse — depends on which story people believe.
+
+I keep coming back to that, because it hints at something most economic models leave out: **the economy doesn't just run on numbers. It runs on stories.** And in the last few years, we built machines that are very, very good at telling them.
+
+## Shiller's dangerous idea
+
+The economist Robert Shiller — Nobel laureate, co-creator of the Case-Shiller house-price index — spent his career on this. In his 2017 presidential address to the American Economic Association, and then his 2019 book *Narrative Economics*, he made a claim that still unsettles the field: **popular narratives spread like epidemics, and those epidemics drive major economic events** — booms, busts, recessions, bubbles.
+
+He borrowed the maths from epidemiology directly — the same century-old model (Kermack and McKendrick, 1927) used for actual diseases. A story has a contagion rate (how catchy it is) and a recovery rate (how fast people forget). Their ratio gives you an *R₀* — and if it clears 1, the story spreads. Drag the two below and watch a narrative boom and bust:
+
+<NarrativeEpidemic />
+
+Once you see it, you can't unsee it. The dot-com story that "profits don't matter, eyeballs do" drove the Nasdaq up roughly fivefold and then down about 78%. The belief that "house prices always go up" powered the 2000s until 2008 proved it was a story, not a law. Bitcoin — Shiller's favourite modern case — spreads in visible waves, each boom seeding the memory that fuels the next. None of these were only about fundamentals. They were about a story reaching R₀ > 1.
+
+## A story is knowledge representation — the human kind
+
+Here's the deeper thing, and it's the bit I find genuinely beautiful. A narrative is how a human being does **knowledge representation** — encoding what you know about the world in a form you can store, reason with, and act on. Machines do it with graphs and logic; we do it with stories.
+
+The world is impossibly high-dimensional — millions of interacting variables, no clean causes. You cannot hold that in a head. So you compress it into a *story*: a short, portable, causal claim — "X causes Y," "this always happens," "we're the good guys." It is lossy, it is often wrong, and it is *exactly* what lets you decide and act.
+
+<EssayFigure name="story-compression" />
+
+Machines represent knowledge in graphs, logic, and vectors; we represent it in narrative. Both are compressions of a messy world. The difference is that a human's compression is *contagious* — built to be passed on, remembered, and felt. Keynes called the sentiment that results *animal spirits* (1936); Akerlof and Shiller revived the phrase in 2009 to argue those spirits drive real investment and spending. A narrative isn't decoration on top of the economy. For the people inside it, the narrative *is* their model of the economy.
+
+## Which story wins is partly luck
+
+If narratives were selected for *truth*, this would all be fine. They aren't. They're selected for *contagiousness* — and contagiousness has a huge random component.
+
+The cleanest evidence I know is an experiment. In 2006, Salganik, Dodds, and Watts built an artificial music market and ran roughly 14,000 people through it (*Science*, 2006). In one condition people chose songs alone; in others they could see what everyone else had downloaded. The result: once social influence was switched on, outcomes became both more *unequal* (a few runaway hits) and more *unpredictable* — the very same songs became smash hits in one world and flops in another, depending on nothing but which ones happened to get an early, random lead. Success was real, but it was not destiny. It was a cascade.
+
+You can feel that here. Same five stories, every time — press run and watch a different one run away:
+
+<ViralLottery />
+
+The mechanism is *cumulative advantage* — Merton's "Matthew effect," the rich getting richer. An early, essentially random break compounds into a runaway winner. Which means: the dominant narrative in your head about markets, technology, or the future is *not* simply the truest one that survived a fair fight. It is, in large part, the one that got lucky early and snowballed.
+
+## How algorithms shape the stories (and the stories shape the algorithms)
+
+Now put that random, contagious process on top of a recommendation engine, and you get our world.
+
+Ranking algorithms don't optimise for *true*. They optimise for *engagement* — and engagement loves exactly what makes a narrative spread: novelty, emotion, outrage, a clean villain. The starkest data point: an MIT study of every verified true and false news story on Twitter over a decade (Vosoughi, Roy, and Aral, *Science*, 2018) found that **falsehoods spread significantly farther, faster, and deeper than the truth** — not because of bots, but because false stories were more novel and provoked stronger emotion. The algorithm didn't set out to spread lies. It set out to spread *contagion*, and lies are often more contagious.
+
+So the feedback loop closes. Algorithms amplify whichever narratives caught an early random cascade; that amplification locks them in; and the resulting text becomes the training data for the next generation of models — which learn the *statistical shape* of our loudest stories and are ready to generate infinitely more. Tap through a few that actually moved money:
+
+<NarrativeGenerator />
+
+## The machines can now write the stories
+
+Which is the genuinely new part. A large language model is a compression of the entire corpus of human narrative — every story we've told, statistically distilled. And it can generate fluent, persuasive, novel narrative *on demand, at scale.* For the first time, the most powerful narrative-spreading force in an economy isn't a charismatic person or a newspaper. It's a machine that can produce a million variations of a story and A/B-test which one is most contagious.
+
+That matters because of *reflexivity* — George Soros's word (*The Alchemy of Finance*, 1987) for the two-way street between belief and reality. Narratives don't just describe the economy; they change the behaviour that then becomes the economy, which seeds the next narrative. AI now sits in the middle of that loop, amplifying every turn:
+
+<EssayFigure name="narrative-loop" />
+
+The AI boom itself is the reflexive case study of our moment. "AI will change everything" is a narrative — and belief in it is directing genuinely staggering sums of investment (Nvidia's valuation crossing into the trillions, hyperscaler capital spending at levels normally reserved for national infrastructure). That spending funds the very progress that seems to confirm the story. Belief and reality are pulling each other along. Whether the story is *fully* true matters less, in the short run, than how many people — and how much capital — act as if it is. That is narrative economics, live, and I say it as someone who builds in this field and mostly believes the story: the loop is real, and it can overshoot.
+
+## What to do with this
+
+Two honest sides, because I promised data, not cheerleading.
+
+**The hopeful side.** The same tools that manufacture narratives can *map* them. You can now track the epidemic curve of a belief in near real time — an early-warning system for bubbles and panics, a way to see a bank-run story spreading before the queues form. Understanding markets as narrative systems is genuinely more predictive than pretending everyone is a rational calculator; the behavioural economists have been right about that for decades.
+
+**The wary side.** The same power industrialises manipulation. A model that can find the most contagious framing can sell you a stock, a candidate, or a panic with equal fluency — and because it launders contagious falsehood into confident, well-written prose, it strips away the cues we used to detect nonsense. Bubbles can inflate faster and pop harder when the narratives driving them are machine-optimised and machine-amplified.
+
+The literacy we're going to need isn't just media literacy. It's **narrative literacy** — the habit of asking, of any story that's moving you or the market, *is this spreading because it's true, or just because it's catching?* They are not the same question, they have never been the same question, and we just handed the machines a very large megaphone.
+
+The economy always ran on stories. Now the storyteller is something we built — and it doesn't know the difference between true and viral unless we teach it to care.
+
+---
+
+**Sources & further reading:** Robert Shiller, [*Narrative Economics*](https://en.wikipedia.org/wiki/Narrative_economics) (Princeton, 2019) and his 2017 AEA presidential address; Salganik, Dodds & Watts, [“Experimental Study of Inequality and Unpredictability in an Artificial Cultural Market,”](https://www.science.org/doi/10.1126/science.1121066) *Science* (2006); Vosoughi, Roy & Aral, [“The spread of true and false news online,”](https://www.science.org/doi/10.1126/science.aap9559) *Science* (2018); Diamond & Dybvig, [bank-run model](https://en.wikipedia.org/wiki/Diamond%E2%80%93Dybvig_model) (1983); George Soros on [reflexivity](https://en.wikipedia.org/wiki/Reflexivity_%28social_theory%29) (1987); the [SIR epidemic model](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology) (Kermack & McKendrick, 1927); Reinhart & Rogoff, *This Time Is Different* (2009).
