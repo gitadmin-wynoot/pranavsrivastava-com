@@ -36,6 +36,14 @@ export default function LabsPage() {
           working thing you built yourself — not a slideshow. The fastest way to
           learn a system is to make it do something.
         </p>
+        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-3">
+          Labs are quick, single-session builds. For the deep, structured path,
+          see the full courses in{" "}
+          <Link href="/learn" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Learn
+          </Link>
+          .
+        </p>
       </div>
 
       {/* ── Available now ─────────────────────────────────────────────────── */}

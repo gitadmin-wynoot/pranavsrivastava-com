@@ -28,6 +28,13 @@ export default function EssaysPage() {
           who it&apos;s for, and what kind of builders we want to be. I write
           these to ask better questions, not to sound certain.
         </p>
+        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-3">
+          Shorter notes and build-focused posts live in{" "}
+          <Link href="/blog" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Writing
+          </Link>
+          .
+        </p>
       </div>
 
       {/* Essay list */}

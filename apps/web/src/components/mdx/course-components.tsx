@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
 import { Figure } from "./course-figures";
+import { RelationMap } from "./relation-map";
 import {
   Info,
   Lightbulb,
@@ -297,5 +298,6 @@ export const courseComponents = {
   Steps,
   Step,
   Figure,
+  RelationMap,
   pre: CodeBlock,
 };

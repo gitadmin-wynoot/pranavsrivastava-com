@@ -64,6 +64,13 @@ export default function LearnPage() {
           prerequisites, and clear outcomes. Grounded in academic rigour, built
           for practical application.
         </p>
+        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-3">
+          Want one runnable thing in under an hour instead? Try a hands-on{" "}
+          <Link href="/labs" className="text-blue-600 dark:text-blue-400 hover:underline">
+            lab
+          </Link>
+          .
+        </p>
       </div>
 
       {/* ── Available now ───────────────────────────────────────────────── */}

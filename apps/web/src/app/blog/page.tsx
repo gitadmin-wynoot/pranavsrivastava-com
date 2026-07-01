@@ -62,6 +62,13 @@ export default async function WritingPage() {
           </a>
           .
         </p>
+        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-3">
+          For slower, more reflective pieces — the why and what-if — see{" "}
+          <Link href="/essays" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Essays
+          </Link>
+          .
+        </p>
       </div>
 
       {/* Essays — the slower, reflective writing */}
