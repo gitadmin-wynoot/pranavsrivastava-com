@@ -332,7 +332,7 @@ export default function AboutPage() {
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 Enterprise integration, six domains
               </p>
-              <p className="text-xs text-zinc-400 mt-0.5">TCS · Cognizant · KPN · 2010 → present</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Consulting · KPN · 2010 → present</p>
             </div>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
               Across fifteen years and several companies, he has built integration
@@ -598,7 +598,7 @@ export default function AboutPage() {
         <blockquote className="text-base font-medium text-zinc-700 dark:text-zinc-300 border-l-2 border-blue-500 pl-4 mb-8 italic leading-relaxed">
           &ldquo;I genuinely believe anyone can learn anything. Not as a motivational
           poster thing — as something I have proved to myself repeatedly.
-          Skiing at 40 was the latest experiment.&rdquo;
+          Skiing at 35 was the latest experiment.&rdquo;
         </blockquote>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-6">

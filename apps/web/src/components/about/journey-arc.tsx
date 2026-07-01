@@ -6,17 +6,20 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 /*
   JourneyArc — the "arc" reframed from a dated résumé timeline into a few
   chapters (scopes) you drag or tap through. Story over dates: it leads with the
-  theme of each phase, keeps time soft, and reveals one chapter at a time so it
-  reads like a journey, not a CV to audit.
+  theme of each phase, keeps time soft, and — for the present — shows the day job
+  and the building running as two *parallel tracks* rather than a "part-time"
+  footnote.
 */
 
+type Lane = { label: string; color: string; chips: string[]; live?: boolean };
 type Scope = {
   label: string;
   title: string;
   span: string;
   color: string;
   body: string;
-  tags: string[];
+  tags?: string[];
+  parallel?: Lane[];
 };
 
 const SCOPES: Scope[] = [
@@ -29,12 +32,12 @@ const SCOPES: Scope[] = [
     tags: ["Curiosity", "Fundamentals"],
   },
   {
-    label: "Cutting teeth",
-    title: "A decade inside real systems",
+    label: "Consulting",
+    title: "A decade solving other people's problems",
     span: "the 2010s",
     color: "#3b82f6",
-    body: "Then years inside real software, across genuinely different worlds — banking, automotive, telecom, asset finance. APIs and integration architecture at scale, for clients who needed it to actually work. He learned that every industry has its own constraints, and that the constraints are the interesting part. A move to the Netherlands turned an assignment into a life.",
-    tags: ["Banking", "Automotive", "Telecom", "Integration"],
+    body: "Then years in consulting, across genuinely different worlds — banking, automotive, financial services. APIs and integration architecture at scale, for clients who needed it to actually work. He learned that every industry has its own constraints, and that the constraints are the interesting part. A move to the Netherlands turned an assignment into a life.",
+    tags: ["Banking", "Automotive", "Finance", "Integration"],
   },
   {
     label: "Going deeper",
@@ -45,20 +48,23 @@ const SCOPES: Scope[] = [
     tags: ["Computer Vision", "Knowledge Rep.", "Optimization"],
   },
   {
-    label: "On his own",
-    title: "Building his own things",
-    span: "since 2022",
+    label: "KPN",
+    title: "Into telecom, at scale",
+    span: "2017 → now",
     color: "#10b981",
-    body: "Then the leap: building his own things. An independent practice, a product (Gravitii) that taught him in precise detail what market fit is not, and then Wynoot, built with AI at its core. He also picked up skiing at 40 — both needed the same thing: showing up without excuses.",
-    tags: ["Products", "Founding", "AI"],
+    body: "Landed in telecom at KPN, where he helped grow the developer portal from a small incubator into a revenue-earning product — and where he still is, making significant contributions across CPaaS, AI, backend, and API management.",
+    tags: ["CPaaS", "API Management", "AI", "Backend"],
   },
   {
-    label: "Right now",
-    title: "Building in public",
+    label: "Now",
+    title: "Two tracks, running in parallel",
     span: "now",
     color: "#06b6d4",
-    body: "Now: architecting AI systems by day, building Wynoot in parallel, writing and teaching in between — building in public as a long-term practice. The itch is the same one from that first DOS machine.",
-    tags: ["AI Systems", "Teaching", "Writing"],
+    body: "And alongside all that, he builds his own. Not instead of the day job — beside it. Two tracks running at once, increasingly with a personal AI doing the heavy lifting. Same curiosity, twice the surface area.",
+    parallel: [
+      { label: "By day", color: "#0ea5e9", chips: ["KPN", "CPaaS", "AI", "API management"] },
+      { label: "In parallel", color: "#10b981", chips: ["Wynoot", "Gravitii", "Writing", "Teaching", "+ personal AI"], live: true },
+    ],
   },
 ];
 
@@ -125,17 +131,44 @@ export function JourneyArc() {
           <span className="text-[11px] uppercase tracking-wide text-zinc-400">{s.span}</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{s.body}</p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {s.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full border px-2 py-0.5 text-[11px]"
-              style={{ color: s.color, borderColor: `${s.color}44` }}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
+
+        {s.parallel ? (
+          <div className="mt-4 space-y-2.5">
+            {s.parallel.map((lane) => (
+              <div key={lane.label} className="flex items-center gap-3">
+                <span className="flex w-20 shrink-0 items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide" style={{ color: lane.color }}>
+                  {lane.live && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: lane.color }} />
+                      <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: lane.color }} />
+                    </span>
+                  )}
+                  {lane.label}
+                </span>
+                <span className="h-px flex-shrink-0 flex-grow-0 basis-4" style={{ background: lane.color }} />
+                <div className="flex flex-wrap gap-1.5">
+                  {lane.chips.map((c) => (
+                    <span key={c} className="rounded-full border px-2 py-0.5 text-[11px]" style={{ color: lane.color, borderColor: `${lane.color}44` }}>
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {s.tags?.map((t) => (
+              <span
+                key={t}
+                className="rounded-full border px-2 py-0.5 text-[11px]"
+                style={{ color: s.color, borderColor: `${s.color}44` }}
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-4 flex items-center justify-between">
           <button
