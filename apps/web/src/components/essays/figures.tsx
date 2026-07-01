@@ -100,7 +100,126 @@ function TwoPaths() {
   );
 }
 
+/* ── Falling forward: progress is a line of falls ───────────────────────── */
+function FallingForward() {
+  const pts =
+    "56,196 110,150 150,196 210,130 250,180 320,116 360,162 430,100 470,148 556,78";
+  const peaks: Array<[number, number]> = [
+    [110, 150],
+    [210, 130],
+    [320, 116],
+    [430, 100],
+  ];
+  const falls: Array<[number, number]> = [
+    [150, 196],
+    [250, 180],
+    [360, 162],
+    [470, 148],
+  ];
+  return (
+    <svg viewBox="0 0 640 240" className="w-full h-auto" fill="none" role="img">
+      <line x1="56" y1="210" x2="592" y2="210" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <text x="56" y="230" className="fill-zinc-400" fontSize="11">attempts · time →</text>
+      <polyline points={pts} className="stroke-emerald-500" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {peaks.map(([x, y], i) => (
+        <circle key={`p${i}`} cx={x} cy={y} r="3.5" className="fill-emerald-500" />
+      ))}
+      {falls.map(([x, y], i) => (
+        <circle key={`f${i}`} cx={x} cy={y} r="4.5" className="fill-amber-500" />
+      ))}
+      <circle cx="56" cy="196" r="5" className="fill-zinc-400 dark:fill-zinc-500" />
+      <text x="56" y="182" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">born</text>
+      <circle cx="556" cy="78" r="6" className="fill-emerald-500" />
+      <text x="556" y="66" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="12" fontWeight="600">walking</text>
+      <text x="308" y="205" textAnchor="middle" className="fill-amber-600/80 dark:fill-amber-400/80" fontSize="11" fontStyle="italic">every dip is a fall — none of them counts as failure</text>
+    </svg>
+  );
+}
+
+/* ── Risk window: cost vs. capacity to recover over a life ───────────────── */
+function RiskWindow() {
+  return (
+    <svg viewBox="0 0 640 300" className="w-full h-auto" fill="none" role="img">
+      <line x1="56" y1="252" x2="600" y2="252" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <text x="56" y="276" className="fill-zinc-400" fontSize="11">age →</text>
+      {/* the cheap years — where recovery dwarfs cost */}
+      <path d="M56,84 C 200,122 300,150 360,168 L 360,236 C 300,228 200,234 56,238 Z" className="fill-emerald-500/10" />
+      {/* cost of a failure — rises with age */}
+      <path d="M56,238 C 260,232 430,150 596,72" className="stroke-amber-500" strokeWidth="2.5" strokeLinecap="round" />
+      {/* room to recover — falls with age */}
+      <path d="M56,84 C 240,124 430,210 596,238" className="stroke-emerald-500" strokeWidth="2.5" strokeLinecap="round" />
+      <text x="596" y="60" textAnchor="end" className="fill-amber-600 dark:fill-amber-400" fontSize="13" fontWeight="600">What a failure costs</text>
+      <text x="60" y="74" className="fill-emerald-600 dark:fill-emerald-400" fontSize="13" fontWeight="600">Room to recover</text>
+      <text x="180" y="206" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11" fontStyle="italic">the cheap years</text>
+    </svg>
+  );
+}
+
+/* ── Old schools: the world's traditions of learning by doing ───────────── */
+function OldSchools() {
+  const cx = 320;
+  const cy = 178;
+  type N = { x: number; y: number; region: string; method: string; anchor: "start" | "middle" | "end"; color: string };
+  const nodes: N[] = [
+    { x: 320, y: 42, region: "The Stoa", method: "voluntary hardship", anchor: "middle", color: "amber" },
+    { x: 512, y: 86, region: "Japan", method: "nanakorobi yaoki", anchor: "start", color: "rose" },
+    { x: 584, y: 184, region: "India", method: "gurukul · jugaad", anchor: "start", color: "emerald" },
+    { x: 498, y: 296, region: "Greece", method: "mētis · cunning", anchor: "start", color: "sky" },
+    { x: 150, y: 296, region: "West Africa", method: "sankofa", anchor: "end", color: "violet" },
+    { x: 56, y: 184, region: "Nordics", method: "risky play", anchor: "end", color: "blue" },
+    { x: 138, y: 86, region: "Polynesia", method: "wayfinding", anchor: "end", color: "cyan" },
+  ];
+  const dotFill: Record<string, string> = {
+    amber: "fill-amber-500",
+    rose: "fill-rose-500",
+    emerald: "fill-emerald-500",
+    sky: "fill-sky-500",
+    violet: "fill-violet-500",
+    blue: "fill-blue-500",
+    cyan: "fill-cyan-500",
+  };
+  return (
+    <svg viewBox="0 0 640 340" className="w-full h-auto" fill="none" role="img">
+      {nodes.map((n, i) => (
+        <line key={`l${i}`} x1={cx} y1={cy} x2={n.x} y2={n.y} className="stroke-zinc-200 dark:stroke-zinc-700/70" strokeWidth="1" />
+      ))}
+      {/* centre */}
+      <circle cx={cx} cy={cy} r="7" className="fill-zinc-800 dark:fill-zinc-100" />
+      <text x={cx} y={cy - 18} textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="12" fontWeight="600">learn by doing</text>
+      <text x={cx} y={cy + 26} textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">fall early, fall cheap</text>
+      {nodes.map((n, i) => {
+        const tx = n.anchor === "start" ? n.x + 12 : n.anchor === "end" ? n.x - 12 : n.x;
+        const top = n.anchor === "middle";
+        const ry = top ? n.y - 20 : n.y - 2;
+        const my = top ? n.y - 6 : n.y + 13;
+        return (
+          <g key={`n${i}`}>
+            <circle cx={n.x} cy={n.y} r="4.5" className={dotFill[n.color]} />
+            <text x={tx} y={ry} textAnchor={n.anchor} className="fill-zinc-700 dark:fill-zinc-200" fontSize="12" fontWeight="600">{n.region}</text>
+            <text x={tx} y={my} textAnchor={n.anchor} className="fill-zinc-400" fontSize="11">{n.method}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "falling-forward": {
+    node: <FallingForward />,
+    caption:
+      "A toddler averages roughly 2,300 steps and 17 falls an hour. We never call it failing — we call it learning to walk. We are born relentless problem-solvers, and then we're slowly taught to stop.",
+  },
+  "risk-window": {
+    node: <RiskWindow />,
+    caption:
+      "When you're young, a failure costs little and you have decades to absorb it. The asymmetry never tilts more in your favour than it does early — which is exactly when we're told to play it safe.",
+  },
+  "old-schools": {
+    node: <OldSchools />,
+    caption:
+      "Almost every durable culture built a way to make the young practise risk and problem-solving on purpose — from Polynesian wayfinding to the Stoa's rehearsed hardship.",
+  },
   "two-stories": {
     node: <TwoStories />,
     caption: "The same technology, two possible stories. The tools don't choose between them — we do.",
