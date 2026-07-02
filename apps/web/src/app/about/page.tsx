@@ -262,325 +262,173 @@ export default function AboutPage() {
         <JourneyArc />
       </div>
 
-      {/* ── Selected impact ───────────────────────────────────────────────── */}
+      {/* ── At a glance ────────────────────────────────────────────────────── */}
       <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          Selected impact
-        </h2>
-        <p className="text-xs text-zinc-400 mb-6">
-          Work that moved something — products, systems, or numbers
-        </p>
-        <div className="space-y-4">
-
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                  KPN Developer Portal
-                </p>
-                <p className="text-xs text-zinc-400 mt-0.5">2017 → present · KPN · Product ownership</p>
-              </div>
-              <a
-                href="https://developer.kpn.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 shrink-0"
-              >
-                developer.kpn.com ↗
-              </a>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[
+            { big: "15+ years", small: "across six industries" },
+            { big: "MSc in AI", small: "earned at night, beside the job" },
+            { big: "Still at KPN", small: "CPaaS · AI · API management" },
+            { big: "Wynoot", small: "building it in parallel" },
+            { big: "Skiing at 40", small: "a beginner again, on purpose" },
+            { big: "In public", small: "essays, courses, this whole site" },
+          ].map((f) => (
+            <div key={f.big} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-4">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{f.big}</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">{f.small}</p>
             </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-              Joined a small internal incubator at KPN in 2017 with a mission
-              to build a developer platform for enterprise communication APIs.
-              Helped take it from early idea through MVP to a live product
-              generating significant revenue — serving enterprises and SMBs
-              with a full suite of production-grade CPaaS APIs.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {["CPaaS", "SMS / RCS", "Speech-to-text", "Anti-fraud APIs", "API management", "Lambda", "DynamoDB", "Kinesis Firehose", "EventBridge", "Cognito", "SDK distribution", "Developer experience"].map((t) => (
-                <span key={t} className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="mb-2">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Anti-fraud API systems
-              </p>
-              <p className="text-xs text-zinc-400 mt-0.5">Telecom scale · Applied AI + systems engineering</p>
-            </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-              Designed and built API-driven fraud detection systems operating
-              at telecom scale — where volume is real, latency matters, and
-              false positives cost money. The intersection of domain knowledge,
-              AI, and production engineering that he finds most interesting.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {["Fraud detection", "High-volume APIs", "AI systems", "Real-time signals", "Telecom scale"].map((t) => (
-                <span key={t} className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="mb-2">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Enterprise integration, six domains
-              </p>
-              <p className="text-xs text-zinc-400 mt-0.5">Consulting · KPN · 2010 → present</p>
-            </div>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-              Across fifteen years and several companies, he has built integration
-              systems for automotive, banking, asset finance, financial
-              services, and telecom. Different industries, different
-              constraints, same underlying discipline: well-designed APIs and
-              reliable systems that communicate clearly.
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {["Telecom", "Banking", "Automotive", "Asset finance", "Financial services", "MuleSoft", "IBM DataPower"].map((t) => (
-                <span key={t} className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-
+          ))}
         </div>
       </div>
 
-      {/* ── How I think about products ────────────────────────────────────── */}
+      {/* ── The work ───────────────────────────────────────────────────────── */}
       <div className="mb-12">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          How he thinks about products
+          The work
+        </h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6 max-w-2xl">
+          Fifteen years of one thing, really: making systems talk to each other
+          cleanly — and, lately, making AI do it reliably in production. A few
+          things worth pointing at:
+        </p>
+        <div className="space-y-3">
+          {[
+            { title: "KPN Developer Portal", meta: "2017 → now · KPN", url: "https://developer.kpn.com", urlLabel: "developer.kpn.com", desc: "He took an internal incubator to a revenue-earning platform of production CPaaS APIs — and is still building it, now across AI and API management." },
+            { title: "Anti-fraud AI, at telecom scale", meta: "Applied AI + systems", url: null, urlLabel: null, desc: "Fraud detection where the volume is real, latency matters, and a false positive costs a customer. The intersection of domain, AI, and production engineering he likes most." },
+            { title: "Enterprise integration, six industries", meta: "2010 → now", url: null, urlLabel: null, desc: "APIs and integration for banking, automotive, asset finance, and telecom. Different constraints every time; the same discipline underneath." },
+            { title: "Wynoot", meta: "Co-founder · in parallel", url: "https://wynoot.com", urlLabel: "wynoot.com", desc: "An AI-powered platform for service businesses — booking, workflows, LMS. Built beside the day job, born from a problem that kept showing up." },
+          ].map((c) => (
+            <div key={c.title} className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+              <div className="flex items-start justify-between gap-3 mb-1.5">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{c.title}</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">{c.meta}</p>
+                </div>
+                {c.url && (
+                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 shrink-0">
+                    {c.urlLabel} ↗
+                  </a>
+                )}
+              </div>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-zinc-400 mt-6 mb-2">These days, hands-on with:</p>
+        <div className="flex flex-wrap gap-1.5">
+          {workAreas.map((w) => (
+            <span key={w.label} className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-600 dark:text-zinc-300">
+              <span className={w.color}>{w.icon}</span>
+              {w.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── How I think ────────────────────────────────────────────────────── */}
+      <div className="mb-12">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+          How he thinks
         </h2>
         <p className="text-xs text-zinc-400 mb-6">
-          Three moments that show the product thinking more than any job title could
+          Three small moments that say more than a job title
         </p>
         <div className="space-y-4">
-
           <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
             <div className="flex items-start gap-3">
               <span className="text-lg mt-0.5 shrink-0">🔌</span>
               <div>
                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  The developer who is your user
+                  The developer is your user
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  At KPN, his team had a working SMS API with growing adoption —
-                  and growing support tickets at the same rate. Developers kept
-                  hitting the same errors and not understanding them. The
-                  response codes were technically correct:
-                  {" "}<code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">ERR_429_RATE_LIMIT_EXCEEDED</code>.
-                  But they said nothing about why it happened, what triggered
-                  it, or how to fix it. They spent one sprint rewriting every
-                  error response — plain English, probable cause, suggested
-                  remedy. Support volume dropped. Adoption continued growing.
-                  That is product thinking inside API design: the developer
-                  calling your endpoint is your user, and their confusion is
-                  your bug.
+                  A working SMS API at KPN was growing adoption — and support
+                  tickets at the same rate. The error codes were technically
+                  correct ({" "}
+                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">ERR_429_RATE_LIMIT</code>
+                  {" "}) and told developers nothing about why, or how to fix it.
+                  One sprint rewriting every error into plain English — cause,
+                  and remedy — and support volume dropped while adoption kept
+                  climbing. The developer calling your endpoint is your user;
+                  their confusion is your bug.
                 </p>
               </div>
             </div>
           </div>
-
           <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
             <div className="flex items-start gap-3">
               <span className="text-lg mt-0.5 shrink-0">🎯</span>
               <div>
                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  The threshold is a product decision, not a technical one
+                  The threshold is a business decision, not a technical one
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Building anti-fraud systems at telecom scale, the hardest
-                  decision is never the algorithm. It is the detection
-                  threshold. Too sensitive and legitimate businesses get blocked
-                  mid-campaign, call in angry, and churn. Too permissive and
-                  fraudulent traffic slips through, erodes platform trust, and
-                  attracts regulatory attention. Both failure modes have real
-                  business costs — different kinds, different stakeholders.
-                  Setting the dial requires modelling the cost of each mistake,
-                  not just optimising precision and recall on a test set. The
-                  model serves the business outcome. That order matters.
+                  In anti-fraud at scale, the hardest call is never the
+                  algorithm — it is the detection threshold. Too sensitive and
+                  real businesses get blocked mid-campaign and churn; too loose
+                  and fraud erodes trust and draws regulators. Setting that dial
+                  means modelling the cost of each kind of mistake, not just
+                  chasing precision on a test set. The model serves the business
+                  outcome. That order matters.
                 </p>
               </div>
             </div>
           </div>
-
           <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
             <div className="flex items-start gap-3">
               <span className="text-lg mt-0.5 shrink-0">📅</span>
               <div>
                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  Show availability first, ask for payment second
+                  Sometimes it is sequencing, not engineering
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Early Wynoot booking flow: collect contact details and
-                  payment preference, then show available time slots. Logical
-                  from a data-collection perspective. Wrong from a user
-                  perspective. People want to know if Thursday 6pm is available
-                  before they commit to anything. He flipped the order —
-                  availability first, payment last. Not a single line of
-                  business logic changed. The technology was identical. The
-                  product decision changed the outcome. This is the one he
-                  thinks about most when someone says a feature is not
-                  working: is it engineering, or is it sequencing?
+                  An early Wynoot booking flow asked for contact and payment
+                  details, then showed available slots. Logical for data;
+                  wrong for people, who want to know Thursday 6pm is free before
+                  they commit to anything. He flipped the order — availability
+                  first, payment last. Not one line of logic changed, yet the
+                  product worked. It is the moment he thinks of most when a
+                  feature seems broken: is it engineering, or is it sequencing?
                 </p>
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* ── What I work on ────────────────────────────────────────────────── */}
-      <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-          What he works on
-        </h2>
-        <div className="grid sm:grid-cols-2 gap-3">
-          {workAreas.map((item) => (
-            <div
-              key={item.label}
-              className="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl"
-            >
-              <span className={`${item.color} mb-2 block`}>{item.icon}</span>
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
-                {item.label}
-              </p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── MSc research interests ────────────────────────────────────────── */}
+      {/* ── What keeps me curious ──────────────────────────────────────────── */}
       <div className="mb-12">
         <div className="flex items-start justify-between mb-1">
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-            MSc in AI — research interests
+            What keeps him curious
           </h2>
-          <Link
-            href="/about/research"
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"
-          >
+          <Link href="/about/research" className="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0">
             The technical deep dive →
           </Link>
         </div>
-        <p className="text-xs text-zinc-400 mb-4">
-          MTU Cork, Ireland · 2019–2021
+        <p className="text-xs text-zinc-400 mb-5">
+          From the MSc in AI (MTU Cork) — and the real problems he keeps mapping them onto.
         </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6 max-w-2xl">
-          These are the areas he studied during his Master&apos;s — and the real
-          problems he keeps mapping them onto. Each is written in plain
-          language, with a concrete example, because the idea matters more than
-          the jargon.
-        </p>
-
-        <div className="space-y-4">
+        <div className="space-y-2">
           {depthAreas.map((a) => (
-            <div
+            <Link
               key={a.title}
-              className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl"
+              href={a.href}
+              className="group flex items-start gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 p-3.5 hover:border-blue-500/40 transition-colors"
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${a.chip}`}>
-                  {a.icon}
-                </div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${a.chip}`}>
+                {a.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-snug">
                   {a.title}
                 </p>
-                {a.tag && (
-                  <span className="text-[10px] font-medium text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full ml-auto shrink-0">
-                    {a.tag}
-                  </span>
-                )}
-              </div>
-
-              <div className={`rounded-lg border px-3.5 py-3 mb-3 ${a.plain}`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
-                  In plain words
-                </p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed line-clamp-2">
                   {a.plainWords}
                 </p>
               </div>
-
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">
-                {a.ground}
-              </p>
-
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-2">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300">What he did — </span>
-                {a.mine}
-              </p>
-
-              <Link
-                href={a.href}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                The technical version →
-              </Link>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 text-center">
-          <Link
-            href="/about/research"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-          >
-            See how each one actually works <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-
-      {/* ── Companies ─────────────────────────────────────────────────────── */}
-      <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-          Companies &amp; products
-        </h2>
-        <div className="space-y-3">
-          {[
-            {
-              name: "Wynoot",
-              url: "https://wynoot.com",
-              role: "Co-founder · AI-powered platform",
-              desc: "Booking, calendar, no-code workflows, and LMS — built for service businesses, solopreneurs, and coaches. AI use cases in active development and pilot. Started from a problem that kept showing up.",
-            },
-          ].map((co) => (
-            <div
-              key={co.name}
-              className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100 text-sm">
-                    {co.name}
-                  </p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {co.role}
-                  </p>
-                </div>
-                <a
-                  href={co.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 shrink-0"
-                >
-                  {co.url.replace("https://", "")} ↗
-                </a>
-              </div>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                {co.desc}
-              </p>
-            </div>
+              <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-zinc-300 dark:text-zinc-600 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            </Link>
           ))}
         </div>
       </div>
@@ -591,92 +439,44 @@ export default function AboutPage() {
           Beyond the code
         </h2>
         <p className="text-xs text-zinc-400 mb-6">
-          The stuff that does not go on a CV but shapes how he thinks — and, for
-          this part, in his own words
+          The stuff that never goes on a CV but shapes how he thinks — this bit, in his own words
         </p>
-
         <blockquote className="text-base font-medium text-zinc-700 dark:text-zinc-300 border-l-2 border-blue-500 pl-4 mb-8 italic leading-relaxed">
           &ldquo;I genuinely believe anyone can learn anything. Not as a motivational
           poster thing — as something I have proved to myself repeatedly.
-          Skiing at 35 was the latest experiment.&rdquo;
+          Skiing at 40 was the latest experiment.&rdquo;
         </blockquote>
-
-        <div className="grid sm:grid-cols-2 gap-4 mb-6">
-          <div className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Mountain className="w-4 h-4 text-sky-500" />
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Ski slopes</p>
+        <div className="grid sm:grid-cols-2 gap-4 mb-4">
+          {[
+            { icon: <Mountain className="w-4 h-4 text-sky-500" />, title: "Ski slopes", desc: "Started at 40 with zero experience and full determination — two seasons in, real technique, and he even recorded a podcast mid-run. Then he talked his wife and son onto the slopes too." },
+            { icon: <Globe className="w-4 h-4 text-emerald-500" />, title: "Explorer at heart", desc: "Travel, camping, history, the unfamiliar. Jhansi to Bhopal to Noida to Eindhoven was not accidental — new constraints make you figure things out differently." },
+            { icon: <Lightbulb className="w-4 h-4 text-amber-500" />, title: "A student of sport", desc: "Badminton and table tennis as a kid; tennis picked up in his 30s. Sport taught him patience with the learning curve — which is exactly how he meets new technology." },
+            { icon: <Mic2 className="w-4 h-4 text-purple-500" />, title: "Teaching runs in the family", desc: "His mum is a teacher, and it shows in how he explains things. He writes courses, records the odd podcast, and gives people the honest version of what building a skill takes." },
+          ].map((c) => (
+            <div key={c.title} className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                {c.icon}
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{c.title}</p>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{c.desc}</p>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Picked up skiing in 2024 with zero prior experience and full
-              determination. Two complete seasons, four trips, genuine
-              technique improvement. Even recorded a podcast episode mid-run
-              from a slope — because why not. Then he convinced his wife and son
-              to try it. They are catching up fast.
-            </p>
-          </div>
-
-          <div className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Globe className="w-4 h-4 text-emerald-500" />
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Explorer at heart</p>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Travel, camping, history, local culture — the more unfamiliar,
-              the better. Moving from Jhansi to Bhopal to Noida to Eindhoven
-              to the Netherlands was not accidental. He likes new constraints.
-              They make you figure things out differently.
-            </p>
-          </div>
-
-          <div className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-amber-500" />
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Sport & fast learning</p>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Grew up playing badminton and table tennis in Jhansi. Picked up
-              tennis in the Netherlands in 2021 with coaching — took time to
-              click, but clicked. Sport taught him patience with the
-              learning curve, which translates directly to how he approaches new
-              technology.
-            </p>
-          </div>
-
-          <div className="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <Mic2 className="w-4 h-4 text-purple-500" />
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Teaching & podcasting</p>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              He advises and motivates people more than he talks about it. The
-              instinct comes from growing up with a teacher for a mum — she
-              shaped how he explains things. He records occasional podcast
-              episodes, writes courses, and gives people the honest version of
-              what it takes to build real skills.
-            </p>
-          </div>
+          ))}
         </div>
-
-        {/* Family section */}
         <div className="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br from-zinc-50 to-white dark:from-zinc-900 dark:to-zinc-900">
           <div className="flex items-center gap-2 mb-3">
             <Heart className="w-4 h-4 text-rose-400" />
-            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              The foundation
-            </p>
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">The foundation</p>
           </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            His mum is a retired teacher — the powerhouse of the house. She
-            shaped how he thinks about learning, sharing, and patience. His dad
-            is a scientist turned banker — the solid rock. Between the two of
-            them he got curiosity and groundedness. His wife completed her
-            Masters around the same time he did — she knows what that chapter
-            looks like from the inside. His son is now on the ski slopes too.
-            The explorer gene passes on.
+            His mum is a retired teacher — the powerhouse of the house; his dad,
+            a scientist turned banker — the solid rock. Between them he got
+            curiosity and groundedness. His wife finished her Master&apos;s around
+            the same time he did, so she knows that chapter from the inside. And
+            his son is already on the ski slopes. The explorer gene passes on.
           </p>
         </div>
       </div>
+
 
       {/* ── Social + links ────────────────────────────────────────────────── */}
       <div className="mb-12 flex flex-wrap gap-3 text-sm">
