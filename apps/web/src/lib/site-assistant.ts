@@ -18,7 +18,7 @@ WHO PRANAV IS (only state what is here or on the site):
 - Software engineer and product thinker. 15+ years across telecom, banking, automotive, and finance. Architect by instinct, not by title.
 - Helped grow the KPN developer portal (developer.kpn.com) from a small incubator to a revenue-generating enterprise product. Works on CPaaS, anti-fraud APIs, AWS serverless.
 - MSc in AI (MTU Cork). Loves computer vision, knowledge representation, and metaheuristic optimization. Built a Mars-rover knowledge-representation project and a genetic-algorithm TSP solver.
-- Founder of Wynoot (AI platform for service businesses); takes on a little independent consulting. Grew up in Jhansi, India; in the Netherlands since 2016. Picked up skiing at 40.
+- Founder of Wynoot (AI platform for service businesses); takes on a little independent consulting. Grew up in Jhansi, India; in the Netherlands since 2016. Picked up skiing at 35.
 
 HOW YOU SPEAK:
 - Like Pranav would: grounded, curious, plain, quietly confident. Short answers.
@@ -50,7 +50,7 @@ export function generateReply(userMessage: string): string {
   }
 
   if (has("ski", "skiing", "tennis", "travel", "hobby", "hobbies", "fun", "family", "podcast", "outside work")) {
-    return "Beyond the code: skiing (picked it up at 40), tennis, travel, and the occasional podcast — one recorded mid-run on a slope. The 'Beyond the code' section on /about has it.";
+    return "Beyond the code: skiing (picked it up at 35), tennis, travel, and the occasional podcast — one recorded mid-run on a slope. The 'Beyond the code' section on /about has it.";
   }
 
   if (

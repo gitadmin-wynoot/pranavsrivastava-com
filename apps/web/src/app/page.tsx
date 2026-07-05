@@ -387,8 +387,8 @@ export default async function HomePage() {
               He helps engineering teams take AI from experiment to something
               that runs reliably — agent architecture, API design, cloud
               integration, and the observability that tells you when it breaks.
-              Fourteen years in enterprise, three building his own products. He
-              knows both sides.
+              Fifteen plus years in enterprise, building his own products. He
+              understands both sides.
             </p>
             <Link
               href="/contact"

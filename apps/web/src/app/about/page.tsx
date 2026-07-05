@@ -270,7 +270,7 @@ export default function AboutPage() {
             { big: "MSc in AI", small: "earned at night, beside the job" },
             { big: "Still at KPN", small: "CPaaS · AI · API management" },
             { big: "Wynoot", small: "building it in parallel" },
-            { big: "Skiing at 40", small: "a beginner again, on purpose" },
+            { big: "Skiing at 35", small: "a beginner again, on purpose" },
             { big: "In public", small: "essays, courses, this whole site" },
           ].map((f) => (
             <div key={f.big} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-4">
@@ -284,37 +284,42 @@ export default function AboutPage() {
       {/* ── The work ───────────────────────────────────────────────────────── */}
       <div className="mb-12">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          The work
+          Not theory
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6 max-w-2xl">
-          Fifteen years of one thing, really: making systems talk to each other
-          cleanly — and, lately, making AI do it reliably in production. A few
-          things worth pointing at:
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-5 max-w-2xl">
+          He doesn&apos;t teach anything he hasn&apos;t shipped. Fifteen years
+          making systems — and, lately, AI — work where it actually counts: at
+          scale, under real constraints, for people paying real money.
         </p>
-        <div className="space-y-3">
-          {[
-            { title: "KPN Developer Portal", meta: "2017 → now · KPN", url: "https://developer.kpn.com", urlLabel: "developer.kpn.com", desc: "He took an internal incubator to a revenue-earning platform of production CPaaS APIs — and is still building it, now across AI and API management." },
-            { title: "Anti-fraud AI, at telecom scale", meta: "Applied AI + systems", url: null, urlLabel: null, desc: "Fraud detection where the volume is real, latency matters, and a false positive costs a customer. The intersection of domain, AI, and production engineering he likes most." },
-            { title: "Enterprise integration, six industries", meta: "2010 → now", url: null, urlLabel: null, desc: "APIs and integration for banking, automotive, asset finance, and telecom. Different constraints every time; the same discipline underneath." },
-            { title: "Wynoot", meta: "Co-founder · in parallel", url: "https://wynoot.com", urlLabel: "wynoot.com", desc: "An AI-powered platform for service businesses — booking, workflows, LMS. Built beside the day job, born from a problem that kept showing up." },
-          ].map((c) => (
-            <div key={c.title} className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-              <div className="flex items-start justify-between gap-3 mb-1.5">
-                <div>
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{c.title}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">{c.meta}</p>
-                </div>
-                {c.url && (
-                  <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 shrink-0">
-                    {c.urlLabel} ↗
-                  </a>
-                )}
-              </div>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{c.desc}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-zinc-400 mt-6 mb-2">These days, hands-on with:</p>
+        <ul className="space-y-3">
+          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span>
+              Took an internal idea to a live, revenue-earning platform at KPN —
+              and still builds it, now across AI and API management.{" "}
+              <a href="https://developer.kpn.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">developer.kpn.com ↗</a>
+            </span>
+          </li>
+          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span>Built fraud-detection AI at telecom scale — where a false positive costs a real customer, not a metric.</span>
+          </li>
+          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span>Shipped across six industries — banking, automotive, finance, telecom. Different worlds, one discipline.</span>
+          </li>
+          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
+            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span>
+              Building his own AI product, Wynoot, in parallel.{" "}
+              <a href="https://wynoot.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">wynoot.com ↗</a>
+            </span>
+          </li>
+        </ul>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 italic mt-5 max-w-2xl">
+          None of it is slideware — it&apos;s the ground everything here is taught from.
+        </p>
+        <p className="text-xs text-zinc-400 mt-6 mb-2">Where his head is right now:</p>
         <div className="flex flex-wrap gap-1.5">
           {workAreas.map((w) => (
             <span key={w.label} className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-600 dark:text-zinc-300">
@@ -331,7 +336,8 @@ export default function AboutPage() {
           How he thinks
         </h2>
         <p className="text-xs text-zinc-400 mb-6">
-          Three small moments that say more than a job title
+          Three ideas he keeps coming back to — the kind of thinking these
+          courses are really about
         </p>
         <div className="space-y-4">
           <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
@@ -394,6 +400,14 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-6 max-w-2xl">
+          None of this is talent — it&apos;s a way of looking, and it is entirely
+          learnable. That is the whole point of this place:{" "}
+          <Link href="/learn" className="text-blue-600 dark:text-blue-400 hover:underline">
+            the courses
+          </Link>{" "}
+          are these same habits of mind, taught from scratch.
+        </p>
       </div>
 
       {/* ── What keeps me curious ──────────────────────────────────────────── */}
@@ -444,11 +458,11 @@ export default function AboutPage() {
         <blockquote className="text-base font-medium text-zinc-700 dark:text-zinc-300 border-l-2 border-blue-500 pl-4 mb-8 italic leading-relaxed">
           &ldquo;I genuinely believe anyone can learn anything. Not as a motivational
           poster thing — as something I have proved to myself repeatedly.
-          Skiing at 40 was the latest experiment.&rdquo;
+          Skiing at 35 was the latest experiment.&rdquo;
         </blockquote>
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           {[
-            { icon: <Mountain className="w-4 h-4 text-sky-500" />, title: "Ski slopes", desc: "Started at 40 with zero experience and full determination — two seasons in, real technique, and he even recorded a podcast mid-run. Then he talked his wife and son onto the slopes too." },
+            { icon: <Mountain className="w-4 h-4 text-sky-500" />, title: "Ski slopes", desc: "Started at 35 with zero experience and full determination — two seasons in, real technique, and he even recorded a podcast mid-run. Then he talked his wife and son onto the slopes too." },
             { icon: <Globe className="w-4 h-4 text-emerald-500" />, title: "Explorer at heart", desc: "Travel, camping, history, the unfamiliar. Jhansi to Bhopal to Noida to Eindhoven was not accidental — new constraints make you figure things out differently." },
             { icon: <Lightbulb className="w-4 h-4 text-amber-500" />, title: "A student of sport", desc: "Badminton and table tennis as a kid; tennis picked up in his 30s. Sport taught him patience with the learning curve — which is exactly how he meets new technology." },
             { icon: <Mic2 className="w-4 h-4 text-purple-500" />, title: "Teaching runs in the family", desc: "His mum is a teacher, and it shows in how he explains things. He writes courses, records the odd podcast, and gives people the honest version of what building a skill takes." },
