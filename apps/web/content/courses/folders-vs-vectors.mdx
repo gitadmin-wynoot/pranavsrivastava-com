@@ -69,7 +69,11 @@ Andrej Karpathy called this the "LLM-wiki" pattern, with a memorable line: *LLMs
 
 <ChapterHeader number={3} title="What is a vector, really?" time={12} />
 
-Forget the scary word for a second. Imagine a giant **map**, and on it, every word gets its own little house. Here is the trick: words that *mean* similar things get houses **near each other** — all the animals in one neighbourhood, all the foods in another, all the things-that-go somewhere else. Tap a word and watch it find its closest friends:
+Start with one tiny idea. Some different words mean almost the *same* thing — **cat, kitten, feline** — and so do **car, vehicle, automobile**. A computer that understood *meaning* should treat the words in each group as basically the same. Press the button and watch it do exactly that:
+
+<SynonymSnap />
+
+Sorted by letters, "cat" lands next to "car" — nonsense. Sorted by **meaning**, the words that mean the same thing snap into the same place. *That* is the whole trick. Now zoom out: do it for every word at once and you get a giant **map**, where each word is a little house and similar meanings are near neighbours. Tap a word to see its closest friends:
 
 <MeaningMap />
 

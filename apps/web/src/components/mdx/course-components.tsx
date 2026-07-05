@@ -8,6 +8,7 @@ import { ReActSimulator } from "./react-simulator";
 import { FolderExplorer } from "./folder-explorer";
 import { ApproachPicker } from "./approach-picker";
 import { MeaningMap } from "./meaning-map";
+import { SynonymSnap } from "./synonym-snap";
 import {
   Info,
   Lightbulb,
@@ -311,5 +312,6 @@ export const courseComponents = {
   FolderExplorer,
   ApproachPicker,
   MeaningMap,
+  SynonymSnap,
   pre: CodeBlock,
 };
