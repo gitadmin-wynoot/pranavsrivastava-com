@@ -28,7 +28,7 @@ const SCOPES: Scope[] = [
     title: "The first machine",
     span: "early 2000s",
     color: "#f59e0b",
-    body: "It started with a borrowed DOS machine and \"Programming in Basic\" book by E. Balagurusamy with a black cover  — thirteen years old, in a small town, hooked and never quite un-hooked. School set the foundations and the computer-engineering degree gave him the depth; the curiosity did the rest.",
+    body: "It started with a borrowed DOS machine and \"Programming in Basic\" book by E. Balagurusamy with a black cover  — thirteen years old, in a small town, hooked and never quite un-hooked. Middle school set the foundations and the computer-engineering degree gave him the depth; the curiosity did the rest.",
     tags: ["Curiosity", "Fundamentals"],
   },
   {

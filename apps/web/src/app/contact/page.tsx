@@ -4,7 +4,7 @@ import { PenLine, Briefcase, Mail, ArrowRight, Sparkles } from "lucide-react";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch — a consulting enquiry, a question about the work, or just to compare notes on building AI.",
+    "Get in touch — a question, or just to compare notes on building AI.",
 };
 
 const channels = [

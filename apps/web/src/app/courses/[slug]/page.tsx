@@ -141,12 +141,10 @@ async function MultiModuleCourseIndex({ slug }: { slug: string }) {
         >
           <ArrowLeft className="w-3.5 h-3.5" /> All tracks
         </Link>
-        <Link
-          href="/contact"
-          className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-        >
+        {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+        <span className="text-sm text-zinc-400 cursor-not-allowed">
           Questions? Get in touch →
-        </Link>
+        </span>
       </div>
     </div>
   );
@@ -242,12 +240,10 @@ async function SingleFileCourse({ slug }: { slug: string }) {
         >
           <ArrowLeft className="w-3.5 h-3.5" /> All tracks
         </Link>
-        <Link
-          href="/contact"
-          className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-        >
+        {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+        <span className="text-sm text-zinc-400 cursor-not-allowed">
           Questions? Get in touch →
-        </Link>
+        </span>
       </div>
     </div>
   );

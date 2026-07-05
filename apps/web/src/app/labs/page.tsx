@@ -141,9 +141,10 @@ export default function LabsPage() {
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-2">
           Want a lab on something specific?
         </p>
-        <Link href="/contact" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+        {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+        <span className="text-sm text-zinc-400 cursor-not-allowed">
           Tell me what you want to build →
-        </Link>
+        </span>
       </div>
     </div>
   );

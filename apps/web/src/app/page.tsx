@@ -94,9 +94,9 @@ export default async function HomePage() {
           {/* Meta */}
           <p className="mt-8 text-sm text-zinc-400 fade-up" style={{ animationDelay: "0.44s" }}>
             Netherlands ·{" "}
-            <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+            {/* <a href="https://wynoot.com" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
               Wynoot
-            </a>
+            </a> */}
           </p>
         </div>
       </section>
@@ -347,14 +347,10 @@ export default async function HomePage() {
               question and the engineering question happen in the same thought —
               he&apos;s building the system and already wondering what it should
               become. Fifteen years of that, across domains with genuinely
-              different constraints: telecom fraud at volume, banking
+              different constraints: telecom fraud, CPaaS, banking
               integrations, automotive APIs, asset-finance platforms. He went
               back for an AI Masters in his 30s because the algorithms were
-              always the part he found interesting, not an add-on. He started{" "}
-              <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">Wynoot</a>
-              {" "}because a problem kept showing up, and takes on a handful of
-              consulting engagements for teams that need someone who has done
-              enterprise at scale and product from scratch.
+              always the part he found interesting, not an add-on.
             </p>
             <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed mt-3">
               He grew up in Jhansi and has been in the Netherlands since 2016.
@@ -390,12 +386,15 @@ export default async function HomePage() {
               Fifteen plus years in enterprise, building his own products. He
               understands both sides.
             </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-full hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+            {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+            <button
+              type="button"
+              disabled
+              title="Available soon"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-sm font-medium rounded-full cursor-not-allowed"
             >
               Get in touch <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </button>
           </div>
         </div>
       </section>

@@ -5,6 +5,10 @@ import { ArrowRight, Check } from "lucide-react";
 
 type State = "idle" | "loading" | "done" | "error" | "soon";
 
+// Flip to true once the subscribe backend (BUTTONDOWN_API_KEY + /api/subscribe)
+// is live. Until then the form renders disabled so no one hits a dead endpoint.
+const SIGNUPS_ENABLED = false;
+
 export function NewsletterSignup() {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<State>("idle");
@@ -48,7 +52,26 @@ export function NewsletterSignup() {
         spam, unsubscribe in one click.
       </p>
 
-      {state === "done" || state === "soon" ? (
+      {!SIGNUPS_ENABLED ? (
+        <div>
+          <div className="flex flex-col sm:flex-row gap-2 max-w-md">
+            <input
+              type="email"
+              disabled
+              placeholder="you@email.com"
+              className="flex-1 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-full px-4 py-2.5 text-sm text-zinc-400 placeholder:text-zinc-400 opacity-60 cursor-not-allowed"
+            />
+            <button
+              type="button"
+              disabled
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-sm font-medium rounded-full cursor-not-allowed shrink-0"
+            >
+              Subscribe <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-zinc-400 mt-2">✦ Sign-ups open soon — thanks for the interest.</p>
+        </div>
+      ) : state === "done" || state === "soon" ? (
         <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
           <Check className="w-4 h-4" />
           {message}

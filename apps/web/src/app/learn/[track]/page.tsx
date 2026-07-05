@@ -204,15 +204,12 @@ export default async function TrackPage({ params }: Props) {
           <div className="p-5 bg-zinc-900 dark:bg-zinc-800 rounded-xl text-white">
             <p className="text-xs font-medium text-zinc-400 mb-2">Stay updated</p>
             <p className="text-sm leading-relaxed mb-4">
-              New courses added regularly. Send a note and I will let you know
-              when this track launches.
+              New courses are added regularly — more of this track is on the way.
             </p>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-            >
+            {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+            <span className="inline-flex items-center gap-1.5 text-sm text-zinc-500 cursor-not-allowed">
               Get in touch <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </span>
           </div>
 
           {/* All tracks */}
