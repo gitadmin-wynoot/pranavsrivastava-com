@@ -9,13 +9,6 @@ export const metadata: Metadata = {
 
 const channels = [
   {
-    icon: <Mail className="w-5 h-5" />,
-    label: "Email",
-    sub: "hello@pranavsrivastava.com",
-    href: "mailto:hello@pranavsrivastava.com",
-    accent: "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400",
-  },
-  {
     icon: <Briefcase className="w-5 h-5" />,
     label: "LinkedIn",
     sub: "The usual place to connect",
@@ -40,12 +33,6 @@ export default function ContactPage() {
       <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-4">
         Say hello.
       </h1>
-      <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed mb-4">
-        The easiest way to reach Pranav is email. He reads everything himself
-        and replies to most things — give him a few days. If you&apos;re
-        comparing notes on building AI, or stuck on something specific, that&apos;s
-        exactly the kind of message he enjoys.
-      </p>
       <p className="text-sm text-zinc-400 mb-12 flex items-start gap-2">
         <Sparkles className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
         <span>
@@ -78,22 +65,8 @@ export default function ContactPage() {
         ))}
       </div>
 
-      {/* Consulting */}
-      <div className="p-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-        <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-3">
-          Working together
-        </p>
-        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mb-2">
-          For consulting, he takes AI from a working prototype to something that
-          runs reliably — agent architecture, API design, cloud integration, and
-          the observability that tells you when it breaks.
-        </p>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-          He takes on a couple of engagements at a time, so he&apos;s picky about
-          fit — but always happy to have the first conversation and point you in
-          the right direction either way.
-        </p>
-      </div>
+      {/* Consulting - later */}
+  
     </div>
   );
 }

@@ -15,11 +15,7 @@ import {
   Mic2,
   Lightbulb,
   Heart,
-  Building2,
-  Code2,
-  Telescope,
   Zap,
-  Cloud,
   Boxes,
   ShieldCheck,
   Eye,
@@ -102,52 +98,6 @@ export const metadata: Metadata = {
   description:
     "Product thinkengineer. 15+ years across telecom, banking, automotive, and asset finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Wynoot. Netherlands.",
 };
-const workAreas = [
-  {
-    icon: <Cpu className="w-4 h-4" />,
-    label: "Applied AI systems",
-    desc: "Agentic workflows, MCP servers, LLM orchestration, RAG, computer vision — AI that has to work in production.",
-    color: "text-blue-500",
-  },
-  {
-    icon: <Building2 className="w-4 h-4" />,
-    label: "Enterprise integration",
-    desc: "CPaaS, API management, fraud detection at volume, RCS, speech-to-text. MuleSoft, IBM DataPower, event-driven architecture at telecom scale.",
-    color: "text-zinc-500",
-  },
-  {
-    icon: <Cloud className="w-4 h-4" />,
-    label: "Cloud & Serverless (AWS)",
-    desc: "Lambda, DynamoDB, S3, Kinesis Firehose, EventBridge, Cognito — streaming data pipelines, event-driven systems, serverless APIs. SageMaker and Bedrock in the pipeline.",
-    color: "text-orange-500",
-  },
-  {
-    icon: <Code2 className="w-4 h-4" />,
-    label: "API platforms",
-    desc: "REST, GraphQL, event-driven design — from design through governance to developer experience. APIs as products, not plumbing.",
-    color: "text-emerald-500",
-  },
-  {
-    icon: <Telescope className="w-4 h-4" />,
-    label: "Computer vision",
-    desc: "Feature detection, optical flow, facial analysis, CNN classification. He built his MSc thesis on it — from pixels to meaning.",
-    color: "text-purple-500",
-  },
-  {
-    icon: <Zap className="w-4 h-4" />,
-    label: "Metaheuristic optimization",
-    desc: "Genetic algorithms, combinatorial search, scheduling under constraints. NP-hard problems that show up constantly in real product decisions.",
-    color: "text-amber-500",
-  },
-  {
-    icon: <GraduationCap className="w-4 h-4" />,
-    label: "Teaching & writing",
-    desc: "Courses on MCP, AI agents, and semantic search. Ebook in progress. He writes what he actually learns, not what sounds good.",
-    color: "text-sky-500",
-  },
-];
-
-
 export default function AboutPage() {
   // Use Pranav's photo if it has been added to /public; otherwise a PS monogram.
   const photoFile = ["pranav.jpg", "pranav.jpeg", "pranav.png", "pranav.webp"].find(
@@ -271,6 +221,7 @@ export default function AboutPage() {
             { big: "Still at KPN", small: "CPaaS · AI · API management" },
             { big: "Wynoot", small: "building it in parallel" },
             { big: "Skiing at 35", small: "a beginner again, on purpose" },
+            { big: "30+ countries", small: "explorer — and still counting" },
             { big: "In public", small: "essays, courses, this whole site" },
           ].map((f) => (
             <div key={f.big} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 p-4">
@@ -362,7 +313,7 @@ export default function AboutPage() {
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           {[
             { icon: <Mountain className="w-4 h-4 text-sky-500" />, title: "Ski slopes", desc: "Started at 35 with zero experience and full determination — two seasons in, real technique, and he even recorded a podcast mid-run. Then he talked his wife and son onto the slopes too." },
-            { icon: <Globe className="w-4 h-4 text-emerald-500" />, title: "Explorer at heart", desc: "Travel, camping, history, the unfamiliar. Jhansi to Bhopal to Noida to Eindhoven was not accidental — new constraints make you figure things out differently." },
+            { icon: <Globe className="w-4 h-4 text-emerald-500" />, title: "Explorer at heart", desc: "Thirty-plus countries and counting. He's lived and worked across India, Qatar, the US, and now the Netherlands — with teammates from the UK to California — enough different places that reading a new culture, and feeling at home in it, has become second nature. New map, new people, new constraints: that's his idea of a good time." },
             { icon: <Lightbulb className="w-4 h-4 text-amber-500" />, title: "A student of sport", desc: "Badminton and table tennis as a kid; tennis picked up in his 30s. Sport taught him patience with the learning curve — which is exactly how he meets new technology." },
             { icon: <Mic2 className="w-4 h-4 text-purple-500" />, title: "Teaching runs in the family", desc: "His mum is a teacher, and it shows in how he explains things. He writes courses, records the odd podcast, and gives people the honest version of what building a skill takes." },
           ].map((c) => (

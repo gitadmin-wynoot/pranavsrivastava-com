@@ -64,7 +64,6 @@ export function Footer() {
                 { label: "LinkedIn", href: "https://nl.linkedin.com/in/pranav-srivastava-651a9427" },
                 { label: "Medium", href: "https://pranav-srivastava.medium.com" },
                 { label: "GitHub", href: "https://pranavsdev.github.io" },
-                { label: "Email", href: "mailto:hello@pranavsrivastava.com" },
               ].map((link) => (
                 <a
                   key={link.label}

@@ -50,7 +50,7 @@ export function generateReply(userMessage: string): string {
   }
 
   if (has("ski", "skiing", "tennis", "travel", "hobby", "hobbies", "fun", "family", "podcast", "outside work")) {
-    return "Beyond the code: skiing (picked it up at 35), tennis, travel, and the occasional podcast — one recorded mid-run on a slope. The 'Beyond the code' section on /about has it.";
+    return "Beyond the code: an avid traveller and explorer — 30+ countries and counting — plus skiing (picked it up at 35), tennis, and the occasional podcast, one recorded mid-run on a slope. The 'Beyond the code' section on /about has it.";
   }
 
   if (
