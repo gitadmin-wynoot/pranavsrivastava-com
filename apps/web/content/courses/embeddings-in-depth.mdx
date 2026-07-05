@@ -1,0 +1,175 @@
+---
+title: "Embeddings, in Depth: Turning Words into Numbers"
+slug: "embeddings-in-depth"
+summary: "The single idea underneath every modern AI — turning words into numbers you can measure and do maths on. From an eight-year-old's picture to the billions of numbers inside ChatGPT and Claude, with a spinnable 3D model and the real facts on scale, compute, and cost."
+level: "Beginner to Advanced"
+status: "published"
+order: 17
+track: "ai-foundations"
+prereqs: []
+tags: ["Embeddings", "LLMs", "Vectors", "Transformers", "Scale"]
+lessonCount: 6
+---
+
+There is one idea hiding underneath ChatGPT, Claude, Google search, Spotify recommendations, and almost every "smart" thing a computer does today. It is not complicated — an eight-year-old can get it in a minute — but it is so powerful it took decades to fully exploit. The idea is this: **turn words into numbers, arranged so that the numbers carry the meaning.** Those numbers are called *embeddings*, and this course goes from the picture a child can grasp all the way to the billions of numbers inside a frontier model.
+
+<Callout type="info" title="The one-line idea">
+An **embedding** is a word (or sentence, or image) turned into a list of numbers — a *point in space* — placed so that things with similar meaning end up close together. Once meaning is numbers, a computer can measure it, search it, and even do arithmetic on it.
+</Callout>
+
+<LearningObjectives>
+- Understand embeddings from scratch — words as points that cluster by meaning
+- Feel "many dimensions" by spinning a 3D map, and do arithmetic on meaning
+- See how machines *learn* the map from raw text
+- Understand how embeddings power LLMs like ChatGPT and Claude — and the staggering numbers behind them
+</LearningObjectives>
+
+<ChapterHeader number={1} title="The big idea, the simple way" time={9} />
+
+Some different words mean nearly the same thing — **cat, kitten, feline** — and so do **car, vehicle, automobile**. A computer that understood *meaning* should treat the words in each group as basically the same thing. Press the button and watch it do exactly that:
+
+<SynonymSnap />
+
+Sorted by letters, "cat" lands next to "car" — useless. Sorted by **meaning**, words that mean the same thing snap into the same place. That "same place" is the whole idea. Do it for *every* word at once and you get a giant map where similar meanings are neighbours:
+
+<MeaningMap />
+
+The computer was never handed a dictionary. It read a mountain of text, noticed which words get used in similar ways, and placed them close together. That map of meaning is what embeddings *are*.
+
+<ChapterSummary>
+- An embedding places each word at a spot so that similar meanings are close together
+- Different words for the same thing land in nearly the same place
+- The machine learns this from how words are *used*, not from any dictionary
+</ChapterSummary>
+
+<ChapterHeader number={2} title="A space you can spin — what 'dimensions' means" time={11} />
+
+On paper we draw the map flat, with two directions: left-right and up-down. That is **2 dimensions**. Add depth — a direction *into* the page — and you have **3 dimensions**, a real space you can spin. Grab this one and give it a whirl; tap a word to see its nearest neighbours:
+
+<Embedding3D />
+
+Here is the mind-bender: a real embedding does not use 2 or 3 directions. It uses **hundreds or thousands** of them at once. You cannot picture a 768-dimensional space — nobody can — but the maths works exactly the same as this 3D toy: every word is a point, and "similar meaning" means "close together," just in far more directions. Each extra dimension is another subtle question the model can use to tell meanings apart ("is it alive?", "is it hot?", "is it formal?" — though the real ones aren't labelled so neatly).
+
+<Callout type="tip" title="Why so many dimensions?">
+Meaning is rich. Two dimensions can only say so much before everything crowds together. With hundreds of dimensions, the model has room to keep *cat* near *tiger* on the "animal" directions while keeping it near *pet* on others. More directions = more shades of meaning it can hold apart.
+</Callout>
+
+<ChapterSummary>
+- 2D and 3D are just how many directions a space has; you can spin a 3D one
+- Real embeddings use hundreds to thousands of dimensions at once
+- More dimensions give the model room to hold many shades of meaning apart
+</ChapterSummary>
+
+<ChapterHeader number={3} title="Doing maths on meaning" time={11} />
+
+Because every word is now a point, the *relationships* between meanings become **directions you can add and subtract**. The famous example: take "king", apply the same step that turns "man" into "woman", and you land on "queen." Build your own and watch the two arrows stay parallel:
+
+<AnalogyMachine />
+
+This result — *man is to woman as king is to queen*, falling out of pure geometry — was the moment, back in 2013, that convinced researchers embeddings had captured *real* meaning and not just word-counting. It came from a Google system called **word2vec** (Mikolov et al., 2013), and it is still the clearest proof that "distance means similarity, direction means relationship."
+
+<ChapterSummary>
+- Relationships between meanings become directions in the space
+- king − man + woman ≈ queen — analogies solved by vector arithmetic
+- This 2013 word2vec result showed embeddings capture genuine meaning
+</ChapterSummary>
+
+<ChapterHeader number={4} title="How a machine learns the map" time={11} />
+
+Nobody places the words by hand. The machine learns the whole map from raw text, using one deceptively simple principle, stated by the linguist J.R. Firth back in 1957: **"You shall know a word by the company it keeps."**
+
+The training trick is a fill-in-the-blank game, played billions of times:
+
+<Diagram title="Learning by filling the blank" caption="Guess the missing word; nudge the numbers; repeat billions of times">
+
+```
+  "The ___ chased the mouse."     → the model guesses: cat? dog? kitten?
+        │
+        ▼
+  It was "cat". Nudge the numbers so 'cat' fits this context better.
+        │  (repeat over billions of sentences)
+        ▼
+  Words that appear in similar blanks drift close together — automatically.
+```
+
+</Diagram>
+
+Because "cat" and "kitten" show up in the same kinds of sentences, the nudges keep pushing them together, and they end up neighbours — no human ever told the machine they were related. Do this over billions of sentences and the entire map of meaning organises itself. That is <KeyTerm definition="Learning a task from data without labelled answers — here, by predicting missing or next words in ordinary text.">self-supervised learning</KeyTerm>, and it is the engine behind every large model.
+
+<ChapterSummary>
+- The map is learned, not hand-built: "know a word by the company it keeps"
+- Training is a fill-in-the-blank game repeated over billions of sentences
+- Words used in similar contexts drift together automatically — no labels needed
+</ChapterSummary>
+
+<ChapterHeader number={5} title="Embeddings inside ChatGPT and Claude" time={12} />
+
+A large language model is, at its front door, a giant embedding table. Here is the journey your words take:
+
+<Diagram title="From your text to the model's numbers" caption="Text becomes tokens, tokens become embedding vectors, then the layers do their work">
+
+```
+  "hello there"  ──split──►  tokens: [hello] [ there]
+                                │  look each up in the embedding table
+                                ▼
+                    each token → a vector of thousands of numbers
+                                │  fed through dozens of transformer layers
+                                ▼
+                    the model predicts the next token — and writes
+```
+
+</Diagram>
+
+Two numbers make the scale real. A model has a **vocabulary** of tokens (word-pieces) — tens of thousands of them — and each token's embedding is a vector whose length is the model's <KeyTerm definition="The size of each token's embedding vector — how many numbers represent one token. GPT-3 used 12,288.">hidden dimension</KeyTerm>. For GPT-3, that was a vocabulary of about **50,000** tokens and a hidden dimension of **12,288**. Multiply them and the *input embedding table alone* is roughly **617 million numbers** — before the model does a single bit of thinking.
+
+That table is only the entrance. Above it sit dozens of <KeyTerm definition="The layer type introduced in 2017 that lets a model weigh how much each word should attend to every other word.">transformer</KeyTerm> layers (from the 2017 paper "Attention Is All You Need"), and *all* of those numbers together are the model's **parameters** — the knobs learned during training. Every version you have heard of is mostly a story about how many of those knobs there are.
+
+<Callout type="important" title="ChatGPT and Claude are 'built of' embeddings">
+When people say a model has "billions of parameters," a large share of that — and the very first thing your words touch — is embeddings and the layers reshaping them. The model's entire understanding lives as positions and transformations in a high-dimensional meaning-space. It is embeddings, all the way down.
+</Callout>
+
+<ChapterSummary>
+- An LLM turns your text into tokens, then looks each up in a huge embedding table
+- GPT-3's input embedding table alone was ~617 million numbers (50k tokens × 12,288)
+- Those vectors flow through dozens of transformer layers; all the numbers are the model's parameters
+</ChapterSummary>
+
+<ChapterHeader number={6} title="The staggering scale — the real numbers" time={14} />
+
+Now the facts, because the growth is genuinely hard to believe. In a few years, models went from millions of parameters to hundreds of billions, trained on more text than any human could read in a thousand lifetimes.
+
+| Model | Year | Parameters | Training data | Est. training cost |
+|---|---|---|---|---|
+| word2vec | 2013 | ~a few hundred dims | billions of words | trivial |
+| GPT-1 | 2018 | 117 million | ~5 GB of books | small |
+| GPT-2 | 2019 | 1.5 billion | ~40 GB of web text | ~tens of thousands |
+| GPT-3 | 2020 | 175 billion | ~300 billion tokens | ~$4.6M (compute) |
+| GPT-4 | 2023 | not disclosed (much larger) | not disclosed | >$100M (per OpenAI) |
+| Llama 3.1 | 2024 | 405 billion | ~15 trillion tokens | tens of millions |
+
+A few facts to sit with:
+
+- **Compute.** Training GPT-3 took an estimated **3.14 × 10²³ operations** — the equivalent of running a fast laptop for thousands of *years*, compressed onto thousands of GPUs running for weeks.
+- **Cost.** Independent estimates put GPT-3's training compute around **$4.6 million**; OpenAI's CEO said GPT-4 cost **"more than $100 million"**; the 2024 Stanford AI Index estimated frontier training runs (GPT-4, Gemini Ultra) in the **$78M–$191M** range. Frontier costs are still climbing.
+- **Data.** GPT-3 read about **300 billion tokens**; modern models train on **10–15 trillion**. The 2022 *Chinchilla* result (Hoffmann et al., DeepMind) showed that, for a given compute budget, you often want *more data per parameter* — roughly 20 tokens for every parameter — reshaping how everyone trains.
+
+<Callout type="warning" title="The numbers keep exploding — and there's a catch">
+Training-compute for frontier models has roughly been *doubling every several months* for years. That has bought astonishing capability — and an enormous appetite for electricity, water, and hardware. What that costs the planet, how often these giants really need re-training, and whether we can keep it up is its own big story: I wrote it as an essay, [The weight of a thought](/essays/the-weight-of-a-thought).
+</Callout>
+
+<ChapterSummary>
+- In ~a decade, models grew from millions to hundreds of billions of parameters
+- GPT-3: 175B parameters, ~300B training tokens, ~$4.6M compute; GPT-4: >$100M
+- Chinchilla (2022) showed more data-per-parameter is often compute-optimal
+- The scale brings a real-world cost — energy, water, hardware — worth reckoning with
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, what is an embedding — and why does "cat" end up near "kitten"?
+2. A real embedding uses hundreds of dimensions. What does one extra dimension buy the model?
+3. Roughly how many numbers were in GPT-3's input embedding table, and how did we get that figure?
+</Checkpoint>
+
+---
+
+**Sources:** Mikolov et al., [“Efficient Estimation of Word Representations,”](https://arxiv.org/abs/1301.3781) 2013 (word2vec); J.R. Firth (1957), the distributional hypothesis; Vaswani et al., [“Attention Is All You Need,”](https://arxiv.org/abs/1706.03762) 2017; Brown et al., [“Language Models are Few-Shot Learners,”](https://arxiv.org/abs/2005.14165) 2020 (GPT-3: 175B params, 12,288 hidden dim); Hoffmann et al., [“Training Compute-Optimal LLMs” (Chinchilla),](https://arxiv.org/abs/2203.15556) 2022; the [Stanford AI Index 2024](https://aiindex.stanford.edu/report/) (training-cost estimates). Parameter/cost figures for GPT-4 and later are estimates; exact numbers are undisclosed. This course underpins [Folders vs Vectors](/courses/folders-vs-vectors) and [RAG in Production](/courses/production-rag).

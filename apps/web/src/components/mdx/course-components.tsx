@@ -10,6 +10,7 @@ import { ApproachPicker } from "./approach-picker";
 import { MeaningMap } from "./meaning-map";
 import { SynonymSnap } from "./synonym-snap";
 import { AnalogyMachine } from "./analogy-machine";
+import { Embedding3D } from "./embedding-3d";
 import {
   Info,
   Lightbulb,
@@ -315,5 +316,6 @@ export const courseComponents = {
   MeaningMap,
   SynonymSnap,
   AnalogyMachine,
+  Embedding3D,
   pre: CodeBlock,
 };
