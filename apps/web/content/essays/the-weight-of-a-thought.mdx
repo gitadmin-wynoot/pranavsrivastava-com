@@ -1,0 +1,65 @@
+---
+title: "The weight of a thought"
+slug: "the-weight-of-a-thought"
+dek: "Every clever answer an AI gives has a physical cost — electricity, water, heat, metal. Here is the real footprint of modern AI, why training is only half the story, and how progress and a livable planet might actually share a future."
+summary: "A data-backed, intuitive look at what AI costs the Earth — the energy, water, and carbon behind training and every query — the training-versus-inference twist, how often models really need retraining, and a probabilistic view of whether technological advancement and the planet can be balanced. With an interactive footprint explorer and sources."
+category: "AI & Society"
+published: true
+publishedAt: "2026-07-05"
+---
+
+When you ask an AI a question, nothing seems to happen anywhere but on your screen. In reality, somewhere — often several countries away — a warehouse of chips flickers awake, draws a gulp of electricity, and warms up enough that water has to evaporate to cool it down. A thought has a *weight*: grams of carbon, sips of water, a flash of heat. We feel none of it, which is exactly why it is worth looking at.
+
+I build with this technology and mostly love it. This is not a doom essay. It is an honest accounting — because you cannot balance something you refuse to measure.
+
+## The footprint, made real
+
+Numbers this abstract only land when you can picture them. Pick an activity and see what it actually costs — from one reply to training a whole model:
+
+<AIFootprint />
+
+The headline figures, from published estimates: a single AI chat reply uses on the order of **2.9 watt-hours** — roughly ten times a plain web search (per the International Energy Agency's 2024 estimate). Training GPT-3 *once* was estimated at about **1,287 megawatt-hours** of electricity and **552 tonnes of CO₂** (Patterson and colleagues, 2021) — and, by one analysis, some **700,000 litres of freshwater** for cooling (Li and colleagues, *Making AI Less Thirsty*, 2023). Zoom all the way out and the world's data centres drew roughly **460 terawatt-hours in 2022** — more than many entire countries — a figure the IEA projects could approach **1,000 TWh by 2026**, with AI a fast-growing slice.
+
+## The twist: training is the small story
+
+Here is the thing most headlines miss. Training a giant model is a spectacular one-off — a fireworks display of energy that happens once, then it's done. The part that actually *scales* is the opposite: **inference** — the billions of everyday queries, running forever.
+
+One reply is tiny. But a tiny number times billions a day, every day, for years, is not tiny at all. The dangerous figure is never the dramatic one; it's the small one you multiply endlessly. And there is a trap waiting here with a name: the **Jevons paradox** (from 1865, when better steam engines *increased* coal use). Make AI cheaper and more efficient, and people don't use the saved energy — they use *far more AI*. Efficiency, left alone, can grow the total instead of shrinking it.
+
+## So how often will we retrain these things?
+
+A fair worry: if a frontier model costs a hundred million dollars and a mountain of carbon to train, and we retrain constantly, is that sustainable? Two forces pull against each other.
+
+Pulling *up*: frontier labs do retrain and refresh often, and each new generation has been bigger than the last, with training compute roughly **doubling every several months** for years.
+
+Pulling *down*, and quietly winning in places: **efficiency is improving astonishingly fast.** The compute needed to reach a given capability has been falling — by some measures the algorithms alone get about twice as efficient every year or so (work from Epoch AI and others) — on top of steadily better chips. And you rarely need the giant. A small, *distilled* model can do most everyday tasks at a fraction of the energy; the frontier model is a sledgehammer you should only pick up for the genuinely hard nail.
+
+The future footprint is a race between these two — appetite versus efficiency — and it is genuinely not yet decided.
+
+## Two futures, and honest odds
+
+<br />
+
+- **The runaway.** Demand outruns efficiency. Models and usage balloon, data centres strain local grids and water tables, and AI becomes a serious chunk of global electricity — built, too often, on whatever power is cheapest rather than cleanest. *Plausible if we sleepwalk.*
+- **The efficient path.** Intelligence-per-watt improves faster than demand grows. Data centres are sited where power is clean and cooling is cheap, models are right-sized to the task, and AI even pays down its debt by accelerating the things that decarbonise everything else — better batteries, grid optimisation, materials discovery, fusion research. *Plausible if we're deliberate.*
+- **My honest read:** somewhere between, and — this is the important part — **it is a choice, not a fate.** The same industry that can make a model 175 billion parameters large can make it ten times more efficient; which one it optimises for is a decision, and decisions can be pushed.
+
+## Striking the balance
+
+Not slogans — the actual levers, roughly in order of leverage:
+
+- **Right-size the model.** The biggest single win is *not using a frontier model for a task a small one handles.* Most queries don't need the sledgehammer. This is a builder's responsibility, and it's mostly free.
+- **Make efficiency the target, not a side effect.** Distillation, better algorithms, better silicon — measured in *intelligence per watt*, published, and competed on.
+- **Move the compute to clean power.** Where and when a data centre runs matters as much as how much it draws; siting near renewables and running flexibly with the grid is a lever most people never see.
+- **Measure and disclose.** We are arguing over *estimates* because the real numbers are rarely published. You cannot manage what you won't reveal.
+- **Aim AI at the problem.** The optimistic case isn't that AI is carbon-free; it's that a tool this powerful, pointed at clean energy and efficiency, could save far more than it spends. That is a bet worth making on purpose.
+
+## The false binary
+
+"Technological advancement *versus* the Earth" is the wrong frame — a choice you only have to make if you're careless. The real question is whether we build deliberately: using the smallest tool that works, powering it with the cleanest energy we can, and being honest about the bill.
+
+A thought has weight. The point is not to stop thinking — it's to build machines that know their own weight, and to use them like they cost something, because they do. The billions of numbers inside these models (the [embeddings](/courses/embeddings-in-depth) I find so beautiful) are not made of nothing. They are made of energy, water, and heat — and how gracefully we carry that is, in the end, up to us.
+
+---
+
+**Sources & further reading:** International Energy Agency, [*Electricity 2024*](https://www.iea.org/reports/electricity-2024) (data-centre demand and per-query estimates); Patterson et al., [“Carbon Emissions and Large Neural Network Training,”](https://arxiv.org/abs/2104.10350) 2021 (GPT-3 energy/CO₂); Li et al., [“Making AI Less Thirsty,”](https://arxiv.org/abs/2304.03271) 2023 (water); Epoch AI on [algorithmic efficiency trends](https://epoch.ai/); and W.S. Jevons, *The Coal Question* (1865), for the paradox that still haunts us. Figures are best-available estimates and vary by source and method.

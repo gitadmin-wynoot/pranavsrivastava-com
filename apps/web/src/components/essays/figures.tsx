@@ -3,6 +3,7 @@ import { NetworkUseCases } from "./network-use-cases";
 import { TelcoEraSlider } from "./telco-era-slider";
 import { GuardrailSim } from "./guardrail-sim";
 import { NarrativeEpidemic, ViralLottery, NarrativeGenerator } from "./narrative-viz";
+import { AIFootprint } from "./ai-footprint";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -417,4 +418,5 @@ export const essayComponents = {
   NarrativeEpidemic,
   ViralLottery,
   NarrativeGenerator,
+  AIFootprint,
 };
