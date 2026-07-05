@@ -69,15 +69,21 @@ Andrej Karpathy called this the "LLM-wiki" pattern, with a memorable line: *LLMs
 
 <ChapterHeader number={3} title="What is a vector, really?" time={12} />
 
-A **vector** sounds mathematical; the idea is not. An <KeyTerm definition="A list of numbers representing a piece of text's meaning, arranged so that similar meanings sit close together.">embedding</KeyTerm> turns a piece of text into a long list of numbers — a *point in space* — placed so that texts with **similar meaning land near each other**, even if they share no words.
+Forget the scary word for a second. Imagine a giant **map**, and on it, every word gets its own little house. Here is the trick: words that *mean* similar things get houses **near each other** — all the animals in one neighbourhood, all the foods in another, all the things-that-go somewhere else. Tap a word and watch it find its closest friends:
+
+<MeaningMap />
+
+Nobody told the computer what a cat is. It just read a mountain of text, noticed that "cat," "dog," and "tiger" tend to show up in similar sentences, and quietly placed their houses close together. **That map of meaning is what "vectors" are.**
+
+Now the grown-up name. An <KeyTerm definition="A list of numbers representing a piece of text's meaning, arranged so that similar meanings sit close together — like an address on the map of meaning.">embedding</KeyTerm> turns any piece of text into that house's *address*: a long list of numbers, a **point in space**. Similar meanings get nearby addresses, even when they share no words at all.
 
 <Figure name="vectors-space" caption="An embedding turns text into a point. Similar meanings become nearby points — so 'how much leave do I get' lands near 'vacation policy', with no shared words." />
 
-That is the superpower: you can search by **meaning**, not spelling. Ask "how much time off do I get" and it finds the passage about "annual leave." Try it — type a question and watch which passages get retrieved:
+And the magic follows for free: to **search by meaning** instead of spelling, you just find the nearest houses. Ask "how much time off do I get" and it walks straight to "annual leave" — no matching words required. Try it:
 
 <RetrievalPlayground />
 
-A <KeyTerm definition="A database that stores embeddings and can quickly find the vectors nearest to a query vector.">vector database</KeyTerm> is just a store of these number-points plus fast "find the nearest points" search. Feed it thousands or millions of chunks, and it retrieves the handful closest in meaning to any question. Wrap that in a model that answers *from* those chunks, and you have RAG — covered end to end in [RAG in Production](/courses/production-rag).
+So what is a <KeyTerm definition="A database that stores embeddings (points on the map of meaning) and can instantly find the ones nearest to a query.">vector database</KeyTerm>? Just a place that stores *millions* of these houses and, the instant you describe what you want, points to the closest ones — like a librarian who, before you even finish your sentence, hands you the three most relevant books without either of you knowing a single title. Feed it your documents, wrap a model that answers *from* the nearest ones, and you have RAG — covered end to end in [RAG in Production](/courses/production-rag).
 
 <ChapterSummary>
 - A vector (embedding) is text turned into a point in space, positioned by meaning

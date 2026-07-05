@@ -7,6 +7,7 @@ import { ChunkSizer } from "./chunk-sizer";
 import { ReActSimulator } from "./react-simulator";
 import { FolderExplorer } from "./folder-explorer";
 import { ApproachPicker } from "./approach-picker";
+import { MeaningMap } from "./meaning-map";
 import {
   Info,
   Lightbulb,
@@ -309,5 +310,6 @@ export const courseComponents = {
   ReActSimulator,
   FolderExplorer,
   ApproachPicker,
+  MeaningMap,
   pre: CodeBlock,
 };
