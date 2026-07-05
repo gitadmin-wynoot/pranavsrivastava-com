@@ -1,0 +1,192 @@
+---
+title: "Build a ReAct agent in 40 lines"
+slug: "react-agent-in-40-lines"
+summary: "Write a real Reason+Act agent from scratch — Thought, Action, Observation, loop — that reasons, calls tools, and solves a multi-step question while printing its whole trace."
+outcome: "A running ReAct agent that answers a multi-hop question using tools, with its Thought / Action / Observation trace printed live."
+level: "Intermediate"
+durationMin: 40
+tools: ["Python 3.10+", "Anthropic API"]
+tags: ["AI Agents", "ReAct", "Tool Use", "LLMs"]
+status: "published"
+updatedAt: "2026-07-05"
+---
+
+By the end of this lab you will have written a **ReAct agent** — the Reason + Act loop behind every modern AI agent — from scratch, in about forty lines of Python. It reasons about what it needs, calls tools to get it, reads the results, and repeats until it can answer. And it prints its whole trace, so you *watch* the loop turn.
+
+<Callout type="info" title="What you're building">
+A loop: the model writes a **Thought**, takes an **Action** (calls one of your tools), reads the **Observation** (the result), and loops — until it emits a final answer. If the idea is new, the [ReAct Loop course](/courses/react-loop) explains it with an interactive trace; this is the hands-on version.
+</Callout>
+
+<Figure name="agent-loop" caption="Think, act, observe — then think again with what you just learned. That loop is the whole agent." />
+
+### Before you start
+
+Python 3.10+, an Anthropic API key (`export ANTHROPIC_API_KEY=...`), about 40 minutes.
+
+<CodeFile filename="terminal">
+```bash
+uv init react-agent && cd react-agent
+uv add anthropic
+# or: pip install anthropic
+```
+</CodeFile>
+
+<Steps>
+
+<Step number={1} title="Give the agent two tools">
+
+An agent is only as capable as its tools. We give it two tiny ones — a fact lookup and a calculator — so it can answer a question no single lookup could. Create `agent.py`:
+
+<CodeFile filename="agent.py">
+```python
+def lookup(person: str) -> str:
+    """Return birth and death years for a well-known person."""
+    facts = {
+        "isaac newton": "Isaac Newton: born 1643, died 1727.",
+        "albert einstein": "Albert Einstein: born 1879, died 1955.",
+    }
+    return facts.get(person.lower().strip(), "No record found.")
+
+
+def calculator(expression: str) -> str:
+    """Evaluate a simple arithmetic expression like '1727 - 1643'."""
+    return str(eval(expression, {"__builtins__": {}}))  # tiny sandbox for the demo
+```
+</CodeFile>
+
+</Step>
+
+<Step number={2} title="Describe the tools to the model">
+
+The model can only use a tool if it knows the tool exists and what shape its input takes. That is what a tool schema is.
+
+<CodeFile filename="agent.py (add)">
+```python
+tools = [
+    {
+        "name": "lookup",
+        "description": "Look up the birth and death years of a well-known person.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"person": {"type": "string"}},
+            "required": ["person"],
+        },
+    },
+    {
+        "name": "calculator",
+        "description": "Evaluate a simple arithmetic expression, e.g. 1727 - 1643.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"expression": {"type": "string"}},
+            "required": ["expression"],
+        },
+    },
+]
+
+handlers = {
+    "lookup": lambda i: lookup(i["person"]),
+    "calculator": lambda i: calculator(i["expression"]),
+}
+```
+</CodeFile>
+
+</Step>
+
+<Step number={3} title="Write the loop — this is ReAct">
+
+Here is the whole thing. The `for` loop *is* the ReAct loop: the model's text is the **Thought**, a `tool_use` block is the **Action**, the `tool_result` you feed back is the **Observation**, and a turn with no tool call is the **Finish**.
+
+<CodeFile filename="agent.py (add)">
+```python
+from anthropic import Anthropic
+
+client = Anthropic()
+
+
+def agent(question: str, max_steps: int = 8) -> str:
+    messages = [{"role": "user", "content": question}]
+    for _ in range(max_steps):  # the step cap — a confused agent can't loop forever
+        resp = client.messages.create(
+            model="claude-opus-4-8",
+            max_tokens=1024,
+            tools=tools,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": resp.content})
+
+        # THOUGHT: whatever the model reasoned out loud this turn
+        for b in resp.content:
+            if b.type == "text" and b.text.strip():
+                print("🧠 THOUGHT:", b.text.strip())
+
+        if resp.stop_reason != "tool_use":
+            return next((b.text for b in resp.content if b.type == "text"), "")
+
+        # ACTION + OBSERVATION: run each tool, feed the results back
+        results = []
+        for b in resp.content:
+            if b.type == "tool_use":
+                print(f"🔧 ACTION: {b.name}({b.input})")
+                observation = handlers[b.name](b.input)
+                print("👀 OBSERVATION:", observation)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": b.id,
+                    "content": observation,
+                })
+        messages.append({"role": "user", "content": results})
+
+    return "Stopped: hit the step limit before finishing."
+
+
+print("\n✅ ANSWER:", agent(
+    "Who lived longer, Isaac Newton or Albert Einstein, and by how many years?"
+))
+```
+</CodeFile>
+
+</Step>
+
+<Step number={4} title="Run it and watch the loop">
+
+<CodeFile filename="terminal">
+```bash
+uv run agent.py
+```
+</CodeFile>
+
+You will see the agent *investigate* rather than guess — something like:
+
+<CodeFile filename="output">
+```text
+🧠 THOUGHT: I need each man's lifespan. Let me look up Newton first.
+🔧 ACTION: lookup({'person': 'Isaac Newton'})
+👀 OBSERVATION: Isaac Newton: born 1643, died 1727.
+🔧 ACTION: lookup({'person': 'Albert Einstein'})
+👀 OBSERVATION: Albert Einstein: born 1879, died 1955.
+🧠 THOUGHT: Newton lived 1727-1643 years; Einstein 1955-1879. Let me compute both.
+🔧 ACTION: calculator({'expression': '1727 - 1643'})
+👀 OBSERVATION: 84
+🔧 ACTION: calculator({'expression': '1955 - 1879'})
+👀 OBSERVATION: 76
+✅ ANSWER: Newton lived longer — 84 years to Einstein's 76, a difference of 8 years.
+```
+</CodeFile>
+
+<Callout type="tip" title="What just happened">
+No single tool could answer that question. The agent broke it into steps, fetched each fact, did the arithmetic, and assembled the answer — grounding every number in a real observation instead of guessing. That is the entire value of ReAct.
+</Callout>
+
+</Step>
+
+</Steps>
+
+<Callout type="important" title="You built an agent">
+Modern "function-calling" agents are exactly this loop, scaled up: more tools, better error handling, memory, and observability around it. But the beating heart — think, act, observe, repeat — is the forty lines you just wrote.
+</Callout>
+
+### Where to go next
+
+- **Add a real tool** — swap `lookup` for a live API (start with something keyless) and watch the agent reach into the real world.
+- **Handle failure** — return a helpful error string from a tool and see the agent recover and try another approach.
+- **Go deeper** — the [ReAct Loop](/courses/react-loop) course covers the research and failure modes; [Harness Engineering](/courses/harness-engineering) and [AI Ops](/courses/ai-ops) cover making this production-safe.
