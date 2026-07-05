@@ -1,0 +1,177 @@
+---
+title: "Folders vs Vectors: How to Give AI Knowledge"
+slug: "folders-vs-vectors"
+summary: "Two ways to give an AI your knowledge — organise it as a folder (Google's Open Knowledge Format) or embed it as vectors (RAG). What a folder and a vector really are, how they compare, and how to combine them into one architecture. Built from scratch, for beginner to advanced."
+level: "Beginner to Advanced"
+status: "published"
+order: 16
+track: "ai-foundations"
+prereqs: []
+tags: ["OKF", "RAG", "Vector Search", "Retrieval", "Knowledge", "Agents"]
+lessonCount: 6
+---
+
+An AI model is brilliant and ignorant at the same time: it can reason beautifully, but it does not know *your* things — your tables, your docs, your decisions. So the central question of building useful AI is: **how do you hand it your knowledge?**
+
+There are two great families of answers, and this course is about both — from the very fundamentals of what each one *is*, all the way to combining them into one architecture. You can arrive knowing nothing about either.
+
+<Callout type="info" title="The one-line map">
+You can give an AI knowledge as a **folder** — organised, human-readable files it can navigate (Google's *Open Knowledge Format*) — or as **vectors** — text turned into numbers so it can be searched by meaning (*RAG*). Folders are for *structure*; vectors are for *semantic recall*. The best systems use both.
+</Callout>
+
+<LearningObjectives>
+- Understand, from scratch, what a "folder" of knowledge and a "vector" of meaning actually are
+- Explore the Open Knowledge Format (OKF) — the folder approach — and RAG — the vector approach
+- Compare them honestly: what each is good and bad at, and when to reach for which
+- Combine them into one architecture, and see why that beats either alone
+</LearningObjectives>
+
+<ChapterHeader number={1} title="Two ways to hand over knowledge" time={9} />
+
+Picture giving a new colleague everything they need to do a job. You could hand them a **well-organised binder** — labelled sections, a table of contents, cross-references — and let them flip to what they need. Or you could give them a **magic index** that, for any question, instantly surfaces the most relevant paragraphs from a giant pile of documents, even if they used different words than the documents do.
+
+Those are the two approaches, and they are not rivals so much as different tools:
+
+- The **binder** is the *folder* way — structured, curated, navigable. Its modern form for AI is Google's **Open Knowledge Format (OKF)**.
+- The **magic index** is the *vector* way — fuzzy, semantic, scalable. Its form is **Retrieval-Augmented Generation (RAG)**.
+
+Before comparing them, let's be sure what each *is*, because the words hide simple ideas.
+
+<ChapterSummary>
+- Two ways to give an AI knowledge: a structured folder, or a searchable vector index
+- Folder = OKF (organised, navigable); Vector = RAG (semantic, scalable)
+- They are complementary tools, not competitors
+</ChapterSummary>
+
+<ChapterHeader number={2} title="What is a folder, really?" time={11} />
+
+You already know what a folder is: files inside folders, with names, that you can open and read, and that can link to each other. That is the whole idea — and it turns out to be a surprisingly good way to store knowledge *for an AI*, not just for a person.
+
+Here is knowledge stored as a folder. Click through it — open files, follow the structure:
+
+<FolderExplorer />
+
+Notice three things, because they are the whole point:
+
+- **It is human-readable.** Every file is just text you can open and understand. Nothing is hidden in a database.
+- **It has structure.** Folders group things; a file has a `type` and named fields; files **link to each other** (orders → customers). Those links form a little map of how things relate.
+- **An agent can navigate it.** It can read a file, follow a link to the next, and — importantly — *write* to it: fix a description, add a cross-reference. Files are as easy for a model to edit as for a human.
+
+<Callout type="tip" title="Why files suit an AI so well">
+Andrej Karpathy called this the "LLM-wiki" pattern, with a memorable line: *LLMs don't get bored, don't forget to update a cross-reference, and can touch 15 files in one pass.* The dull bookkeeping that makes humans abandon a wiki is exactly what a model is happy to do.
+</Callout>
+
+<ChapterSummary>
+- A "folder" of knowledge = readable files, grouped, typed, and cross-linked
+- The links between files form a map of relationships, richer than the folder tree
+- Agents can both read and update files — the bookkeeping humans hate, models do gladly
+</ChapterSummary>
+
+<ChapterHeader number={3} title="What is a vector, really?" time={12} />
+
+A **vector** sounds mathematical; the idea is not. An <KeyTerm definition="A list of numbers representing a piece of text's meaning, arranged so that similar meanings sit close together.">embedding</KeyTerm> turns a piece of text into a long list of numbers — a *point in space* — placed so that texts with **similar meaning land near each other**, even if they share no words.
+
+<Figure name="vectors-space" caption="An embedding turns text into a point. Similar meanings become nearby points — so 'how much leave do I get' lands near 'vacation policy', with no shared words." />
+
+That is the superpower: you can search by **meaning**, not spelling. Ask "how much time off do I get" and it finds the passage about "annual leave." Try it — type a question and watch which passages get retrieved:
+
+<RetrievalPlayground />
+
+A <KeyTerm definition="A database that stores embeddings and can quickly find the vectors nearest to a query vector.">vector database</KeyTerm> is just a store of these number-points plus fast "find the nearest points" search. Feed it thousands or millions of chunks, and it retrieves the handful closest in meaning to any question. Wrap that in a model that answers *from* those chunks, and you have RAG — covered end to end in [RAG in Production](/courses/production-rag).
+
+<ChapterSummary>
+- A vector (embedding) is text turned into a point in space, positioned by meaning
+- Similar meanings become nearby points — so you can search by intent, not keywords
+- A vector database stores these points and finds the nearest ones fast; RAG answers from them
+</ChapterSummary>
+
+<ChapterHeader number={4} title="OKF — the folder way, in depth" time={12} />
+
+In June 2026, Google Cloud introduced the **Open Knowledge Format** to make the folder approach a real standard. It is deliberately, almost stubbornly, simple: **a directory of markdown files, each with a little YAML frontmatter**, plus a few conventions so different tools can read the same bundle.
+
+The details worth knowing:
+
+- **The only required field is `type`.** Everything else — what types exist, what fields and sections a file has — is up to you. The spec defines how tools interoperate, not what your knowledge must look like. The whole v0.1 spec fits on a single page.
+- **Cross-links are the graph.** Ordinary markdown links between files create a web of relationships "richer than the file-system hierarchy," in Google's words. Optional `index.md` files let an agent discover a folder gradually; an optional `log.md` records changes.
+- **It is "format, not platform."** A bundle is *just files* — readable in any editor, renderable on GitHub, shippable as a tarball, stored in git next to the code it describes. No SDK, no proprietary database, not tied to any cloud or model.
+
+<Callout type="important" title="What OKF is NOT">
+It is *not* a knowledge graph, RDF, or an ontology language — and that is a design choice. Instead of a heavyweight semantic model, it bets on the thing every tool and every model already understands: markdown and folders. (For the heavyweight, structured-facts approach, see [Knowledge Graphs](/courses/knowledge-graphs) and [Knowledge Representation](/courses/knowledge-representation).)
+</Callout>
+
+Google shipped it with working pieces: an *enrichment agent* that walks BigQuery datasets and drafts OKF documents (schemas, join paths, citations), a self-contained HTML *visualizer* that renders a bundle as an interactive graph, and sample bundles over real public datasets (GA4 e-commerce, Stack Overflow, Bitcoin). It has since been wired into Google Cloud's Knowledge Catalog to serve knowledge to agents.
+
+<ChapterSummary>
+- OKF (Google Cloud, June 2026) standardises knowledge as markdown files + YAML frontmatter
+- Only `type` is required; cross-links form the relationship graph; the v0.1 spec fits one page
+- "Format, not platform" — just files, portable, git-friendly, no SDK or database
+- Deliberately not a knowledge graph/RDF — it bets on markdown that every tool already reads
+</ChapterSummary>
+
+<ChapterHeader number={5} title="Folder vs Vector — the honest comparison" time={11} />
+
+Neither wins outright; they are good at different things.
+
+| | **Folder (OKF)** | **Vector (RAG)** |
+|---|---|---|
+| **Finds by** | Structure, names, links | Meaning / similarity |
+| **Best at** | Exact facts, schemas, relationships, curated knowledge | Fuzzy questions over huge, messy text |
+| **Scale** | Small–medium, human-curated | Millions of chunks |
+| **Transparency** | Total — it's readable files | Opaque — numbers in a database |
+| **Editable by** | Humans *and* agents, precisely | Re-embed to change |
+| **Weak at** | Fuzzy "find things like this" at scale | Exact strings, precise relationships |
+
+The clearest way to feel the trade-off is to give each a job. Pick a scenario and see which fits — sometimes it's one, sometimes both:
+
+<ApproachPicker />
+
+The pattern you'll notice: **vectors are for *finding* things by meaning; folders are for *knowing* things precisely.** Ask "which tickets are like this one?" and you want vectors. Ask "how do these two tables join?" and you want the folder's explicit link.
+
+<ChapterSummary>
+- Folders excel at exact facts, structure, and curated, transparent, editable knowledge
+- Vectors excel at fuzzy, semantic search over huge, unstructured text
+- Vectors *find* by meaning; folders *know* precisely — different jobs
+</ChapterSummary>
+
+<ChapterHeader number={6} title="The ultimate architecture — use both" time={12} />
+
+Here is the punchline: you do not choose. The strongest design **layers them** — and OKF was explicitly built to allow it. Google's own note is that an OKF bundle *can* be embedded and indexed for vector search, while still preserving the structured relationships "that vector similarity alone might miss."
+
+So the ultimate architecture uses each for what it's best at:
+
+<Diagram title="Folder + Vector, combined" caption="Vectors find the right door; the folder holds the exact room behind it">
+
+```
+  question ─► embed ─► VECTOR search over the folder's files
+                              │  finds the right concept, by meaning ("orders")
+                              ▼
+                       open that OKF file ─► follow its cross-links (FOLDER)
+                              │  exact schema · joins · definitions
+                              ▼
+                       grounded answer, citing the actual files
+```
+
+</Diagram>
+
+In words: the **vector index** solves the hard problem of *finding the right entry point* when the question is phrased in any of a thousand ways. Then the **folder** takes over, giving the agent the exact schema, the precise join, the cross-linked neighbours — the structured truth a fuzzy match can't guarantee. An agent runs this as a loop: search to find the door, then read and follow links to gather what's behind it (that agentic loop is the [ReAct pattern](/courses/react-loop)).
+
+<Callout type="tip" title="The rule of thumb">
+Use **vectors to find**, **folders to ground**. Embed your knowledge so any question can locate the right place; keep it as structured, cross-linked files so the answer stands on exact facts, not just similarity. That combination — semantic reach plus structured truth — is as close to an "ultimate" knowledge architecture as we have today.
+</Callout>
+
+<ChapterSummary>
+- Don't choose — layer them: vectors to find the right concept, the folder to ground the answer in exact structure
+- OKF was designed to be embeddable while preserving relationships vectors miss
+- An agent loops over both: search to find the door, follow links to gather what's behind it
+- Semantic reach (vectors) + structured truth (folders) = the strongest knowledge architecture today
+</ChapterSummary>
+
+<Checkpoint>
+1. In one sentence each, what is a "folder" of knowledge and what is a "vector"?
+2. You need to answer "which of our 500k tickets resemble this one?" and also "what is the exact refund policy, with the clause number." Which approach for each, and why?
+3. In the combined architecture, what job does the vector index do, and what job does the folder do?
+</Checkpoint>
+
+---
+
+**Sources:** Sam McVeety & Amir Hormati, [“How the Open Knowledge Format can improve data sharing,”](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing) Google Cloud (June 2026), and the [OKF Knowledge Catalog repo](https://github.com/GoogleCloudPlatform/knowledge-catalog); Andrej Karpathy, [the “LLM wiki” note](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). The vector/RAG half is covered in depth in this track's [RAG in Production](/courses/production-rag) and [RAG & Tool Use](/courses/rag-and-tool-use).
