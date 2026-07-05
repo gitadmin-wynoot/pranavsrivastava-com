@@ -24,19 +24,11 @@ type Scope = {
 
 const SCOPES: Scope[] = [
   {
-    label: "Before the code",
-    title: "Numbers came first",
-    span: "long before any of this",
-    color: "#f472b6",
-    body: "Long before any computer, there was a small kid oddly at home with numbers — the sort who somehow remembered everyone's phone number — and pulled toward physics years before he knew it was even a subject. He drew and painted, too. School itself was harder: a bit of a misfit in those early classrooms, he found his footing only later (a story for another day). The physics never really left — he still meets a tangled problem by picturing forces settling into balance, or a ball rolling to its lowest point, which, it turns out, is quietly how a lot of optimization actually works.",
-    tags: ["Numbers", "Physics", "Drawing"],
-  },
-  {
     label: "The spark",
     title: "The first machine",
     span: "early 2000s",
     color: "#f59e0b",
-    body: "It started with a borrowed DOS machine and a BASIC book with a black cover — thirteen years old, in a small town, hooked and never quite un-hooked. A computer-engineering degree gave him the fundamentals; the curiosity did the rest.",
+    body: "It started with a borrowed DOS machine and \"Programming in Basic\" book by E. Balagurusamy with a black cover  — thirteen years old, in a small town, hooked and never quite un-hooked. School set the foundations and the computer-engineering degree gave him the depth; the curiosity did the rest.",
     tags: ["Curiosity", "Fundamentals"],
   },
   {
@@ -44,8 +36,8 @@ const SCOPES: Scope[] = [
     title: "A decade solving other people's problems",
     span: "the 2010s",
     color: "#3b82f6",
-    body: "Then years in consulting, across genuinely different worlds — banking, automotive, financial services. APIs and integration architecture at scale, for clients who needed it to actually work. He learned that every industry has its own constraints, and that the constraints are the interesting part. A move to the Netherlands turned an assignment into a life.",
-    tags: ["Banking", "Automotive", "Finance", "Integration"],
+    body: "Then years in consulting, across genuinely different worlds — telecom, healthcare, banking, automotive, financial services. APIs and integration architecture at scale, for clients who needed it to actually work. He learned that every industry has its own constraints, and that the constraints are the interesting part. A move to the Netherlands turned an assignment into a life.",
+    tags: ["Banking", "Automotive", "Finance", "Integration", "Healthcare"],
   },
   {
     label: "Going deeper",
@@ -73,6 +65,14 @@ const SCOPES: Scope[] = [
       { label: "By day", color: "#0ea5e9", chips: ["KPN", "CPaaS", "AI", "API management"] },
       { label: "In parallel", color: "#10b981", chips: ["Wynoot", "Gravitii", "Writing", "Teaching", "+ personal AI"], live: true },
     ],
+  },
+  {
+    label: "Where it started",
+    title: "Numbers came first",
+    span: "long before any of this",
+    color: "#f472b6",
+    body: "And if you trace it all the way back: long before any computer, there was a small kid oddly at home with numbers — the sort who somehow remembered everyone's phone number — and pulled toward physics years before he knew it was even a subject. He drew and painted, too. School itself was harder: a bit of a misfit in those early classrooms, he found his footing only later (a story for another day). The physics never really left — he still meets a tangled problem by picturing forces settling into balance, or a ball rolling to its lowest point, which, it turns out, is quietly how a lot of optimization actually works.",
+    tags: ["Numbers", "Physics", "Drawing"],
   },
 ];
 
