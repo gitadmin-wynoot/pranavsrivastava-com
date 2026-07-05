@@ -81,7 +81,11 @@ Nobody told the computer what a cat is. It just read a mountain of text, noticed
 
 Now the grown-up name. An <KeyTerm definition="A list of numbers representing a piece of text's meaning, arranged so that similar meanings sit close together — like an address on the map of meaning.">embedding</KeyTerm> turns any piece of text into that house's *address*: a long list of numbers, a **point in space**. Similar meanings get nearby addresses, even when they share no words at all.
 
-<Figure name="vectors-space" caption="An embedding turns text into a point. Similar meanings become nearby points — so 'how much leave do I get' lands near 'vacation policy', with no shared words." />
+And here is where it gets genuinely wild. Because every word is now a *point*, the **relationships between meanings become directions you can add and subtract**. Take the point for "king", apply the very same step that turns "man" into "woman", and you land on... "queen." No one programmed that — it falls straight out of the geometry. Play with it: change the words, use a preset, and watch the two arrows stay parallel:
+
+<AnalogyMachine />
+
+That parallel-arrow trick — *man is to woman as king is to queen* — is the famous result that first made people realise embeddings had captured real meaning, not just word-counting. Distance means *similarity*; direction means *relationship*. Real embeddings do this across hundreds of these number-dimensions at once; we flattened it to two so you can see it move.
 
 And the magic follows for free: to **search by meaning** instead of spelling, you just find the nearest houses. Ask "how much time off do I get" and it walks straight to "annual leave" — no matching words required. Try it:
 

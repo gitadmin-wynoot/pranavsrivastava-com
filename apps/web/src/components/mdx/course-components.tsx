@@ -9,6 +9,7 @@ import { FolderExplorer } from "./folder-explorer";
 import { ApproachPicker } from "./approach-picker";
 import { MeaningMap } from "./meaning-map";
 import { SynonymSnap } from "./synonym-snap";
+import { AnalogyMachine } from "./analogy-machine";
 import {
   Info,
   Lightbulb,
@@ -313,5 +314,6 @@ export const courseComponents = {
   ApproachPicker,
   MeaningMap,
   SynonymSnap,
+  AnalogyMachine,
   pre: CodeBlock,
 };
