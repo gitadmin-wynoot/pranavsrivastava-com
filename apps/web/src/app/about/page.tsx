@@ -281,135 +281,6 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* ── The work ───────────────────────────────────────────────────────── */}
-      <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          Not theory
-        </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-5 max-w-2xl">
-          He doesn&apos;t teach anything he hasn&apos;t shipped. Fifteen years
-          making systems — and, lately, AI — work where it actually counts: at
-          scale, under real constraints, for people paying real money.
-        </p>
-        <ul className="space-y-3">
-          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span>
-              Took an internal idea to a live, revenue-earning platform at KPN —
-              and still builds it, now across AI and API management.{" "}
-              <a href="https://developer.kpn.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">developer.kpn.com ↗</a>
-            </span>
-          </li>
-          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span>Built fraud-detection AI at telecom scale — where a false positive costs a real customer, not a metric.</span>
-          </li>
-          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span>Shipped across six industries — banking, automotive, finance, telecom. Different worlds, one discipline.</span>
-          </li>
-          <li className="flex items-start gap-2.5 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span>
-              Building his own AI product, Wynoot, in parallel.{" "}
-              <a href="https://wynoot.com" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">wynoot.com ↗</a>
-            </span>
-          </li>
-        </ul>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 italic mt-5 max-w-2xl">
-          None of it is slideware — it&apos;s the ground everything here is taught from.
-        </p>
-        <p className="text-xs text-zinc-400 mt-6 mb-2">Where his head is right now:</p>
-        <div className="flex flex-wrap gap-1.5">
-          {workAreas.map((w) => (
-            <span key={w.label} className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-600 dark:text-zinc-300">
-              <span className={w.color}>{w.icon}</span>
-              {w.label}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── How I think ────────────────────────────────────────────────────── */}
-      <div className="mb-12">
-        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-          How he thinks
-        </h2>
-        <p className="text-xs text-zinc-400 mb-6">
-          Three ideas he keeps coming back to — the kind of thinking these
-          courses are really about
-        </p>
-        <div className="space-y-4">
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <span className="text-lg mt-0.5 shrink-0">🔌</span>
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  The developer is your user
-                </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  A working SMS API at KPN was growing adoption — and support
-                  tickets at the same rate. The error codes were technically
-                  correct ({" "}
-                  <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5 rounded">ERR_429_RATE_LIMIT</code>
-                  {" "}) and told developers nothing about why, or how to fix it.
-                  One sprint rewriting every error into plain English — cause,
-                  and remedy — and support volume dropped while adoption kept
-                  climbing. The developer calling your endpoint is your user;
-                  their confusion is your bug.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <span className="text-lg mt-0.5 shrink-0">🎯</span>
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  The threshold is a business decision, not a technical one
-                </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  In anti-fraud at scale, the hardest call is never the
-                  algorithm — it is the detection threshold. Too sensitive and
-                  real businesses get blocked mid-campaign and churn; too loose
-                  and fraud erodes trust and draws regulators. Setting that dial
-                  means modelling the cost of each kind of mistake, not just
-                  chasing precision on a test set. The model serves the business
-                  outcome. That order matters.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-            <div className="flex items-start gap-3">
-              <span className="text-lg mt-0.5 shrink-0">📅</span>
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  Sometimes it is sequencing, not engineering
-                </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  An early Wynoot booking flow asked for contact and payment
-                  details, then showed available slots. Logical for data;
-                  wrong for people, who want to know Thursday 6pm is free before
-                  they commit to anything. He flipped the order — availability
-                  first, payment last. Not one line of logic changed, yet the
-                  product worked. It is the moment he thinks of most when a
-                  feature seems broken: is it engineering, or is it sequencing?
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-6 max-w-2xl">
-          None of this is talent — it&apos;s a way of looking, and it is entirely
-          learnable. That is the whole point of this place:{" "}
-          <Link href="/learn" className="text-blue-600 dark:text-blue-400 hover:underline">
-            the courses
-          </Link>{" "}
-          are these same habits of mind, taught from scratch.
-        </p>
-      </div>
-
       {/* ── What keeps me curious ──────────────────────────────────────────── */}
       <div className="mb-12">
         <div className="flex items-start justify-between mb-1">
@@ -420,8 +291,36 @@ export default function AboutPage() {
             The technical deep dive →
           </Link>
         </div>
-        <p className="text-xs text-zinc-400 mb-5">
-          From the MSc in AI (MTU Cork) — and the real problems he keeps mapping them onto.
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6 max-w-2xl">
+          The one thing he never wants to lose is the itch to understand how
+          things work. A few of the things that keep it burning:
+        </p>
+
+        <div className="space-y-3 mb-6">
+          {[
+            { emoji: "🧩", title: "Making hard things simple", desc: "He's convinced almost anything — even rocket science — can be explained to a curious kid. If an idea sounds complicated, it usually just hasn't met the right teacher yet." },
+            { emoji: "🔬", title: "Running experiments", desc: "Tech or non-tech, hardware or software — if it can be tried, he wants to try it. Most of what he knows came from building something, breaking it, and figuring out why." },
+            { emoji: "💡", title: "Rooms full of builders", desc: "Founders, makers, thinkers — the people asking 'what if'. That's his favourite kind of room. Curiosity is contagious, and he likes to be where it's spreading." },
+          ].map((t) => (
+            <div key={t.title} className="flex items-start gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
+              <span className="text-lg mt-0.5 shrink-0" aria-hidden="true">{t.emoji}</span>
+              <div>
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{t.title}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-0.5">{t.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mb-8 max-w-2xl border-l-2 border-blue-500 pl-4 italic">
+          The thread through all of it: stay curious, think for yourself, and
+          never graduate from being a student. The best people he knows never
+          did — and those are the people, and the communities, he most wants to
+          keep building alongside.
+        </p>
+
+        <p className="text-xs text-zinc-400 mb-3">
+          And the technical rabbit holes he keeps falling into — from the MSc in AI:
         </p>
         <div className="space-y-2">
           {depthAreas.map((a) => (
