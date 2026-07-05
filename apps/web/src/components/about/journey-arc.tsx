@@ -24,8 +24,16 @@ type Scope = {
 
 const SCOPES: Scope[] = [
   {
+    label: "Before the code",
+    title: "Numbers came first",
+    span: "long before any of this",
+    color: "#f472b6",
+    body: "Long before any computer, there was a small kid oddly at home with numbers — the sort who somehow remembered everyone's phone number — and pulled toward physics years before he knew it was even a subject. He drew and painted, too. School itself was harder: a bit of a misfit in those early classrooms, he found his footing only later (a story for another day). The physics never really left — he still meets a tangled problem by picturing forces settling into balance, or a ball rolling to its lowest point, which, it turns out, is quietly how a lot of optimization actually works.",
+    tags: ["Numbers", "Physics", "Drawing"],
+  },
+  {
     label: "The spark",
-    title: "Where it began",
+    title: "The first machine",
     span: "early 2000s",
     color: "#f59e0b",
     body: "It started with a borrowed DOS machine and a BASIC book with a black cover — thirteen years old, in a small town, hooked and never quite un-hooked. A computer-engineering degree gave him the fundamentals; the curiosity did the rest.",

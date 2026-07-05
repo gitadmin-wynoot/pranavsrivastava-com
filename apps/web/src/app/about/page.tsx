@@ -166,39 +166,6 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* ── The quick version ─────────────────────────────────────────────── */}
-      <div className="mb-12 p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-        <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-4">
-          The quick version
-        </p>
-        <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-          <p>
-            He&apos;s a software engineer and product thinker with fifteen years
-            building the systems businesses depend on — APIs, CPaaS, fraud
-            detection, AI integration — across telecom, banking, automotive, and
-            asset finance. He joined a small KPN incubator in 2017 and helped grow{" "}
-            <a href="https://developer.kpn.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">developer.kpn.com</a>
-            {" "}into a revenue-generating enterprise product.
-          </p>
-          <p>
-            He&apos;s also a founder, running{" "}
-            <a href="https://wynoot.com" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Wynoot</a>
-            {" "}(an AI-powered platform for service businesses), and takes on
-            a little independent consulting on the side. He did an MSc in AI in
-            his 30s because algorithms were always the part he found genuinely
-            interesting, not an add-on.
-          </p>
-          <p>
-            He grew up in{" "}
-            <Link href="/atlas/jhansi" className="text-cyan-600 dark:text-cyan-400 underline underline-offset-2 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors">
-              Jhansi
-            </Link>
-            , has been an engineer since 2010, in the Netherlands since 2016 —
-            still building, still curious, and (recently) on ski slopes.
-          </p>
-        </div>
-      </div>
-
       {/* ── The arc, in chapters ──────────────────────────────────────────── */}
       <div className="mb-12">
         <div className="mb-5">
