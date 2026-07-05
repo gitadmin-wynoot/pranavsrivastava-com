@@ -4,6 +4,7 @@ import { Figure } from "./course-figures";
 import { RelationMap } from "./relation-map";
 import { RetrievalPlayground } from "./retrieval-playground";
 import { ChunkSizer } from "./chunk-sizer";
+import { ReActSimulator } from "./react-simulator";
 import {
   Info,
   Lightbulb,
@@ -303,5 +304,6 @@ export const courseComponents = {
   RelationMap,
   RetrievalPlayground,
   ChunkSizer,
+  ReActSimulator,
   pre: CodeBlock,
 };

@@ -1,0 +1,189 @@
+---
+title: "The ReAct Loop"
+slug: "react-loop"
+summary: "Reason + Act: the Thought → Action → Observation loop behind every modern AI agent. From the 2022 research to production practice — with an interactive trace you can step through, move by move."
+level: "Intermediate"
+status: "published"
+track: "applied-ai"
+prereqs: ["rag-and-tool-use"]
+tags: ["AI Agents", "ReAct", "Reasoning", "Tool Use", "LLMs"]
+lessonCount: 5
+---
+
+Ask a plain language model a factual question and it will answer — confidently, and sometimes wrongly, because it is guessing from memory with no way to check. Give it the ability to *reason about what it needs* and *act to go get it*, in a loop, and something changes: it stops guessing and starts investigating. That loop has a name — **ReAct**, for *Reason + Act* — and it is the pattern underneath essentially every modern AI agent.
+
+<Callout type="info" title="The one-line idea">
+ReAct interleaves **thinking** and **doing**: the model writes a thought about what to do next, takes an **action** (calls a tool), reads the **observation** (the result), and repeats — until it has enough to answer.
+</Callout>
+
+<Figure name="agent-loop" caption="The ReAct loop: think, act, observe — then think again with what you just learned. Round and round until the task is done." />
+
+<LearningObjectives>
+- Explain the ReAct loop — Thought, Action, Observation — and why it interleaves reasoning with acting
+- Step through a real ReAct trace and see how the agent investigates instead of guessing
+- Understand, with data, why ReAct beats reasoning-only and acting-only approaches
+- Connect ReAct to production agents (function calling, frameworks) and its failure modes
+</LearningObjectives>
+
+<ChapterHeader number={1} title="Watch the loop turn" time={12} />
+
+The fastest way to understand ReAct is to watch one run. Below is a real trace. Hit **Next move** and follow the agent as it thinks, acts, observes, and thinks again — notice that it never answers until it has actually *looked*:
+
+<ReActSimulator />
+
+Three kinds of move repeat in a cycle:
+
+- **Thought** — the model reasons in plain language about what it needs and what to do next. This is <KeyTerm definition="Reasoning written out step by step, in natural language, before answering.">chain-of-thought</KeyTerm>, but mid-task.
+- **Action** — it calls a tool: a search, a lookup, a calculation, an API. The action is structured so your code can run it.
+- **Observation** — the tool's result comes back and is fed to the model as new context.
+
+Then it thinks again *with that new information*, and the loop continues until it emits a final answer (a **Finish** action).
+
+<Callout type="tip" title="Why the interleaving matters">
+Reasoning alone can plan but can't check facts. Acting alone can fetch facts but can't plan. ReAct lets each fix the other's blind spot: the model reasons to decide the next action, and acts to ground the next thought in something real.
+</Callout>
+
+<ChapterSummary>
+- ReAct repeats three moves: Thought (reason), Action (call a tool), Observation (read the result)
+- The model reasons about what it needs, then acts to get it, then reasons again — until it can answer
+- Interleaving reasoning and acting lets each cover the other's weakness
+</ChapterSummary>
+
+<ChapterHeader number={2} title="Where the idea comes from — and the evidence" time={12} />
+
+ReAct is not folklore; it is a 2022 research result. In *"ReAct: Synergizing Reasoning and Acting in Language Models"* (Yao et al., Princeton and Google, published at ICLR 2023), the authors showed that prompting a model to interleave reasoning traces with tool actions beat both reasoning-only and acting-only baselines — often by a lot.
+
+The two problems it solved are worth naming precisely:
+
+<Diagram title="Three ways to answer" caption="Reasoning-only hallucinates; acting-only can't plan; ReAct grounds one in the other">
+
+```
+  REASON only     think → think → think → answer      → confident, unchecked (hallucinates)
+  ACT only        act → act → act → answer            → fetches facts, no plan, gets lost
+  ReAct           think → act → observe → think → …    → reasons AND checks against reality
+```
+
+</Diagram>
+
+The numbers, from the paper:
+
+- On **knowledge tasks** — HotpotQA (multi-hop question answering) and Fever (fact verification) — ReAct produced more *trustworthy* answers than chain-of-thought alone, because every reasoning step could be grounded in a real lookup instead of the model's fallible memory. Pure chain-of-thought had a higher rate of confidently hallucinated facts.
+- On **decision-making tasks** — ALFWorld (a text world where an agent must complete household tasks) and WebShop (navigating a shopping site) — ReAct beat imitation-learning and reinforcement-learning baselines by a wide margin: roughly **+34% absolute** success on ALFWorld and **+10%** on WebShop, with nothing but a handful of prompt examples.
+
+<Callout type="important" title="The deeper finding">
+The win wasn't just accuracy — it was *trust and control*. Because the agent thinks out loud and acts on real observations, its trace is readable: you can see *why* it did what it did, catch it going wrong, and correct it. A grounded, inspectable reasoning process turned out to matter as much as the score.
+</Callout>
+
+<ChapterSummary>
+- ReAct comes from Yao et al. (2022 / ICLR 2023): interleave reasoning with tool actions
+- It reduces hallucination on knowledge tasks by grounding each thought in a real observation
+- It beat learning-based baselines on decision tasks (~+34% ALFWorld, ~+10% WebShop) from prompting alone
+- A readable, grounded reasoning trace makes the agent inspectable and correctable
+</ChapterSummary>
+
+<ChapterHeader number={3} title="The anatomy of a good loop" time={12} />
+
+Switch the simulator above to **the paper's example** and step through it — the Colorado orogeny question is the exact trace from the ReAct paper. Watch how it *decomposes* a hard multi-hop question:
+
+1. A **thought** breaks the question into a plan (find the orogeny → find the area → find the elevation).
+2. Each **action** fetches one missing piece.
+3. Each **observation** either answers a sub-question or reveals the next one.
+4. A final **thought** assembles the pieces, and **Finish** returns the answer.
+
+Two design details make or break this:
+
+- **Actions must be machine-runnable.** The model emits something structured — `Search["High Plains"]`, or a JSON tool call — that your code parses and executes. Vague actions can't be run.
+- **The loop needs a stop condition.** ReAct ends when the model emits a *Finish*. In production you also add a hard cap on steps, so a confused agent can't loop forever.
+
+<Callout type="note" title="This is where ReAct meets RAG">
+Notice the "Search" and "Lookup" actions — that's <KeyTerm definition="Retrieval-Augmented Generation — fetching relevant passages from your own data and answering from them.">retrieval</KeyTerm> happening *inside* the loop, chosen by the model when it decides it needs facts. This is exactly "agentic RAG": retrieval as a tool the agent calls, rather than a fixed pre-step. The [RAG & Tool Use](/courses/rag-and-tool-use) course covers the retrieval half in depth.
+</Callout>
+
+<ChapterSummary>
+- A good loop decomposes a hard question into single-fact actions and reassembles the answer
+- Actions must be structured so your code can run them
+- The loop stops on a Finish action — plus a hard step cap in production
+- Search/Lookup actions are agentic RAG: retrieval the agent chooses, mid-loop
+</ChapterSummary>
+
+<ChapterHeader number={4} title="From paper to production" time={12} />
+
+Almost every agent you use today is a descendant of ReAct. When a model does "function calling" — deciding to call a tool, reading the result, and continuing — that *is* the ReAct loop, with the Thought/Action/Observation format handled by the API instead of hand-written prompt examples.
+
+Here is the loop in code, stripped to its essence:
+
+<CodeFile filename="react_loop.py">
+```python
+from anthropic import Anthropic
+
+client = Anthropic()
+
+
+def run(question: str, tools, handlers, max_steps: int = 6) -> str:
+    messages = [{"role": "user", "content": question}]
+    for _ in range(max_steps):  # the hard step cap — no infinite loops
+        resp = client.messages.create(
+            model="claude-opus-4-8",
+            max_tokens=1024,
+            tools=tools,
+            messages=messages,
+        )
+        messages.append({"role": "assistant", "content": resp.content})
+
+        if resp.stop_reason != "tool_use":
+            # No action requested → the model is finished. Return its answer.
+            return next(b.text for b in resp.content if b.type == "text")
+
+        # ACTION: run each tool the model called; feed OBSERVATIONS back in.
+        results = []
+        for block in resp.content:
+            if block.type == "tool_use":
+                observation = handlers[block.name](block.input)
+                results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": str(observation),
+                })
+        messages.append({"role": "user", "content": results})
+
+    return "Stopped: hit the step limit before finishing."
+```
+</CodeFile>
+
+That `for` loop *is* ReAct. The model's text is the **Thought**, a `tool_use` block is the **Action**, the `tool_result` you append is the **Observation**, and a turn with no tool call is the **Finish**.
+
+<Callout type="warning" title="The failure modes are real">
+ReAct is powerful, not magic. Agents can **loop** (repeating the same failing action), **drift** (wandering off the task), or **act on a bad observation** (a tool returns garbage and the model trusts it). The fixes are engineering, not prompting: a hard step cap, good tool error messages, letting the model *see* its own failures so it can change tack, and — always — logging every step so you can replay what happened. That last part is the whole [Harness Engineering](/courses/harness-engineering) and [AI Ops](/courses/ai-ops) story.
+</Callout>
+
+<ChapterSummary>
+- Modern "function calling" agents are ReAct with the format handled by the API
+- The loop is a simple `for` with a step cap: model text = Thought, tool call = Action, tool result = Observation
+- Real failure modes — looping, drift, bad observations — are solved by harness engineering, not clever prompts
+</ChapterSummary>
+
+<ChapterHeader number={5} title="When to reach for it" time={8} />
+
+ReAct shines when a task needs **information or actions the model doesn't already have** and can't get in one shot: multi-step questions, anything that touches live data, tool-driven workflows, decisions that unfold over several moves.
+
+It is overkill when the answer is already in the prompt (just answer), or when a single tool call with a fixed pre-step would do (plain RAG, no loop). As always: use the simplest thing that works, and reach for the loop when the task genuinely requires the model to *investigate*.
+
+<Callout type="tip" title="The through-line">
+ReAct is the hinge between two halves of this track: the model's **reasoning** and the world's **tools**. Master the loop and everything else — RAG, multi-agent systems, autonomous workflows — is a variation on think, act, observe, repeat.
+</Callout>
+
+<ChapterSummary>
+- Use ReAct for multi-step tasks needing live data, tools, or unfolding decisions
+- Skip it when the answer is in the prompt, or a single retrieval step suffices
+- The loop — think, act, observe, repeat — is the foundation the rest of agent-building sits on
+</ChapterSummary>
+
+<Checkpoint>
+1. In the trace "Search[\"Isaac Newton\"]", which of the three ReAct phases is that, and what phase comes right after it?
+2. Why does interleaving reasoning with actions reduce hallucination compared to reasoning alone?
+3. Name one ReAct failure mode and the engineering fix for it.
+</Checkpoint>
+
+---
+
+**Source:** Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, Yuan Cao, [“ReAct: Synergizing Reasoning and Acting in Language Models,”](https://arxiv.org/abs/2210.03629) arXiv:2210.03629 (2022); ICLR 2023.
