@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getTracks, getCourses, isCourseAvailable } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
 import { FeaturedCourses } from "@/components/course/featured-courses";
+import { CurriculumMap } from "@/components/learn/curriculum-map";
 
 export const metadata: Metadata = {
   title: "Learn",
@@ -25,12 +26,14 @@ export default function LearnPage() {
   const courses = getCourses();
   const availableCourses = courses.filter(isCourseAvailable);
 
-  const coursesByTrack = tracks.reduce<Record<string, number>>((acc, t) => {
-    acc[t.slug] = courses.filter((c) => c.track === t.slug).length;
+  // Count only *available* (published) courses so a track's badge never
+  // over-promises — a track with only drafts reads as "Coming soon".
+  const availableByTrack = tracks.reduce<Record<string, number>>((acc, t) => {
+    acc[t.slug] = availableCourses.filter((c) => c.track === t.slug).length;
     return acc;
   }, {});
 
-  // Learning path: 3 levels showing how tracks stack
+  // Learning path: 3 stages showing how the tracks stack. Also feeds the map.
   const learningPath = [
     {
       label: "Start here",
@@ -48,6 +51,22 @@ export default function LearnPage() {
       tracks: ["personal-ai-os"],
     },
   ];
+
+  const mapTracks = tracks.map((t) => ({
+    slug: t.slug,
+    title: t.title,
+    icon: t.icon,
+    color: t.color,
+    availableCount: availableByTrack[t.slug] ?? 0,
+    comingSoon: (availableByTrack[t.slug] ?? 0) === 0,
+    prereqs: t.prereqs,
+    leadsTo: t.leadsTo,
+  }));
+  const mapStages = learningPath.map((l) => ({
+    label: l.label,
+    desc: l.desc,
+    slugs: l.tracks,
+  }));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16">
@@ -103,7 +122,7 @@ export default function LearnPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-20">
         {tracks.map((track) => {
           const c = trackColors[track.color] ?? trackColors.zinc;
-          const count = coursesByTrack[track.slug] ?? 0;
+          const count = availableByTrack[track.slug] ?? 0;
           return (
             <Link
               key={track.slug}
@@ -112,8 +131,8 @@ export default function LearnPage() {
             >
               <div className="flex items-start justify-between gap-3 mb-3">
                 <span className="text-2xl leading-none">{track.icon}</span>
-                <span className={`text-xs font-medium ${c.text}`}>
-                  {count > 0 ? `${count} courses` : "Coming soon"}
+                <span className={`text-xs font-medium ${count > 0 ? c.text : "text-zinc-400 dark:text-zinc-500"}`}>
+                  {count > 0 ? `${count} ${count === 1 ? "course" : "courses"}` : "Coming soon"}
                 </span>
               </div>
               <h2 className="font-semibold text-zinc-900 dark:text-zinc-100 text-base mb-2 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
@@ -135,64 +154,17 @@ export default function LearnPage() {
         })}
       </div>
 
-      {/* ── Learning path ────────────────────────────────────────────────── */}
+      {/* ── The map — how it all connects ────────────────────────────────── */}
       <div className="mb-20">
         <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-          Suggested learning path
+          How it all connects
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
-          You can enter at any level — but this order builds the strongest foundation.
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8 max-w-2xl">
+          Not a pile of topics — a path. Foundations feed the applied work, and
+          it all comes together in the capstone. You can enter at any stage;
+          hover a track to see what it needs and what it unlocks.
         </p>
-
-        <div className="space-y-0">
-          {learningPath.map((level, i) => {
-            const levelTracks = tracks.filter((t) =>
-              level.tracks.includes(t.slug)
-            );
-            const isLast = i === learningPath.length - 1;
-            return (
-              <div key={level.label} className="flex gap-4">
-                {/* Connector line */}
-                <div className="flex flex-col items-center w-8 shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center text-xs font-bold shrink-0">
-                    {i + 1}
-                  </div>
-                  {!isLast && (
-                    <div className="w-px flex-1 bg-zinc-200 dark:bg-zinc-800 my-1" />
-                  )}
-                </div>
-
-                {/* Level content */}
-                <div className={`pb-8 flex-1 ${isLast ? "pb-0" : ""}`}>
-                  <div className="mb-3">
-                    <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">
-                      {level.label}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {level.desc}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {levelTracks.map((t) => {
-                      const c = trackColors[t.color] ?? trackColors.zinc;
-                      return (
-                        <Link
-                          key={t.slug}
-                          href={`/learn/${t.slug}`}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all hover:shadow-sm ${c.bg} ${c.border} ${c.text}`}
-                        >
-                          <span>{t.icon}</span>
-                          {t.title}
-                          <ChevronRight className="w-3 h-3" />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <CurriculumMap tracks={mapTracks} stages={mapStages} />
       </div>
 
       {/* ── Topics at a glance ───────────────────────────────────────────── */}
