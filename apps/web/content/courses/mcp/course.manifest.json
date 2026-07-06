@@ -1,13 +1,22 @@
 {
   "course_id": "mcp",
   "title": "MCP for Practical Builders",
-  "summary": "Learn Model Context Protocol from scratch — how it works, how to build servers in Python, and how to give AI assistants safe access to your files, databases, and APIs. Ends with a complete hands-on project.",
+  "summary": "Learn Model Context Protocol from scratch \u2014 how it works, how to build servers in Python, and how to give AI assistants safe access to your files, databases, and APIs. Ends with a complete hands-on project.",
   "level": "Beginner to Intermediate",
   "track": "applied-ai",
+  "order": 2,
   "status": "published",
   "version": "1.0.0",
   "last_reviewed": "2026-06-16",
-  "tags": ["MCP", "Python", "Claude", "AI Tools", "FastMCP", "Security", "Agents"],
+  "tags": [
+    "MCP",
+    "Python",
+    "Claude",
+    "AI Tools",
+    "FastMCP",
+    "Security",
+    "Agents"
+  ],
   "modules": [
     {
       "id": "01-what-is-mcp",

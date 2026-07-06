@@ -40,6 +40,9 @@ export default async function TrackPage({ params }: Props) {
 
   const allTracks = getTracks();
   const courses = getCoursesByTrack(slug);
+  const availableCourses = courses.filter(isCourseAvailable);
+  // A track with nothing available yet but a planned curriculum shows a roadmap.
+  const roadmapMode = availableCourses.length === 0 && (track.roadmap?.length ?? 0) > 0;
   const prereqTracks = allTracks.filter((t) => track.prereqs.includes(t.slug));
   const leadsToTracks = allTracks.filter((t) => track.leadsTo.includes(t.slug));
 
@@ -86,9 +89,37 @@ export default async function TrackPage({ params }: Props) {
           {/* Courses in this track */}
           <div>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
-              Courses in this track
+              {roadmapMode ? "What's planned" : "Courses in this track"}
             </h2>
-            {courses.length === 0 ? (
+            {roadmapMode ? (
+              <div className="space-y-3">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+                  This track&apos;s curriculum is being written. Here&apos;s the plan,
+                  in order:
+                </p>
+                {track.roadmap!.map((item, i) => (
+                  <div
+                    key={item.title}
+                    className="flex items-start gap-4 p-4 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 flex items-center justify-center text-xs font-medium shrink-0 mt-0.5">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-medium text-sm text-zinc-600 dark:text-zinc-300">
+                          {item.title}
+                        </p>
+                        <Badge variant="outline">Coming soon</Badge>
+                      </div>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                        {item.blurb}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : courses.length === 0 ? (
               <div className="text-center py-12 bg-zinc-50 dark:bg-zinc-900 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-400">
                 <BookOpen className="w-7 h-7 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Courses in development.</p>

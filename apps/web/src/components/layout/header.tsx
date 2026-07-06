@@ -7,12 +7,15 @@ import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { cn } from "@/lib/utils";
 
-// Work-first nav: hands-on labs lead, then deeper courses, then writing, then who I am.
-// /ai-lab (projects) is reachable from the homepage; Contact lives as a CTA, not a nav slot.
+// Work-first nav: hands-on labs lead, then the guided courses, then writing
+// (the /blog page is the Writing home — it surfaces both notes and essays),
+// then the projects, then who I am. Contact lives as a CTA, not a nav slot;
+// Atlas is contextual and Circle is a quiet footer link.
 const NAV_LINKS = [
   { label: "Labs", href: "/labs" },
   { label: "Learn", href: "/learn" },
   { label: "Writing", href: "/blog" },
+  { label: "Projects", href: "/ai-lab" },
   { label: "About", href: "/about" },
 ];
 

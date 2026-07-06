@@ -39,6 +39,7 @@ export function Footer() {
                 { label: "Labs", href: "/labs" },
                 { label: "Learn", href: "/learn" },
                 { label: "Writing", href: "/blog" },
+                { label: "Essays", href: "/essays" },
                 { label: "Projects", href: "/ai-lab" },
                 { label: "About", href: "/about" },
                 { label: "Contact", href: "/contact" },

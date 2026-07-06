@@ -37,6 +37,7 @@ export interface CourseManifest {
   version: string;
   last_reviewed: string;
   tags: string[];
+  order?: number;      // position within its track's curriculum
   modules: CourseModuleMeta[];
 }
 
@@ -81,6 +82,11 @@ export interface Essay {
   content: string;
 }
 
+export interface TrackRoadmapItem {
+  title: string;
+  blurb: string;
+}
+
 export interface Track {
   slug: string;
   title: string;
@@ -93,6 +99,10 @@ export interface Track {
   leadsTo: string[];   // track slugs this unlocks
   tags: string[];
   courseCount?: number;
+  /** Optional — set to "coming-soon" for a track whose courses aren't built yet. */
+  status?: "coming-soon";
+  /** Planned courses shown as a roadmap when the track has none available yet. */
+  roadmap?: TrackRoadmapItem[];
   content: string;
 }
 
@@ -436,6 +446,7 @@ export function getCourses(): Course[] {
         prereqs: [],
         tags: manifest.tags ?? [],
         lessonCount: manifest.modules.length,
+        order: manifest.order,
         content: `<!-- multi-module:${manifest.course_id} totalMinutes:${totalMinutes} -->`,
       };
     })
@@ -541,6 +552,8 @@ export function getTracks(): Track[] {
         leadsTo: data.leadsTo ?? [],
         tags: data.tags ?? [],
         courseCount: data.courseCount,
+        status: data.status ?? undefined,
+        roadmap: data.roadmap ?? undefined,
         content,
       } satisfies Track;
     })

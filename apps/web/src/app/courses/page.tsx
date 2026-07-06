@@ -27,15 +27,22 @@ export default function CoursesPage() {
       {/* Header */}
       <div className="max-w-2xl mb-12">
         <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest mb-4">
-          Courses
+          The full catalogue
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-4">
-          Learn by building.
+          Every course, in one place.
         </h1>
         <p className="text-zinc-500 dark:text-zinc-400 text-lg leading-relaxed">
-          Practical courses that show you how to build real things — with code,
-          context, and the reasoning behind each decision. Written from actual
-          experience, not just theory.
+          The whole catalogue across all five tracks — code-first, written from
+          real experience, with the reasoning behind each decision. Available
+          courses first, then what&apos;s on the roadmap.
+        </p>
+        <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-3">
+          Prefer a guided path? Start at{" "}
+          <Link href="/learn" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Learn
+          </Link>{" "}
+          — the tracks put these in order.
         </p>
       </div>
 

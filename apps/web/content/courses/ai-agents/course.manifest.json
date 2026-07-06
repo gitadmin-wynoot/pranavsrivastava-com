@@ -1,13 +1,24 @@
 {
   "course_id": "ai-agents",
-  "title": "AI Agents — From Basics to Multi-Agent Systems",
-  "summary": "Build AI agents from scratch — single-agent patterns, multi-agent pipelines, memory, observability with Langfuse, and a complete hands-on project. Covers LangGraph, CrewAI, AutoGen, and Agno with real code examples.",
+  "title": "AI Agents \u2014 From Basics to Multi-Agent Systems",
+  "summary": "Build AI agents from scratch \u2014 single-agent patterns, multi-agent pipelines, memory, observability with Langfuse, and a complete hands-on project. Covers LangGraph, CrewAI, AutoGen, and Agno with real code examples.",
   "level": "Beginner to Intermediate",
   "track": "applied-ai",
+  "order": 5,
   "status": "published",
   "version": "1.0.0",
   "last_reviewed": "2026-06-16",
-  "tags": ["AI Agents", "LangGraph", "CrewAI", "AutoGen", "Agno", "Multi-Agent", "Langfuse", "Observability", "Python"],
+  "tags": [
+    "AI Agents",
+    "LangGraph",
+    "CrewAI",
+    "AutoGen",
+    "Agno",
+    "Multi-Agent",
+    "Langfuse",
+    "Observability",
+    "Python"
+  ],
   "modules": [
     {
       "id": "01-what-is-an-agent",
@@ -19,7 +30,7 @@
     },
     {
       "id": "02-react-agent-loop",
-      "title": "The Agent Loop — ReAct",
+      "title": "The Agent Loop \u2014 ReAct",
       "time_minutes": 12,
       "level": "Beginner",
       "status": "published",
@@ -43,7 +54,7 @@
     },
     {
       "id": "05-memory",
-      "title": "Memory — What Agents Remember",
+      "title": "Memory \u2014 What Agents Remember",
       "time_minutes": 15,
       "level": "Intermediate",
       "status": "published",

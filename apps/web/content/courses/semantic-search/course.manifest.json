@@ -1,13 +1,23 @@
 {
   "course_id": "semantic-search",
   "title": "Semantic Search & Embeddings",
-  "summary": "Move beyond keyword matching — dense vector search, embedding models, hybrid retrieval, and RAG pipelines that actually ground LLM responses in real knowledge.",
+  "summary": "Move beyond keyword matching \u2014 dense vector search, embedding models, hybrid retrieval, and RAG pipelines that actually ground LLM responses in real knowledge.",
   "level": "Intermediate",
   "track": "applied-ai",
+  "order": 3,
   "status": "published",
   "version": "1.0.0",
   "last_reviewed": "2026-06-16",
-  "tags": ["Semantic Search", "Embeddings", "Vector Databases", "RAG", "Retrieval", "Qdrant", "pgvector", "Python"],
+  "tags": [
+    "Semantic Search",
+    "Embeddings",
+    "Vector Databases",
+    "RAG",
+    "Retrieval",
+    "Qdrant",
+    "pgvector",
+    "Python"
+  ],
   "modules": [
     {
       "id": "01-how-embeddings-work",
@@ -27,7 +37,7 @@
     },
     {
       "id": "03-vector-db-fundamentals",
-      "title": "Vector Database Fundamentals — HNSW and IVF",
+      "title": "Vector Database Fundamentals \u2014 HNSW and IVF",
       "time_minutes": 15,
       "level": "Intermediate",
       "status": "published",
@@ -35,7 +45,7 @@
     },
     {
       "id": "04-pgvector",
-      "title": "pgvector — Vector Search Inside PostgreSQL",
+      "title": "pgvector \u2014 Vector Search Inside PostgreSQL",
       "time_minutes": 18,
       "level": "Intermediate",
       "status": "published",
@@ -43,7 +53,7 @@
     },
     {
       "id": "05-qdrant-pinecone",
-      "title": "Dedicated Vector Stores — Qdrant and Pinecone",
+      "title": "Dedicated Vector Stores \u2014 Qdrant and Pinecone",
       "time_minutes": 20,
       "level": "Intermediate",
       "status": "published",
@@ -51,7 +61,7 @@
     },
     {
       "id": "06-hybrid-search",
-      "title": "Hybrid Search — Dense + Sparse + Re-Ranking",
+      "title": "Hybrid Search \u2014 Dense + Sparse + Re-Ranking",
       "time_minutes": 20,
       "level": "Intermediate",
       "status": "published",
@@ -67,7 +77,7 @@
     },
     {
       "id": "08-production-rag",
-      "title": "Production RAG — Evaluation, Caching, and Drift",
+      "title": "Production RAG \u2014 Evaluation, Caching, and Drift",
       "time_minutes": 20,
       "level": "Intermediate",
       "status": "published",
