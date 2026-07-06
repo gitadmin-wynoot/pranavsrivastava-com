@@ -241,92 +241,110 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Writing (native posts + Medium essays, newest first) ──────────── */}
-      {writing.length > 0 && (
+      {/* ── Writing — one section, two lanes: essays + shorter notes ──────── */}
+      {(writing.length > 0 || essays.length > 0) && (
         <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <PenLine className="w-4 h-4 text-emerald-500" />
               Writing
             </h2>
-            <a
-              href="https://pranav-srivastava.medium.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
-            >
-              More on Medium ↗
-            </a>
-          </div>
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-900">
-            {writing.map((item) => {
-              const inner = (
-                <>
-                  <div className="min-w-0">
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {item.title}
-                    </span>
-                    <span className="ml-2 text-xs text-zinc-400">
-                      {item.source}
-                      {item.external ? " ↗" : ""}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
-                    <span>{item.readingTimeMin} min read</span>
-                    <span>{formatDate(item.date)}</span>
-                  </div>
-                </>
-              );
-              const cls =
-                "group flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 -mx-3 px-3 rounded-lg transition-colors";
-              return item.external ? (
-                <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>
-                  {inner}
-                </a>
-              ) : (
-                <Link key={item.href} href={item.href} className={cls}>
-                  {inner}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Essays — perspective, shown through the work ─────────────────── */}
-      {essays.length > 0 && (
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <Feather className="w-4 h-4 text-violet-500" />
-              Thinking out loud
-            </h2>
             <Link
-              href="/essays"
+              href="/blog"
               className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
             >
-              All essays →
+              All writing →
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {essays.map((essay) => (
-              <Link
-                key={essay.slug}
-                href={`/essays/${essay.slug}`}
-                className="group flex flex-col p-5 sm:p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 hover:border-violet-500/30 hover:shadow-sm transition-all"
-              >
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
-                  {essay.title}
+
+          {/* Essays — the slower, reflective pieces */}
+          {essays.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                  <Feather className="w-3.5 h-3.5 text-violet-500" />
+                  Essays — thinking out loud
                 </h3>
-                {essay.dek && (
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-2 italic">
-                    {essay.dek}
-                  </p>
-                )}
-                <span className="mt-4 text-xs text-zinc-400">{essay.readingTimeMin} min read</span>
-              </Link>
-            ))}
-          </div>
+                <Link
+                  href="/essays"
+                  className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                >
+                  All essays →
+                </Link>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {essays.map((essay) => (
+                  <Link
+                    key={essay.slug}
+                    href={`/essays/${essay.slug}`}
+                    className="group flex flex-col p-5 sm:p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 hover:border-violet-500/30 hover:shadow-sm transition-all"
+                  >
+                    <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 leading-snug group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                      {essay.title}
+                    </h3>
+                    {essay.dek && (
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-2 italic">
+                        {essay.dek}
+                      </p>
+                    )}
+                    <span className="mt-4 text-xs text-zinc-400">{essay.readingTimeMin} min read</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notes — the shorter posts (native + Medium) */}
+          {writing.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                  <PenLine className="w-3.5 h-3.5 text-emerald-500" />
+                  Notes — shorter posts
+                </h3>
+                <a
+                  href="https://pranav-srivastava.medium.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+                >
+                  More on Medium ↗
+                </a>
+              </div>
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-900">
+                {writing.map((item) => {
+                  const inner = (
+                    <>
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {item.title}
+                        </span>
+                        <span className="ml-2 text-xs text-zinc-400">
+                          {item.source}
+                          {item.external ? " ↗" : ""}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
+                        <span>{item.readingTimeMin} min read</span>
+                        <span>{formatDate(item.date)}</span>
+                      </div>
+                    </>
+                  );
+                  const cls =
+                    "group flex flex-col sm:flex-row sm:items-center justify-between gap-2 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 -mx-3 px-3 rounded-lg transition-colors";
+                  return item.external ? (
+                    <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                      {inner}
+                    </a>
+                  ) : (
+                    <Link key={item.href} href={item.href} className={cls}>
+                      {inner}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
       )}
 
