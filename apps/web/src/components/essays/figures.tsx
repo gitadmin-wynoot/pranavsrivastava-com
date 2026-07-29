@@ -474,38 +474,46 @@ function CollectiveBrain() {
 
 /* ── The broker: out-of-the-box is often a network position ──────────────── */
 function TheBroker() {
+  // Two tidy 5-node "worlds" (convex pentagons — no crossing links), a broker
+  // above the gap, and two short clean bridges to each world's nearest node.
   const left: Array<[number, number]> = [
-    [96, 70], [60, 130], [120, 120], [80, 196], [150, 176], [130, 44],
+    [150, 105], [193, 136], [176, 186], [124, 186], [107, 136],
   ];
   const right: Array<[number, number]> = [
-    [544, 70], [580, 130], [520, 120], [560, 196], [490, 176], [510, 44],
+    [490, 105], [533, 136], [516, 186], [464, 186], [447, 136],
   ];
-  const linksL: Array<[number, number]> = [[0, 2], [2, 1], [1, 3], [3, 4], [0, 5], [2, 4]];
-  const linksR: Array<[number, number]> = [[0, 2], [2, 1], [1, 3], [3, 4], [0, 5], [2, 4]];
+  const ring: Array<[number, number]> = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0]];
+  const broker: [number, number] = [320, 108];
   return (
     <svg viewBox="0 0 640 250" className="w-full h-auto" fill="none" role="img">
-      <text x="96" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world A</text>
-      <text x="544" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world B</text>
-
-      {linksL.map(([a, b], i) => (
+      {/* world links */}
+      {ring.map(([a, b], i) => (
         <line key={`la${i}`} x1={left[a][0]} y1={left[a][1]} x2={left[b][0]} y2={left[b][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
       ))}
-      {linksR.map(([a, b], i) => (
+      {ring.map(([a, b], i) => (
         <line key={`lb${i}`} x1={right[a][0]} y1={right[a][1]} x2={right[b][0]} y2={right[b][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
       ))}
+
+      {/* the bridge across the gap — short, clear of all text */}
+      <line x1={broker[0]} y1={broker[1]} x2={left[1][0]} y2={left[1][1]} className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
+      <line x1={broker[0]} y1={broker[1]} x2={right[4][0]} y2={right[4][1]} className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
+
+      {/* world nodes */}
       {left.map(([x, y], i) => (
-        <circle key={`a${i}`} cx={x} cy={y} r="5" className="fill-blue-500/80" />
+        <circle key={`a${i}`} cx={x} cy={y} r="5" className="fill-blue-500/85" />
       ))}
       {right.map(([x, y], i) => (
-        <circle key={`b${i}`} cx={x} cy={y} r="5" className="fill-emerald-500/80" />
+        <circle key={`b${i}`} cx={x} cy={y} r="5" className="fill-emerald-500/85" />
       ))}
 
-      {/* the bridge */}
-      <line x1="150" y1="176" x2="320" y2="125" className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
-      <line x1="320" y1="125" x2="490" y2="176" className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
-      <circle cx="320" cy="125" r="8" className="fill-amber-500" />
-      <text x="320" y="104" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="12" fontWeight="600">the broker</text>
-      <text x="320" y="150" textAnchor="middle" className="fill-zinc-400" fontSize="10" fontStyle="italic">sees both — combines what neither can</text>
+      {/* broker */}
+      <circle cx={broker[0]} cy={broker[1]} r="8" className="fill-amber-500" />
+      <text x={broker[0]} y="88" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="12" fontWeight="600">the broker</text>
+
+      {/* labels — all clear of the lines */}
+      <text x="320" y="178" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">sees what neither world can</text>
+      <text x="150" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world A</text>
+      <text x="490" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world B</text>
     </svg>
   );
 }
