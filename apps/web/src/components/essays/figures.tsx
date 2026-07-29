@@ -12,6 +12,8 @@ import { SyncField } from "./sync-field";
 import { ThinkingToolkit } from "./thinking-toolkit";
 import { ThinkerTypes } from "./thinker-types";
 import { LeapsTimeline } from "./leaps-timeline";
+import { PrastaraBinary } from "./prastara-binary";
+import { FibonacciRhythms } from "./fibonacci-rhythms";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -518,7 +520,85 @@ function TheBroker() {
   );
 }
 
+/* ── Meru-prastāra: the binomial triangle from prosody (= Pascal's) ──────── */
+function MeruPrastara() {
+  const rows = 7;
+  const tri: number[][] = [];
+  for (let r = 0; r < rows; r++) {
+    const row: number[] = [];
+    for (let k = 0; k <= r; k++) {
+      row.push(k === 0 || k === r ? 1 : tri[r - 1][k - 1] + tri[r - 1][k]);
+    }
+    tri.push(row);
+  }
+  const cx = 320;
+  const dx = 46;
+  const dy = 30;
+  const y0 = 40;
+  return (
+    <svg viewBox="0 0 640 268" className="w-full h-auto" fill="none" role="img">
+      {tri.map((row, r) =>
+        row.map((v, k) => {
+          const x = cx + (k - r / 2) * dx;
+          const y = y0 + r * dy;
+          const edge = k === 0 || k === r;
+          return (
+            <text
+              key={`${r}-${k}`}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              className={edge ? "fill-amber-600 dark:fill-amber-400" : "fill-zinc-500 dark:fill-zinc-300"}
+              fontSize="13"
+              fontWeight={edge ? "700" : "500"}
+            >
+              {v}
+            </text>
+          );
+        })
+      )}
+      <text x="320" y="258" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">
+        row n, place k = number of metres with exactly k heavy syllables = C(n, k)
+      </text>
+    </svg>
+  );
+}
+
+/* ── One idea, many names: found early in India, named later in Europe ───── */
+function OneIdeaManyNames() {
+  const tracks = [
+    { y: 60, idea: "Binary numbers", origin: "Piṅgala · ~2nd c. BCE", named: "Leibniz 1703 · Shannon's \"bit\" 1948", ox: 150, nx: 520 },
+    { y: 130, idea: "Fibonacci sequence", origin: "Piṅgala → Virahāṅka · to ~700 CE", named: "Fibonacci · 1202", ox: 150, nx: 430 },
+    { y: 200, idea: "Pascal's triangle", origin: "Piṅgala → Halāyudha · ~950 CE", named: "Pascal · 1654", ox: 260, nx: 470 },
+  ];
+  return (
+    <svg viewBox="0 0 640 250" className="w-full h-auto" fill="none" role="img">
+      {tracks.map((t, i) => (
+        <g key={i}>
+          <text x="20" y={t.y - 14} className="fill-zinc-700 dark:fill-zinc-200" fontSize="12" fontWeight="600">{t.idea}</text>
+          <line x1={t.ox} y1={t.y} x2={t.nx} y2={t.y} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1.25" strokeDasharray="4 5" />
+          <circle cx={t.ox} cy={t.y} r="5.5" className="fill-amber-500" />
+          <text x={t.ox} y={t.y + 20} textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="10">{t.origin}</text>
+          <circle cx={t.nx} cy={t.y} r="5.5" className="fill-blue-500" />
+          <text x={t.nx} y={t.y + 20} textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="10">{t.named}</text>
+        </g>
+      ))}
+      <text x="320" y="238" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">● found first, in verse &nbsp;·&nbsp; ● named later, and remembered</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "meru-prastara": {
+    node: <MeruPrastara />,
+    caption:
+      "The meru-prastāra — the \"staircase of Mount Meru\" — laid out by the commentator Halāyudha around 950 CE to count how many metres have a given number of heavy syllables. It is Pascal's triangle, roughly seven centuries before Pascal.",
+  },
+  "one-idea-many-names": {
+    node: <OneIdeaManyNames />,
+    caption:
+      "Three ideas that quietly run modern computing, found first in the counting of Sanskrit verse and named centuries later in Europe. Not a conspiracy — the ordinary way credit follows language and print. The honest map of discovery is more crowded, and more global, than the textbooks.",
+  },
   "the-broker": {
     node: <TheBroker />,
     caption:
@@ -616,4 +696,6 @@ export const essayComponents = {
   ThinkingToolkit,
   ThinkerTypes,
   LeapsTimeline,
+  PrastaraBinary,
+  FibonacciRhythms,
 };

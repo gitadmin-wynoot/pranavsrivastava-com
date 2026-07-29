@@ -1,0 +1,93 @@
+---
+title: "The First Bit Was a Syllable"
+slug: "the-first-bit-was-a-syllable"
+dek: "Around 2,200 years ago an Indian scholar named Piṅgala set out to count the rhythms of poetry — and on the way invented binary numbers, the Fibonacci sequence, Pascal's triangle, and a fast way to raise numbers to powers. Here is how counting verse built the logic your phone runs on, explained from scratch."
+summary: "A from-scratch, example-first tour of Piṅgala's Chandaḥśāstra and how counting the light and heavy syllables of Sanskrit metre produced binary encoding, base conversion (naṣṭa/uddiṣṭa), fast exponentiation, the binomial triangle (meru-prastāra = Pascal's), and the Fibonacci sequence — centuries to two millennia before their European namesakes. Why it happened in poetry, why it still runs modern computing and AI, and why almost nobody was taught it. Interactive figures and sources."
+category: "Systems & Tech"
+published: true
+publishedAt: "2026-07-29"
+---
+
+I want to tell you about the most important computer scientist you have never heard of, who lived more than two thousand years before the computer, and whose subject was not mathematics or engineering but *poetry*. His name was Piṅgala, and when I properly understood what he did, I had to put the book down and walk around the room. Because the thing he built, while trying to do something as gentle as catalogue the rhythms of verse, is the thing your phone is doing right now to show you this sentence.
+
+This is a story about how counting poems accidentally produced binary numbers, the Fibonacci sequence, Pascal's triangle, and a clever shortcut for raising numbers to powers — each of them centuries, sometimes two millennia, ahead of the European names we hang on them. I am going to build it up from nothing, with small examples you can check on your fingers, because the ideas are genuinely simple once someone shows you. That is the wonderful part. It was never hard. It was just waiting for someone to *count*.
+
+## A poet with a counting problem
+
+Piṅgala wrote a treatise called the *Chandaḥśāstra* — a work on *chandas*, Sanskrit metre — sometime around the third or second century BCE. (The exact date is genuinely uncertain; scholars argue about it, and I won't pretend otherwise.) His problem was the one every poet in that tradition lived inside: Sanskrit verse is built on a strict rhythm of syllables, and each syllable comes in exactly two kinds. A syllable is either **laghu** — light, short — or **guru** — heavy, long. That's it. Two options, no third.
+
+So a line of poetry with, say, four syllables is just a sequence of four choices, each one light or heavy. And here is the first click of the whole story, the one everything else hangs on: *a line of verse is a string of two-way choices.* Piṅgala wanted to catalogue every possible metre. To do that, he had to answer a counting question — how many are there, and how do you list them all in order? — and answering it dragged him, step by step, into inventing the mathematics of information itself.
+
+## Light and heavy: a syllable is a bit
+
+Start as small as it goes. One syllable: two possible metres, light or heavy. Two syllables: light-light, light-heavy, heavy-light, heavy-heavy — four metres. Three syllables: eight. Every time you add a syllable, you double the count, because each old pattern can be extended two ways. Four syllables give sixteen; ten syllables give 1,024; *n* syllables give 2 multiplied by itself *n* times — what we'd write 2ⁿ.
+
+Now do the thing Piṅgala did, and give the two states names that aren't "light" and "heavy." Call light **0** and heavy **1**. Suddenly a metre isn't a rhythm at all — it's a *binary number*. And listing every metre of *n* syllables in order is just counting from zero upward in binary. Play with it:
+
+<PrastaraBinary />
+
+Piṅgala called this listing the **prastāra** — the "spreading out." It is, precisely and unmistakably, the enumeration of all binary strings of a given length. He wrote down the procedure for generating the whole table by hand, row after row, in the same order your computer would produce today. A poet, before the idea of zero had even settled into Indian mathematics, was writing binary numbers to organise the sound of poems.
+
+## The computer's oldest trick
+
+It gets sharper. Piṅgala didn't only list the metres — he gave two procedures that any programmer will recognise on sight. One, called **naṣṭa**, answers: *given a row number, which metre is it?* The other, **uddiṣṭa**, answers the reverse: *given a metre, what is its row number?*
+
+Read those again with modern eyes. "Given a number, produce its binary pattern" is *decimal-to-binary conversion.* "Given a binary pattern, produce its number" is *binary-to-decimal conversion.* This is the single most routine operation inside every digital device on Earth — it happens billions of times a second in the machine you are holding — and the algorithm for it was written down, to help poets look up metres, over two thousand years ago. When you drag the slider in the figure above and watch the pattern change, you are running naṣṭa. Piṅgala got there first.
+
+## A shortcut to enormous powers
+
+Here is a move that genuinely startled me. To know how many metres a long line allows, you need 2ⁿ, and for a big *n* that is a big number — 2²⁰ is over a million. The plodding way is to multiply 2 by itself twenty times. But the *Chandaḥśāstra*, as its later commentators spell out, gives a shortcut: to build the answer, keep **halving** the exponent and **squaring** as you go, and only occasionally doubling. To reach 2¹⁶ you don't do sixteen multiplications — you square four times: 2 → 4 → 16 → 256 → 65,536. Four steps instead of sixteen.
+
+That trick has a modern name — **exponentiation by squaring**, or "square-and-multiply" — and it is not a museum piece. It is the beating heart of modern cryptography. Every time your browser sets up a secure connection, it raises gigantic numbers to gigantic powers, and it does so with exactly this halve-and-square logic, because the plodding way would outlast the universe. The maths that keeps your bank details private is, in its bones, the maths Piṅgala used to count syllables.
+
+## The staircase of Mount Meru
+
+Now change the question slightly. Not "how many metres are there," but "how many metres of *n* syllables have exactly *k* heavy ones?" How many four-syllable lines have exactly two heavy syllables? (Six, if you want to check: the two heavies can sit in any of six pairs of positions.) Ask that for every *n* and every *k*, stack the answers in a triangle, and you get a shape the Indian prosodists called the **meru-prastāra**, the "staircase of Mount Meru."
+
+<EssayFigure name="meru-prastara" />
+
+You may know this triangle by another name. Each number is the sum of the two above it; the edges are all ones; the rows read 1; 1,1; 1,2,1; 1,3,3,1. It is **Pascal's triangle** — and the commentator Halāyudha laid it out, explicitly, around 950 CE, to solve this prosody problem. Blaise Pascal, whose name it wears, was born in 1623, nearly seven centuries later. Those numbers, the *binomial coefficients*, are everywhere now: in probability, in the bell curve, in combinatorics, in the guts of machine learning. They fell out of a poet's filing system.
+
+## The rhythm that is Fibonacci
+
+Save the most beautiful for last. Sanskrit also has metres counted not by number of syllables but by *duration*. A light syllable takes one beat — call it one unit of time, one *mātrā*. A heavy syllable takes two. So now ask: how many different rhythms last exactly *n* beats?
+
+Do it by hand for a moment, it's a joy. Four beats. You could go short-short-short-short (1+1+1+1). Or short-short-long (1+1+2). Or short-long-short. Or long-short-short. Or long-long (2+2). That's five rhythms for four beats. Try three beats and you get three; try five and you get eight. Watch:
+
+<FibonacciRhythms />
+
+One, two, three, five, eight, thirteen. That is the **Fibonacci sequence** — and here is *why* it must be, in one sentence you can feel: any rhythm of *n* beats ends in either a short syllable (with an (n−1)-beat rhythm in front of it) or a long one (with an (n−2)-beat rhythm in front). So the count for *n* is the count for n−1 plus the count for n−2. That is Fibonacci's rule exactly, and it is *forced* by the fact that syllables come in lengths one and two.
+
+Indian prosodists knew this. Virahāṅka stated the rule somewhere around 600–800 CE; Gopāla and the great Hemachandra worked with it in the twelfth century — before Leonardo of Pisa, "Fibonacci," wrote down his famous rabbits in 1202. The historian Parmanand Singh documented all this carefully in 1985, and Donald Knuth, the closest thing computer science has to a patron saint, credits the Indian prosodists in *The Art of Computer Programming*. The Fields medallist Manjul Bhargava now delights audiences by teaching the Fibonacci numbers straight from Sanskrit poetry — the way, he points out, he first met them as a child. The sequence that turns up in sunflowers and pinecones and the spiral of a shell first turned up in the counting of *rhythm*.
+
+## Why poetry, of all places?
+
+It stopped me, at first — that this cascade of computer science came out of literary criticism rather than astronomy or trade. But the more I sat with it, the more inevitable it felt, and the reason connects straight to something I wrote about in an [earlier essay](/essays/seeing-early-thinking-sideways): **a hard constraint is a maths problem in disguise.**
+
+Metre is a rigid rule. Once you insist that a syllable is exactly light-or-heavy and a line is exactly *n* of them, you have — without meaning to — defined a perfectly discrete, combinatorial system. And the natural thing to do with a combinatorial system, if you are curious, is *count it*: enumerate it, index it, find the pattern in the totals. Poetry gave Piṅgala the cleanest possible binary alphabet — two crisp states, no fuzz — and a reason to care how the combinations stacked up. The Indian tradition was already fluent in this move: Pāṇini had earlier described the whole of Sanskrit as a formal system of ordered rules, an algorithm for a language. Treating art as a structure you could compute over was in the water. The lesson repeats through history and it's worth tattooing somewhere: the deepest technology often hides in the least "technical"-looking room.
+
+## From a syllable to the bit
+
+Draw the line all the way forward and it lands on the device in your hand. In 1948, Claude Shannon founded information theory and gave us the **bit** — the irreducible atom of information, a single two-way choice, 0 or 1. Every photo, song, message, and model weight is, underneath, a long string of these. Shannon's bit and Piṅgala's syllable are the *same idea*: that anything, however rich, can be encoded as a sequence of binary choices. Between them stands Leibniz, who formalised binary arithmetic in 1703 and was so taken with it he saw the hand of God in the pattern — and who, tellingly, found the same binary structure staring back at him from the ancient Chinese hexagrams of the *I Ching*.
+
+Which is the quiet joke threaded through this whole piece. Binary was discovered by Piṅgala in India, echoed in the *I Ching* in China, formalised by Leibniz in Germany, and crowned by Shannon in America — a textbook case of the [multiple discovery](/essays/something-in-the-air) I wrote about last time. Big ideas are not owned. They get *found*, again and again, by whoever is standing in front of the open door — and encoding-the-world-as-choices is a door humanity has walked through on at least three continents.
+
+And Piṅgala's real invention, the one under all the others, is the one that now powers the strangest technology of our age. It was not binary, or Fibonacci, or the triangle. It was the *deeper idea that structure is countable* — that a qualitative, human thing like the rhythm of a poem can be turned into number and computed over without losing what makes it what it is. That move — encode meaning as number, then calculate — is exactly what a modern AI does when it turns a word into a list of coordinates. (If that idea grabs you, it's the whole subject of the [embeddings course](/courses/embeddings-in-depth).) The line from Piṅgala's light-and-heavy to a language model's billion numbers is not a metaphor. It is one continuous thought, two thousand years long.
+
+## Why you never heard this
+
+So why isn't this on the first page of every book about the history of computing? Not a conspiracy — something duller and more human. Credit tends to follow language and print. The name that sticks is usually the one written in the tradition that later dominated the textbooks, in the language those textbooks were written in.
+
+<EssayFigure name="one-idea-many-names" />
+
+The point of noticing this is not to stage a contest and swap the trophies. Fibonacci, Pascal, Leibniz and Shannon each did real, original, magnificent work, and knew nothing of Piṅgala when they did it. The point is bigger and kinder than a scoreboard: the true map of human discovery is far more crowded, and far more global, than we were taught. Scholars have been quietly redrawing it for decades — Kim Plofker's *Mathematics in India*, B. van Nooten's careful paper on binary numbers in Indian antiquity, Parmanand Singh on the Fibonacci sequence. When you let the map fill in, the story of where ideas come from gets less like a relay of lone Western geniuses and more like what it actually is: a species, everywhere, thinking hard about whatever is in front of it — even, especially, the music of a poem.
+
+## The idea worth keeping
+
+I keep coming back to the image of Piṅgala at his work: no computer, no notion of the bit, not even the fully-formed idea of zero yet, sitting with the light and heavy syllables of his language and simply asking *how many ways?* — and, by taking that small question seriously, laying down the logic that would one day run the world.
+
+There's a lesson in it I find genuinely useful, and not only historically. Revolutionary structure is usually already lying around in something we don't consider technical at all — a game, a grammar, a poem, a piece of music. It just needs someone curious enough to count it. The next Piṅgala is probably staring at something equally unglamorous right now. If any part of this made the hair on your arm stand up the way it did on mine, let that be the takeaway: the door is still open, on every continent, and it is usually hiding somewhere no one thought to look.
+
+---
+
+**Sources & further reading:** Piṅgala's *Chandaḥśāstra* with the commentary of Halāyudha (*Mṛtasañjīvanī*, c. 10th century) for the prastāra, meru-prastāra, and the counting rules; B. van Nooten, "Binary Numbers in Indian Antiquity," *Journal of Indian Philosophy* (1993); Parmanand Singh, "The So-called Fibonacci Numbers in Ancient and Medieval India," *Historia Mathematica* 12 (1985); Donald Knuth, *The Art of Computer Programming* (Vols. 1 and 4A) on Indian prosody, enumeration, and the origins of the Fibonacci numbers; Kim Plofker, *Mathematics in India* (2009); Virahāṅka, Gopāla and Hemachandra on mātrā-metres and the Fibonacci recurrence; Leibniz, "Explication de l'arithmétique binaire" (1703); and Claude Shannon, "A Mathematical Theory of Communication" (1948). Datings for Piṅgala and the early prosodists are uncertain and given conservatively; the achievements are remarkable without embellishment, which is the only kind of remarkable worth writing about.
