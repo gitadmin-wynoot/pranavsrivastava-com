@@ -7,6 +7,8 @@ import { AIFootprint } from "./ai-footprint";
 import { FourTurnings } from "./four-turnings";
 import { ProgressReceipts } from "./progress-receipts";
 import { HubsCompare } from "./hubs-compare";
+import { MultipleDiscovery } from "./multiple-discovery";
+import { SyncField } from "./sync-field";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -383,7 +385,101 @@ function PerezSurge() {
   );
 }
 
+/* ── The adjacent possible: combinations open new frontiers ──────────────── */
+function AdjacentPossible() {
+  const have: Array<[number, number]> = [
+    [70, 90], [110, 150], [78, 200], [150, 110], [140, 190],
+  ];
+  const made: Array<[number, number]> = [
+    [300, 96], [320, 168], [290, 210],
+  ];
+  const combos: Array<[number, number, number, number]> = [
+    [70, 90, 300, 96], [150, 110, 300, 96], [140, 190, 320, 168], [110, 150, 320, 168], [78, 200, 290, 210],
+  ];
+  const frontier: Array<[number, number]> = [
+    [500, 70], [540, 120], [520, 176], [498, 224], [560, 200],
+  ];
+  return (
+    <svg viewBox="0 0 640 270" className="w-full h-auto" fill="none" role="img">
+      <text x="70" y="46" className="fill-zinc-500 dark:fill-zinc-400" fontSize="12" fontWeight="600">what exists</text>
+      <text x="70" y="62" className="fill-zinc-400" fontSize="10">the pieces you already have</text>
+      {combos.map(([x1, y1, x2, y2], i) => (
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
+      ))}
+      {have.map(([x, y], i) => (
+        <circle key={`h${i}`} cx={x} cy={y} r="5" className="fill-blue-500" />
+      ))}
+      <text x="300" y="52" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="12" fontWeight="600">new combinations</text>
+      {made.map(([x, y], i) => (
+        <circle key={`m${i}`} cx={x} cy={y} r="5.5" className="fill-emerald-500" />
+      ))}
+      {/* frontier arrows */}
+      {made.map(([x, y], i) => (
+        <line key={`f${i}`} x1={x} y1={y} x2={frontier[i][0] - 14} y2={frontier[i][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" strokeDasharray="3 5" />
+      ))}
+      <text x="560" y="46" textAnchor="end" className="fill-violet-600 dark:fill-violet-400" fontSize="12" fontWeight="600">the adjacent possible</text>
+      <text x="560" y="62" textAnchor="end" className="fill-zinc-400" fontSize="10">reachable next — for anyone standing here</text>
+      {frontier.map(([x, y], i) => (
+        <circle key={`p${i}`} cx={x} cy={y} r="5" className="stroke-violet-400 dark:stroke-violet-500" strokeWidth="1.5" strokeDasharray="2 3" />
+      ))}
+    </svg>
+  );
+}
+
+/* ── The collective brain: sparse & slow → dense & instant ───────────────── */
+function CollectiveBrain() {
+  const left: Array<[number, number]> = [
+    [70, 80], [140, 60], [110, 140], [60, 190], [150, 200], [200, 120], [95, 110],
+  ];
+  const leftLinks: Array<[number, number]> = [[0, 6], [6, 2], [2, 3], [1, 5]];
+  const right: Array<[number, number]> = [
+    [400, 70], [470, 55], [540, 80], [580, 140], [540, 200], [470, 215], [405, 190], [385, 130],
+    [500, 120], [450, 150], [520, 165], [430, 100],
+  ];
+  return (
+    <svg viewBox="0 0 640 260" className="w-full h-auto" fill="none" role="img">
+      <line x1="320" y1="24" x2="320" y2="236" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" strokeDasharray="3 6" />
+
+      {/* left — sparse */}
+      <text x="60" y="34" className="fill-zinc-500 dark:fill-zinc-400" fontSize="12" fontWeight="600">printing-press era</text>
+      <text x="60" y="50" className="fill-zinc-400" fontSize="10">few minds, few links — ideas crawl</text>
+      {leftLinks.map(([a, b], i) => (
+        <line key={i} x1={left[a][0]} y1={left[a][1]} x2={left[b][0]} y2={left[b][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
+      ))}
+      {left.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="5" className={i === 0 ? "fill-amber-500" : "fill-zinc-300 dark:fill-zinc-600"} />
+      ))}
+
+      {/* right — dense */}
+      <text x="580" y="34" textAnchor="end" className="fill-zinc-500 dark:fill-zinc-400" fontSize="12" fontWeight="600">networked now</text>
+      <text x="580" y="50" textAnchor="end" className="fill-zinc-400" fontSize="10">many minds, dense links — ideas arrive at once</text>
+      {right.map((_, i) =>
+        right.slice(i + 1).map(([x2, y2], j) => {
+          const [x1, y1] = right[i];
+          const near = Math.hypot(x2 - x1, y2 - y1) < 90;
+          return near ? (
+            <line key={`${i}-${j}`} x1={x1} y1={y1} x2={x2} y2={y2} className="stroke-emerald-400/30 dark:stroke-emerald-500/25" strokeWidth="0.75" />
+          ) : null;
+        })
+      )}
+      {right.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="5" className="fill-emerald-500" />
+      ))}
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "adjacent-possible": {
+    node: <AdjacentPossible />,
+    caption:
+      "Stuart Kauffman's 'adjacent possible': every new idea is a recombination of ones that already exist, and each new piece opens a fresh frontier of things now reachable — by anyone standing in the same place. This is why discoveries cluster, and why they speed up.",
+  },
+  "collective-brain": {
+    node: <CollectiveBrain />,
+    caption:
+      "The 'collective brain' (Henrich; Muthukrishna) is intelligence held between minds, not inside one. Add more people and, especially, more connections between them, and the same idea reaches everyone almost at once — the difference between the printing press and the feed.",
+  },
   "perez-surge": {
     node: <PerezSurge />,
     caption:
@@ -461,4 +557,6 @@ export const essayComponents = {
   FourTurnings,
   ProgressReceipts,
   HubsCompare,
+  MultipleDiscovery,
+  SyncField,
 };
