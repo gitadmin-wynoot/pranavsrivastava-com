@@ -14,6 +14,8 @@ import { ThinkerTypes } from "./thinker-types";
 import { LeapsTimeline } from "./leaps-timeline";
 import { PrastaraBinary } from "./prastara-binary";
 import { FibonacciRhythms } from "./fibonacci-rhythms";
+import { PratyaharaIndex } from "./pratyahara-index";
+import { GrammarMachine } from "./grammar-machine";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -588,7 +590,71 @@ function OneIdeaManyNames() {
   );
 }
 
+/* ── A derivation: the grammar "runs" to build a word ────────────────────── */
+function DerivationTrace() {
+  const steps = [
+    { form: "rāma + su", note: "start: stem + nominative-singular affix" },
+    { form: "rāma + s", note: "the 'u' is a silent marker (it) — strip it" },
+    { form: "rāmaḥ", note: "word-final s before a pause → visarga ḥ" },
+  ];
+  return (
+    <svg viewBox="0 0 640 232" className="w-full h-auto" fill="none" role="img">
+      {steps.map((s, i) => {
+        const y = 44 + i * 62;
+        return (
+          <g key={i}>
+            <rect x="150" y={y - 22} width="200" height="40" rx="8" className="fill-blue-500/10 stroke-blue-500/50" strokeWidth="1.25" />
+            <text x="250" y={y + 3} textAnchor="middle" className="fill-zinc-800 dark:fill-zinc-100" fontSize="15" fontWeight="600">{s.form}</text>
+            <text x="372" y={y + 3} className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">{s.note}</text>
+            {i < steps.length - 1 && (
+              <>
+                <line x1="250" y1={y + 18} x2="250" y2={y + 40} className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" />
+                <path d={`M250,${y + 40} l-4,-8 l8,0 z`} className="fill-zinc-400 dark:fill-zinc-500" />
+              </>
+            )}
+          </g>
+        );
+      })}
+      <text x="250" y="216" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="12" fontWeight="600">output: &ldquo;Rāma&rdquo; (as the subject)</text>
+    </svg>
+  );
+}
+
+/* ── The generative lineage: one idea, re-found and formalised ───────────── */
+function GenerativeLineage() {
+  const nodes = [
+    { x: 70, label: "Pāṇini", sub: "~500 BCE", color: "fill-amber-500", tcol: "fill-amber-600 dark:fill-amber-400" },
+    { x: 250, label: "Chomsky", sub: "1957 · generative grammar", color: "fill-blue-500", tcol: "fill-blue-600 dark:fill-blue-400" },
+    { x: 400, label: "Backus–Naur", sub: "1959 · BNF for languages", color: "fill-blue-500", tcol: "fill-blue-600 dark:fill-blue-400" },
+    { x: 560, label: "Compilers · NLP · LLMs", sub: "today", color: "fill-emerald-500", tcol: "fill-emerald-600 dark:fill-emerald-400" },
+  ];
+  return (
+    <svg viewBox="0 0 640 150" className="w-full h-auto" fill="none" role="img">
+      <line x1="70" y1="70" x2="560" y2="70" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <line x1="70" y1="70" x2="250" y2="70" className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" strokeDasharray="4 6" />
+      {nodes.map((n, i) => (
+        <g key={i}>
+          <circle cx={n.x} cy="70" r="6" className={n.color} />
+          <text x={n.x} y="52" textAnchor="middle" className={n.tcol} fontSize="12" fontWeight="600">{n.label}</text>
+          <text x={n.x} y="92" textAnchor="middle" className="fill-zinc-400" fontSize="10">{n.sub}</text>
+        </g>
+      ))}
+      <text x="160" y="126" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">a finite set of rules that generates an infinite language</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "derivation-trace": {
+    node: <DerivationTrace />,
+    caption:
+      "A tiny, simplified glimpse of the machine at work: rules fire in order to derive a finished word from a stem and an affix — markers stripped, sound-changes applied. Read it as a program running, because that is essentially what it is.",
+  },
+  "generative-lineage": {
+    node: <GenerativeLineage />,
+    caption:
+      "The same core idea — a finite rule-system generating an infinite language — appears in Pāṇini, is revived by Chomsky, is turned into Backus–Naur Form to define programming languages, and now underlies compilers, NLP, and the grammar-shaped guts of language models. Re-found, not merely inherited.",
+  },
   "meru-prastara": {
     node: <MeruPrastara />,
     caption:
@@ -698,4 +764,6 @@ export const essayComponents = {
   LeapsTimeline,
   PrastaraBinary,
   FibonacciRhythms,
+  PratyaharaIndex,
+  GrammarMachine,
 };

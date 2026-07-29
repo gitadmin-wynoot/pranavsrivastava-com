@@ -1,0 +1,73 @@
+---
+title: "The First Program Was a Grammar"
+slug: "the-first-program-was-a-grammar"
+dek: "Twenty-five centuries ago, Pāṇini described the whole of Sanskrit as a formal system of some four thousand rules — a machine that generates a language. It is, by any honest reckoning, the ancestor of the programming language, the compiler, and the way we teach machines to handle words. Here is how a grammar became the first algorithm."
+summary: "Deep Roots, part two. Pāṇini's Aṣṭādhyāyī (~500 BCE) is a generative, rule-driven, self-referential description of Sanskrit that prefigures formal grammars, Backus–Naur Form, Chomsky's generative grammar, compilers, and modern NLP. A from-scratch look at how the grammar 'runs', its architecture (rules, markers, metarules, precedence, its ingenious sound-index), the 2,500-year-old rule-conflict only recently untangled, and why the foundations of computing were laid by someone with no machine in mind — with the hype about 'Sanskrit, the AI language' honestly separated from the real, remarkable story. Interactive figures and sources."
+category: "Systems & Tech"
+series: "Deep Roots"
+seriesPart: 2
+published: true
+publishedAt: "2026-07-29"
+---
+
+In the [first Deep Roots essay](/essays/the-first-bit-was-a-syllable) I told the story of Piṅgala, who turned the rhythm of poetry into binary numbers. This one is about his intellectual cousin — a man who, a little earlier, did something even more audacious. He took an entire living language and wrote it as a *machine*.
+
+His name was Pāṇini, and he worked in the north-west of the Indian subcontinent sometime around the fifth century BCE — the dating is genuinely uncertain, and I'll keep flagging that rather than pretend to precision no one has. What he left behind is a text called the *Aṣṭādhyāyī*, the "Eight Chapters": roughly four thousand rules that, applied in the right order to a stock of roots and endings, generate every correctly-formed word in Sanskrit and reject the rest. It is not a description of the language in the way a modern school grammar is. It is a *procedure that produces the language.* Which is to say: it is a program, written two and a half thousand years before we built anything that could run one.
+
+The linguist Leonard Bloomfield, no romantic, called it "one of the greatest monuments of human intelligence." I think it is more specific than that. I think it is the oldest surviving piece of software design, and once you see it that way you cannot unsee the whole history of computer science hiding inside a book about how to speak properly.
+
+## A grammar that runs
+
+Start with the thing that makes it a program rather than a textbook: it *derives*. You don't look a word up; you build it, by feeding a root and an affix into the rules and letting them fire in sequence until a finished word falls out the bottom. Here is a deliberately tiny example — the kind of thing the machine does thousands of times a page:
+
+<EssayFigure name="derivation-trace" />
+
+Read that as a trace of a running program, because that is essentially what it is: an input, a sequence of transformations each licensed by a specific rule, and an output. Some rules add material; some delete it; some change a sound because of the sound next to it. Crucially, the rules are *ordered*, and the order matters — apply them in the wrong sequence and you get a different, wrong answer, exactly as with lines of code. Pāṇini even built in the machinery to manage that ordering, which is where this stops looking like grammar and starts looking like engineering.
+
+## The machine's parts
+
+Once you accept that the Aṣṭādhyāyī is a system rather than a list, you can open it up and name the components — and every one of them turns out to be something a programmer reinvented in the twentieth century.
+
+<GrammarMachine />
+
+I want to dwell on two of these, because they are where the genius really shows.
+
+The first is the **metalanguage** — the technical sub-language Pāṇini invented to write the grammar in. He needed to talk *about* sounds and forms with total precision, so he built a compact notation of markers and abbreviations that exists only inside the machine and never appears in the spoken output. Silent tag-letters — the *it* markers — ride along on roots and affixes, telling the rules how to treat them, then get stripped before the word is finished. If you have ever used a type annotation or a compiler flag — metadata that shapes how your code is processed but never shows up in what the user sees — you have used Pāṇini's idea.
+
+The second is the **sound index**, and it is so clever it makes me grin every time. Pāṇini needed to refer constantly to *classes* of sounds — "all the vowels," "the semivowels," "all the consonants" — without writing them out each time. So he opened the grammar with fourteen short lines, the Śiva Sūtras, that list every sound of the language in a very particular order, each line ending in a silent marker. Then any class you want is named by just two symbols: a starting sound and a marker, meaning "everything from here to there." Try it:
+
+<PratyaharaIndex />
+
+That is a *data structure*. He ordered the elements so that every category he cared about became a contiguous range, then gave himself an O(1) way to name it. An engineer building a lookup index today, choosing how to lay out an array so the common queries become simple range scans, is solving the identical problem with the identical trick — roughly twenty-five centuries later.
+
+## The rules about the rules — and a very old bug
+
+Here is my favourite part, because it is the most human. When you have four thousand ordered rules, they sometimes *conflict*: two rules both apply to the same form and demand different things. Any programmer who has fought with overlapping CSS selectors, or method overriding, or precedence in a rule engine, feels this in their spine. Pāṇini felt it too, and he handled it the way we do — with **rules about the rules.** A specific rule beats a general one. And for genuine standoffs he gave a metarule, traditionally read as *"in a conflict, the later rule in the book wins."*
+
+That metarule turned out to be subtle enough to argue about for two and a half thousand years — because "later rule wins" produces wrong forms in various cases, and generations of scholars patched it with exceptions. In 2022 a Cambridge doctoral researcher, Rishi Rajpopat, proposed a cleaner reading — that Pāṇini meant, when two rules apply to the left and right sides of a form, take the one on the *right* — and argued it dissolves the exceptions. It made headlines as "a 2,500-year-old problem solved," which is a touch breathless, and the interpretation is still discussed rather than settled. But strip the drama and look at what it actually is: **people debugging a specification's conflict-resolution semantics — and the spec is older than the Colosseum.** If that isn't computer science, I don't know what would be.
+
+## Why this still runs the world
+
+The reason all of this matters beyond wonder is a single idea Pāṇini put on the table and no one improved on for two millennia: *a finite set of rules can generate an infinite language.* You have a handful of roots, a handful of endings, a few thousand rules — and out of that bounded machinery comes an unbounded set of valid sentences, most of which have never been spoken. That is the founding idea of modern linguistics and, it turns out, of computer science's entire theory of languages.
+
+<EssayFigure name="generative-lineage" />
+
+Watch it re-emerge. In 1957 Noam Chomsky built modern linguistics on exactly this notion — a generative grammar, a finite rule system producing infinite well-formed output — and the *Chomsky hierarchy* he defined is the backbone of formal language theory that every computer science student still learns. Right alongside, John Backus and Peter Naur devised a notation to define the syntax of programming languages — **Backus–Naur Form**, the thing that formally specifies what a valid line of code looks like — and the resemblance to Pāṇini is close enough that in 1967 a computer scientist, P. Z. Ingerman, half-seriously proposed renaming it *Pāṇini–Backus Form.* Every compiler that parses your code against a grammar, every time your editor knows your bracket is unclosed, is running the descendant of an idea first worked out to keep a sacred language exact.
+
+And then there is language itself — the machine handling of it, which is the whole of natural language processing and the beating centre of today's AI. The enterprise only makes sense if language is *structured, formal, computable* — Pāṇini's founding assumption. It's worth being honest here, because this is exactly the kind of place hype creeps in: back in 1985 a NASA researcher, Rick Briggs, published a paper in *AI Magazine* arguing that Sanskrit's grammatical precision made it a natural fit for representing knowledge unambiguously in machines. It got flattened, over the years, into the myth that "Sanskrit is the perfect language for AI," which is nonsense — no natural language is, and no serious system runs on one. The real, sturdier claim is the interesting one: the *tradition* Pāṇini founded — of treating language as a rigorous formal system — is genuinely upstream of computational linguistics, and modern models are, in their own statistical way, still chasing the structure he described by hand. If turning meaning into computable structure is what fascinates you, it's the whole thread of the [embeddings course](/courses/embeddings-in-depth); Pāṇini is where that thread begins.
+
+## The door that keeps opening
+
+None of the people who rebuilt this idea knew Pāṇini when they did it. Chomsky, Backus, Naur — they arrived at the generative-grammar idea on their own, from their own problems. Which is the same pattern I keep running into and wrote about in [another essay](/essays/something-in-the-air): the big ideas don't get owned, they get *re-found*, by whoever is standing in front of the open door. "A finite machine that generates an infinite language" is a door humanity has now walked through in ancient India, in mid-century Massachusetts, and in the design office of an IBM compiler team — each time thinking it was new.
+
+And that is really the thesis of this whole Deep Roots series, visible now across both essays. Piṅgala took *poetry* and found binary in it. Pāṇini took *language* and found the algorithm in it. In both cases the foundations of computing came not from machinery or trade or war, but from taking a humanistic thing — rhythm, grammar — utterly seriously *as a formal system.* Computation was born, twice over, from people who looked at something soft and human and asked: what are its rules, exactly, and how few can I get away with? The hardware showed up two and a half thousand years late. The logic was already here.
+
+## What to take from it
+
+I find something steadying in the picture of Pāṇini at work — no machine, no notion of a computer, no ambition to found computer science, just a scholar trying to pin down a language precisely enough that it could be preserved without drift. He was doing the most conservative thing imaginable, guarding an old exactness. And in the doing, he wrote the first program.
+
+The lesson I keep drawing from these deep roots is the same one, and it's practical, not just pretty: the foundations of the future are usually already lying in the deep past, in the rooms we don't think of as technical — a grammar, a poem, a game, a piece of music. What turns them into the future is a particular way of looking: seeing the soft human thing as a *system*, and asking for its rules. Pāṇini did it to a language. Someone, right now, is doing it to something we haven't thought to formalise yet — and in a century their quiet, conservative act of precision will look like the beginning of everything that came after.
+
+---
+
+**Sources & further reading:** Pāṇini's *Aṣṭādhyāyī*; George Cardona, *Pāṇini: A Survey of Research* (1976) and *Pāṇini: His Work and Its Traditions*; Leonard Bloomfield, *Language* (1933) for the "greatest monuments" assessment; Frits Staal, "Euclid and Pāṇini" (1965); Paul Kiparsky on Pāṇinian rule interaction and the "elsewhere condition"; Noam Chomsky, *Syntactic Structures* (1957) and the Chomsky hierarchy; P. Z. Ingerman, "Pāṇini–Backus Form Suggested," *Communications of the ACM* (1967); Rick Briggs, "Knowledge Representation in Sanskrit and Artificial Intelligence," *AI Magazine* (1985) — read critically; and the 2022 work of Rishi Rajpopat (University of Cambridge) on Pāṇini's conflict-resolution metarule, reported widely and still under scholarly discussion. Datings for Pāṇini are uncertain and given conservatively; the achievement needs no inflation, and inflation — the "perfect AI language" myth — is exactly what this essay tries to strip away.
