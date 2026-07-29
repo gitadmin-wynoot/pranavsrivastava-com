@@ -9,6 +9,9 @@ import { ProgressReceipts } from "./progress-receipts";
 import { HubsCompare } from "./hubs-compare";
 import { MultipleDiscovery } from "./multiple-discovery";
 import { SyncField } from "./sync-field";
+import { ThinkingToolkit } from "./thinking-toolkit";
+import { ThinkerTypes } from "./thinker-types";
+import { LeapsTimeline } from "./leaps-timeline";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -469,7 +472,50 @@ function CollectiveBrain() {
   );
 }
 
+/* ── The broker: out-of-the-box is often a network position ──────────────── */
+function TheBroker() {
+  const left: Array<[number, number]> = [
+    [96, 70], [60, 130], [120, 120], [80, 196], [150, 176], [130, 44],
+  ];
+  const right: Array<[number, number]> = [
+    [544, 70], [580, 130], [520, 120], [560, 196], [490, 176], [510, 44],
+  ];
+  const linksL: Array<[number, number]> = [[0, 2], [2, 1], [1, 3], [3, 4], [0, 5], [2, 4]];
+  const linksR: Array<[number, number]> = [[0, 2], [2, 1], [1, 3], [3, 4], [0, 5], [2, 4]];
+  return (
+    <svg viewBox="0 0 640 250" className="w-full h-auto" fill="none" role="img">
+      <text x="96" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world A</text>
+      <text x="544" y="230" textAnchor="middle" className="fill-zinc-400" fontSize="11">world B</text>
+
+      {linksL.map(([a, b], i) => (
+        <line key={`la${i}`} x1={left[a][0]} y1={left[a][1]} x2={left[b][0]} y2={left[b][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
+      ))}
+      {linksR.map(([a, b], i) => (
+        <line key={`lb${i}`} x1={right[a][0]} y1={right[a][1]} x2={right[b][0]} y2={right[b][1]} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" />
+      ))}
+      {left.map(([x, y], i) => (
+        <circle key={`a${i}`} cx={x} cy={y} r="5" className="fill-blue-500/80" />
+      ))}
+      {right.map(([x, y], i) => (
+        <circle key={`b${i}`} cx={x} cy={y} r="5" className="fill-emerald-500/80" />
+      ))}
+
+      {/* the bridge */}
+      <line x1="150" y1="176" x2="320" y2="125" className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
+      <line x1="320" y1="125" x2="490" y2="176" className="stroke-amber-400" strokeWidth="1.75" strokeDasharray="4 4" />
+      <circle cx="320" cy="125" r="8" className="fill-amber-500" />
+      <text x="320" y="104" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="12" fontWeight="600">the broker</text>
+      <text x="320" y="150" textAnchor="middle" className="fill-zinc-400" fontSize="10" fontStyle="italic">sees both — combines what neither can</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "the-broker": {
+    node: <TheBroker />,
+    caption:
+      "Ronald Burt's \"structural holes\": the richest ideas cluster at the gaps between groups that don't talk. Out-of-the-box thinking is often less a personality than a position — standing where two worlds meet and carrying an idea across.",
+  },
   "adjacent-possible": {
     node: <AdjacentPossible />,
     caption:
@@ -559,4 +605,7 @@ export const essayComponents = {
   HubsCompare,
   MultipleDiscovery,
   SyncField,
+  ThinkingToolkit,
+  ThinkerTypes,
+  LeapsTimeline,
 };
