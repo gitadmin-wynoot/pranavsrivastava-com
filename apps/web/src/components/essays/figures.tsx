@@ -4,6 +4,9 @@ import { TelcoEraSlider } from "./telco-era-slider";
 import { GuardrailSim } from "./guardrail-sim";
 import { NarrativeEpidemic, ViralLottery, NarrativeGenerator } from "./narrative-viz";
 import { AIFootprint } from "./ai-footprint";
+import { FourTurnings } from "./four-turnings";
+import { ProgressReceipts } from "./progress-receipts";
+import { HubsCompare } from "./hubs-compare";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -349,7 +352,43 @@ function NarrativeLoop() {
   );
 }
 
+/* ── Perez's surge: installation → crash → deployment (the golden age) ───── */
+function PerezSurge() {
+  return (
+    <svg viewBox="0 0 640 300" className="w-full h-auto" fill="none" role="img">
+      <line x1="48" y1="250" x2="600" y2="250" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <text x="48" y="272" className="fill-zinc-400" fontSize="11">time →</text>
+
+      {/* installation phase — rises into a bubble */}
+      <path d="M48,236 C 150,214 210,150 250,120 C 276,100 292,150 312,178" className="stroke-amber-500" strokeWidth="2.5" strokeLinecap="round" />
+      {/* the crash / turning point */}
+      <circle cx="312" cy="178" r="5" className="fill-rose-500" />
+      <text x="312" y="204" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11">the crash · turning point</text>
+      {/* deployment phase — the golden age climb */}
+      <path d="M312,178 C 380,168 430,110 596,54" className="stroke-emerald-500" strokeWidth="2.5" strokeLinecap="round" />
+
+      {/* phase labels */}
+      <text x="150" y="70" className="fill-amber-600 dark:fill-amber-400" fontSize="13" fontWeight="600">Installation</text>
+      <text x="150" y="88" className="fill-zinc-400" fontSize="11">finance leads · bubbles inflate</text>
+      <text x="592" y="40" textAnchor="end" className="fill-emerald-600 dark:fill-emerald-400" fontSize="13" fontWeight="600">Deployment</text>
+      <text x="592" y="58" textAnchor="end" className="fill-zinc-400" fontSize="11">production leads · the golden age</text>
+
+      {/* you are here */}
+      <circle cx="356" cy="164" r="4" className="fill-blue-500" />
+      <text x="366" y="150" className="fill-blue-600 dark:fill-blue-400" fontSize="11" fontStyle="italic">roughly here</text>
+
+      {/* surges footnote */}
+      <text x="320" y="292" textAnchor="middle" className="fill-zinc-400" fontSize="10">canals → railways → steel → oil &amp; the car → information &amp; AI</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "perez-surge": {
+    node: <PerezSurge />,
+    caption:
+      "Carlota Perez's pattern for every great technology: an installation phase where finance inflates a bubble, a crash, then a deployment phase where the technology finally spreads into everyday life — the real golden age. We look to be past the crash, early into deployment.",
+  },
   "story-compression": {
     node: <StoryCompression />,
     caption:
@@ -419,4 +458,7 @@ export const essayComponents = {
   ViralLottery,
   NarrativeGenerator,
   AIFootprint,
+  FourTurnings,
+  ProgressReceipts,
+  HubsCompare,
 };
