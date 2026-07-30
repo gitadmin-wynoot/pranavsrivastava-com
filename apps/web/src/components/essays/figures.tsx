@@ -18,6 +18,7 @@ import { PratyaharaIndex } from "./pratyahara-index";
 import { GrammarMachine } from "./grammar-machine";
 import { InventorsGallery } from "./inventors-gallery";
 import { InventionLessons } from "./invention-lessons";
+import { OriginLedger } from "./origin-ledger";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -699,7 +700,42 @@ function PersistenceBars() {
   );
 }
 
+/* ── How the credit travelled (and got renamed) ─────────────────────────── */
+function CreditFlow() {
+  const stops = [
+    { x: 80, label: "India", sub: "origin", note: "numerals · zero · sine · series", color: "fill-emerald-500", tcol: "fill-emerald-600 dark:fill-emerald-400" },
+    { x: 270, label: "Baghdad", sub: "transmits", note: "credited as 'Indian'", color: "fill-blue-500", tcol: "fill-blue-600 dark:fill-blue-400" },
+    { x: 450, label: "Europe", sub: "renames", note: "'Arabic numerals'", color: "fill-amber-500", tcol: "fill-amber-600 dark:fill-amber-400" },
+    { x: 590, label: "the world", sub: "inherits", note: "source forgotten", color: "fill-zinc-400", tcol: "fill-zinc-500 dark:fill-zinc-400" },
+  ];
+  return (
+    <svg viewBox="0 0 640 150" className="w-full h-auto" fill="none" role="img">
+      <line x1="80" y1="66" x2="590" y2="66" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      {stops.slice(0, -1).map((s, i) => (
+        <path key={i} d={`M${s.x + 14},66 L${stops[i + 1].x - 14},66`} className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" markerEnd="" />
+      ))}
+      {stops.map((s, i) => (
+        <path key={`a${i}`} d={i > 0 ? `M${s.x - 14},66 l-8,-4 l0,8 z` : ""} className="fill-zinc-400 dark:fill-zinc-500" />
+      ))}
+      {stops.map((s, i) => (
+        <g key={i}>
+          <circle cx={s.x} cy="66" r="7" className={s.color} />
+          <text x={s.x} y="46" textAnchor="middle" className={s.tcol} fontSize="12" fontWeight="600">{s.label}</text>
+          <text x={s.x} y="88" textAnchor="middle" className="fill-zinc-400" fontSize="10">{s.sub}</text>
+          <text x={s.x} y="104" textAnchor="middle" className="fill-zinc-400" fontSize="9">{s.note}</text>
+        </g>
+      ))}
+      <text x="320" y="138" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">the mathematics kept moving; the credit fell off somewhere over the Mediterranean</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "credit-flow": {
+    node: <CreditFlow />,
+    caption:
+      "The journey of Indian mathematics west — faithfully credited at every step until the last. Arabic scholars called the digits 'Indian'; Europe, inheriting them, called them 'Arabic'. Not a plot, exactly — but a real erosion worth naming and reversing.",
+  },
   "idea-genealogy": {
     node: <IdeaGenealogy />,
     caption:
@@ -833,4 +869,5 @@ export const essayComponents = {
   GrammarMachine,
   InventorsGallery,
   InventionLessons,
+  OriginLedger,
 };

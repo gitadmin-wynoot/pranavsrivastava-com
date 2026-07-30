@@ -22,7 +22,7 @@ const LESSONS: Lesson[] = [
     title: "Stand on shoulders",
     accent: "border-blue-500/40 bg-blue-500/5",
     idea: "\"If I have seen further, it is by standing on the shoulders of giants,\" wrote Newton — borrowing the line itself from Bernard of Chartres, four centuries earlier. Nobody invents alone; every idea has ancestors.",
-    who: "al-Khwārizmī fusing three traditions · Newton quoting the 12th century",
+    who: "al-Khwārizmī building openly on Indian numerals · Newton quoting the 12th century",
     today: "Build on open models, tools, and papers without shame. Originality is what you add on top, and crediting your giants is a strength, not a weakness.",
   },
   {

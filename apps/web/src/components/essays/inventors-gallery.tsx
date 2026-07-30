@@ -24,16 +24,40 @@ type Inventor = {
 
 const PEOPLE: Inventor[] = [
   {
+    emoji: "🌍",
+    name: "Āryabhaṭa",
+    place: "Kusumapura, India",
+    era: "499 CE",
+    accent: "border-emerald-500/40 bg-emerald-500/5",
+    what: "In the Āryabhaṭīya he used the decimal place-value system, wrote the first true sine table (the origin of the sine itself), fixed π at 3.1416 — and called it 'approximate' — and argued the Earth turns on its axis, the stars only seeming to wheel overhead.",
+    human: "He compressed all of it into terse Sanskrit verse, reportedly around twenty-three, so it could be memorised and carried by heart.",
+    lesson: "Reason from first principles even against the obvious. The ground feels still, and he still said it spins.",
+    roots: "Vedic-era astronomy and Śulba geometry",
+    branches: "trigonometry; the numerals that later reached Baghdad",
+  },
+  {
+    emoji: "⭕",
+    name: "Brahmagupta",
+    place: "Bhillamāla, India",
+    era: "628 CE",
+    accent: "border-blue-500/40 bg-blue-500/5",
+    what: "Set down the first known rules for zero as a number, and for negative numbers — 'fortunes and debts' — plus general solutions to quadratic equations. Europe would resist negatives for another thousand years.",
+    human: "He worked it out in the Brāhmasphuṭasiddhānta, a book mostly about astronomy, almost as an aside.",
+    lesson: "Name the nothing. The boldest move is taking an absence seriously enough to compute with it.",
+    roots: "Āryabhaṭa's place-value system",
+    branches: "algebra, accountancy, and every computer's zero",
+  },
+  {
     emoji: "🧮",
     name: "al-Khwārizmī",
     place: "Baghdad",
     era: "c. 820 CE",
     accent: "border-amber-500/40 bg-amber-500/5",
-    what: "Wrote the books that gave us the words algebra (al-jabr) and, from his own Latinised name, algorithm. He didn't invent from nothing — he fused Indian numerals, Greek geometry, and Babylonian method into one system.",
-    human: "A librarian at the House of Wisdom, his real genius was translation — carrying ideas across languages and cultures until they became something new.",
-    lesson: "The bridge is the breakthrough. Synthesis across traditions is invention.",
-    roots: "Brahmagupta's zero (Deep Roots, part 1)",
-    branches: "Fibonacci, and all of computing",
+    what: "Wrote the books that handed Europe the words algebra (from al-jabr) and — via his Latinised name — algorithm. But the number system at their heart was India's: his arithmetic was literally titled On Indian Calculation, and he said so plainly. His gift was transmission — carrying Indian mathematics into the Arabic-speaking world.",
+    human: "A scholar at Baghdad's House of Wisdom, he worked from Indian sources brought to the caliph's court. Centuries later Europe quietly dropped the credit and renamed the digits 'Arabic'.",
+    lesson: "Transmission is real work — but honour whose shoulders you stand on.",
+    roots: "Āryabhaṭa and Brahmagupta's numerals and zero",
+    branches: "European arithmetic (via Fibonacci); the word 'algorithm'",
   },
   {
     emoji: "🔬",
@@ -213,7 +237,7 @@ export function InventorsGallery() {
         </div>
 
         <p className="mt-3 text-[11px] text-zinc-400">
-          Twelve people, four continents, twelve centuries — and not one of them started from a blank page. Every &ldquo;stood on&rdquo; is someone else's &ldquo;grew into.&rdquo;
+          Fourteen people, four continents, fifteen centuries — and notice how many of the shoulders under modern mathematics are Indian, and how often the credit slipped on the journey west. Every &ldquo;stood on&rdquo; is someone else's &ldquo;grew into&rdquo; — the honest question is always <em>whose</em>.
         </p>
       </div>
     </figure>
