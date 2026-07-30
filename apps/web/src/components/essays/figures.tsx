@@ -19,6 +19,8 @@ import { GrammarMachine } from "./grammar-machine";
 import { InventorsGallery } from "./inventors-gallery";
 import { InventionLessons } from "./invention-lessons";
 import { OriginLedger } from "./origin-ledger";
+import { AncientGames } from "./ancient-games";
+import { MachinesVsHumans } from "./machines-vs-humans";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -730,7 +732,51 @@ function CreditFlow() {
   );
 }
 
+/* ── The Royal Game of Ur board (the 20-square rosette layout) ───────────── */
+function UrBoard() {
+  // Which columns exist in the top/bottom rows (middle row is the full bridge).
+  const outer = [0, 1, 2, 3, 6, 7];
+  const rosettes = new Set(["0-0", "0-3", "1-3", "0-6", "0-7"].flatMap((s) => {
+    const [r, c] = s.split("-").map(Number);
+    // mirror the rosette pattern to top and bottom rows where sensible
+    return [`${r}-${c}`, `2-${c}`];
+  }));
+  const cell = 46;
+  const gap = 6;
+  const x0 = 120;
+  const y0 = 40;
+  const items: { r: number; c: number }[] = [];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (r === 1 || outer.includes(c)) items.push({ r, c });
+    }
+  }
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      {items.map(({ r, c }) => {
+        const x = x0 + c * (cell + gap);
+        const y = y0 + r * (cell + gap);
+        const rosette = rosettes.has(`${r}-${c}`) && (c === 0 || c === 3 || c === 6 || c === 7);
+        return (
+          <g key={`${r}-${c}`}>
+            <rect x={x} y={y} width={cell} height={cell} rx="7" className={rosette ? "fill-amber-500/15 stroke-amber-500/60" : "fill-zinc-100 dark:fill-zinc-800 stroke-zinc-300 dark:stroke-zinc-700"} strokeWidth="1.5" />
+            {rosette && (
+              <text x={x + cell / 2} y={y + cell / 2 + 6} textAnchor="middle" className="fill-amber-500" fontSize="18">✦</text>
+            )}
+          </g>
+        );
+      })}
+      <text x="320" y="206" textAnchor="middle" className="fill-zinc-400" fontSize="11" fontStyle="italic">20 squares · land on a ✦ and roll again</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "ur-board": {
+    node: <UrBoard />,
+    caption:
+      "The Royal Game of Ur — around 4,600 years old, and you could learn it in the time it takes to read this caption. Two players race seven pieces along the track; the flowered squares (✦) are safe spots that grant an extra roll. Humanity's oldest playable board game, and still a good night in.",
+  },
   "credit-flow": {
     node: <CreditFlow />,
     caption:
@@ -870,4 +916,6 @@ export const essayComponents = {
   InventorsGallery,
   InventionLessons,
   OriginLedger,
+  AncientGames,
+  MachinesVsHumans,
 };
