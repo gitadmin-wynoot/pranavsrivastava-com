@@ -16,6 +16,8 @@ import { PrastaraBinary } from "./prastara-binary";
 import { FibonacciRhythms } from "./fibonacci-rhythms";
 import { PratyaharaIndex } from "./pratyahara-index";
 import { GrammarMachine } from "./grammar-machine";
+import { InventorsGallery } from "./inventors-gallery";
+import { InventionLessons } from "./invention-lessons";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -644,7 +646,70 @@ function GenerativeLineage() {
   );
 }
 
+/* ── An idea's genealogy: neural nets, through two winters ───────────────── */
+function IdeaGenealogy() {
+  const nodes = [
+    { x: 60, label: "gradient descent", sub: "Cauchy · 1847", color: "fill-zinc-400" },
+    { x: 190, label: "backprop", sub: "Werbos '74 · RHW '86", color: "fill-blue-500" },
+    { x: 380, label: "AlexNet", sub: "ImageNet · 2012", color: "fill-emerald-500" },
+    { x: 540, label: "modern AI", sub: "LLMs · today", color: "fill-emerald-500" },
+  ];
+  return (
+    <svg viewBox="0 0 640 170" className="w-full h-auto" fill="none" role="img">
+      {/* two AI winters as shaded gaps */}
+      <rect x="118" y="40" width="60" height="60" className="fill-zinc-400/10" />
+      <rect x="230" y="40" width="140" height="60" className="fill-zinc-400/10" />
+      <text x="300" y="34" textAnchor="middle" className="fill-zinc-400" fontSize="10" fontStyle="italic">the AI winters — when almost everyone quit</text>
+
+      <line x1="60" y1="70" x2="540" y2="70" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      {nodes.map((n, i) => (
+        <g key={i}>
+          <circle cx={n.x} cy="70" r="6" className={n.color} />
+          <text x={n.x} y="58" textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="11" fontWeight="600">{n.label}</text>
+          <text x={n.x} y="90" textAnchor="middle" className="fill-zinc-400" fontSize="9.5">{n.sub}</text>
+        </g>
+      ))}
+      <text x="320" y="140" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11" fontStyle="italic">~165 years from the maths to the moment — someone kept the flame through every winter</text>
+    </svg>
+  );
+}
+
+/* ── Persistence: attempts before the breakthrough ───────────────────────── */
+function PersistenceBars() {
+  const bars = [
+    { label: "Dyson — vacuum prototypes", value: 5127, disp: "5,127", w: 520 },
+    { label: "Edison — filament materials tried", value: 1600, disp: "~1,600", w: 300 },
+    { label: "Wrights — wing shapes wind-tested", value: 200, disp: "~200", w: 130 },
+    { label: "Hinton — years before vindication", value: 30, disp: "~30 yrs", w: 70 },
+  ];
+  return (
+    <svg viewBox="0 0 640 200" className="w-full h-auto" fill="none" role="img">
+      {bars.map((b, i) => {
+        const y = 30 + i * 42;
+        return (
+          <g key={i}>
+            <text x="16" y={y - 6} className="fill-zinc-500 dark:fill-zinc-400" fontSize="11">{b.label}</text>
+            <rect x="16" y={y} width={b.w} height="16" rx="4" className="fill-amber-500/80" />
+            <text x={b.w + 26} y={y + 13} className="fill-zinc-700 dark:fill-zinc-200" fontSize="12" fontWeight="700">{b.disp}</text>
+          </g>
+        );
+      })}
+      <text x="16" y="196" className="fill-zinc-400" fontSize="10" fontStyle="italic">Figures are the inventors' own widely-cited counts — the point is the order of magnitude, not the decimal.</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "idea-genealogy": {
+    node: <IdeaGenealogy />,
+    caption:
+      "One idea's family tree. The maths under modern AI runs from Cauchy's gradient descent (1847) through backpropagation to the 2012 ImageNet moment and today's models — across roughly a century and a half, and two 'AI winters' when the field was abandoned. Progress isn't a spark; it's a relay somebody refuses to drop.",
+  },
+  "persistence-bars": {
+    node: <PersistenceBars />,
+    caption:
+      "What 'overnight success' actually costs. Breakthroughs sit on top of a mountain of attempts that no one remembers — which is oddly encouraging: the barrier is mostly persistence, and persistence is available to anyone.",
+  },
   "derivation-trace": {
     node: <DerivationTrace />,
     caption:
@@ -766,4 +831,6 @@ export const essayComponents = {
   FibonacciRhythms,
   PratyaharaIndex,
   GrammarMachine,
+  InventorsGallery,
+  InventionLessons,
 };
