@@ -21,6 +21,9 @@ import { InventionLessons } from "./invention-lessons";
 import { OriginLedger } from "./origin-ledger";
 import { AncientGames } from "./ancient-games";
 import { MachinesVsHumans } from "./machines-vs-humans";
+import { PriceOfLight } from "./price-of-light";
+import { ReboundGallery } from "./rebound-gallery";
+import { GlobalReshuffle } from "./global-reshuffle";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -771,7 +774,50 @@ function UrBoard() {
   );
 }
 
+/* ── Elastic demand: why cheaper explodes the quantity ──────────────────── */
+function ElasticDemand() {
+  return (
+    <svg viewBox="0 0 640 280" className="w-full h-auto" fill="none" role="img">
+      {/* axes */}
+      <line x1="70" y1="30" x2="70" y2="240" className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" />
+      <line x1="70" y1="240" x2="600" y2="240" className="stroke-zinc-300 dark:stroke-zinc-700" strokeWidth="1.5" />
+      <text x="60" y="34" textAnchor="end" className="fill-zinc-400" fontSize="11">price</text>
+      <text x="596" y="262" textAnchor="end" className="fill-zinc-400" fontSize="11">quantity used →</text>
+
+      {/* two price levels */}
+      <line x1="70" y1="80" x2="600" y2="80" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" strokeDasharray="3 5" />
+      <line x1="70" y1="200" x2="600" y2="200" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" strokeDasharray="3 5" />
+      <text x="64" y="84" textAnchor="end" className="fill-zinc-400" fontSize="10">dear</text>
+      <text x="64" y="204" textAnchor="end" className="fill-zinc-400" fontSize="10">cheap</text>
+
+      {/* inelastic demand — steep (salt) */}
+      <path d="M150,40 L200,250" className="stroke-zinc-400 dark:stroke-zinc-500" strokeWidth="2.5" />
+      <text x="150" y="34" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11" fontWeight="600">salt</text>
+      <circle cx="164" cy="80" r="4" className="fill-zinc-500" />
+      <circle cx="192" cy="200" r="4" className="fill-zinc-500" />
+      <text x="220" y="150" className="fill-zinc-400" fontSize="10">inelastic — barely moves</text>
+
+      {/* elastic demand — flat (light / compute / intelligence) */}
+      <path d="M120,70 C 260,90 420,190 590,210" className="stroke-emerald-500" strokeWidth="2.5" />
+      <circle cx="150" cy="80" r="4.5" className="fill-emerald-500" />
+      <circle cx="520" cy="200" r="4.5" className="fill-emerald-500" />
+      <text x="470" y="150" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="11" fontWeight="600">light · computing · intelligence</text>
+      <text x="470" y="166" textAnchor="middle" className="fill-zinc-400" fontSize="10">elastic — quantity explodes</text>
+
+      {/* the price drop arrow */}
+      <path d="M96,86 L96,194" className="stroke-blue-500" strokeWidth="1.5" />
+      <path d="M96,194 l-4,-9 l8,0 z" className="fill-blue-500" />
+      <text x="104" y="150" className="fill-blue-600 dark:fill-blue-400" fontSize="10">price falls</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "elastic-demand": {
+    node: <ElasticDemand />,
+    caption:
+      "The whole trick in one picture. Drop the price of something people barely want more of (salt) and little changes. Drop the price of something with near-limitless uses — light, computing, and now intelligence — and the quantity used detonates. Problems have no ceiling, which is exactly why cheap thinking means far more of it.",
+  },
   "ur-board": {
     node: <UrBoard />,
     caption:
@@ -918,4 +964,7 @@ export const essayComponents = {
   OriginLedger,
   AncientGames,
   MachinesVsHumans,
+  PriceOfLight,
+  ReboundGallery,
+  GlobalReshuffle,
 };
