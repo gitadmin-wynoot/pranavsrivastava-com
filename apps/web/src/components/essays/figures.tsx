@@ -24,6 +24,7 @@ import { MachinesVsHumans } from "./machines-vs-humans";
 import { PriceOfLight } from "./price-of-light";
 import { ReboundGallery } from "./rebound-gallery";
 import { GlobalReshuffle } from "./global-reshuffle";
+import { PanicPattern } from "./panic-pattern";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -812,7 +813,38 @@ function ElasticDemand() {
   );
 }
 
+/* ── The recurring arc of a technology panic ─────────────────────────────── */
+function PanicArc() {
+  return (
+    <svg viewBox="0 0 640 240" className="w-full h-auto" fill="none" role="img">
+      <line x1="56" y1="200" x2="600" y2="200" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <text x="56" y="222" className="fill-zinc-400" fontSize="11">time →</text>
+
+      {/* fear — spikes early, then fades */}
+      <path d="M70,150 C 130,60 180,60 230,96 C 300,150 430,182 596,188" className="stroke-amber-500" strokeWidth="2.5" strokeLinecap="round" />
+      <text x="150" y="48" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="12" fontWeight="600">the fear</text>
+
+      {/* jobs / abundance — dips (real disruption), then climbs well above */}
+      <path d="M70,150 C 150,150 200,186 250,184 C 360,180 470,120 596,54" className="stroke-emerald-500" strokeWidth="2.5" strokeLinecap="round" />
+      <text x="560" y="46" textAnchor="end" className="fill-emerald-600 dark:fill-emerald-400" fontSize="12" fontWeight="600">work &amp; abundance</text>
+
+      {/* the real dip */}
+      <circle cx="250" cy="184" r="4.5" className="fill-rose-500" />
+      <text x="250" y="205" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="10">real disruption (this part is true)</text>
+
+      {/* beats */}
+      <text x="120" y="182" textAnchor="middle" className="fill-zinc-400" fontSize="10">new tool</text>
+      <text x="410" y="150" textAnchor="middle" className="fill-zinc-400" fontSize="10">adaptation</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "panic-arc": {
+    node: <PanicArc />,
+    caption:
+      "The shape of nearly every technology panic. Fear spikes early and fades; there is a real dip of disruption for some people (the honest part); and then adaptation carries work and abundance well past where they started. The mistake is reading the dip as the whole story.",
+  },
   "elastic-demand": {
     node: <ElasticDemand />,
     caption:
@@ -967,4 +999,5 @@ export const essayComponents = {
   PriceOfLight,
   ReboundGallery,
   GlobalReshuffle,
+  PanicPattern,
 };
