@@ -25,6 +25,9 @@ import { PriceOfLight } from "./price-of-light";
 import { ReboundGallery } from "./rebound-gallery";
 import { GlobalReshuffle } from "./global-reshuffle";
 import { PanicPattern } from "./panic-pattern";
+import { CognitionCurve } from "./cognition-curve";
+import { ClimatePhilosophers } from "./climate-philosophers";
+import { InwardOutward } from "./two-paths";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -813,6 +816,77 @@ function ElasticDemand() {
   );
 }
 
+/* ── Climate & society: extremes hurt, the temperate middle helps ────────── */
+function ClimateHistory() {
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      <line x1="40" y1="120" x2="600" y2="120" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1" strokeDasharray="4 6" />
+      <text x="40" y="138" className="fill-zinc-400" fontSize="10">← colder</text>
+      <text x="600" y="138" textAnchor="end" className="fill-zinc-400" fontSize="10">time →</text>
+
+      {/* a temperature-ish wiggle across the eras */}
+      <path d="M60,150 C 130,70 180,72 240,150 C 300,220 360,215 420,120 C 470,50 540,44 596,60" className="stroke-blue-500" strokeWidth="2.5" strokeLinecap="round" />
+
+      {/* era markers */}
+      <g>
+        <circle cx="150" cy="76" r="4" className="fill-emerald-500" />
+        <text x="150" y="58" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-400" fontSize="11" fontWeight="600">Medieval warm</text>
+        <text x="150" y="196" textAnchor="middle" className="fill-zinc-400" fontSize="9">farms &amp; cathedrals spread</text>
+      </g>
+      <g>
+        <circle cx="270" cy="196" r="4" className="fill-rose-500" />
+        <text x="270" y="212" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11" fontWeight="600">Little Ice Age</text>
+        <text x="270" y="88" textAnchor="middle" className="fill-zinc-400" fontSize="9">famine, war, the 17th-c. crisis</text>
+      </g>
+      <g>
+        <circle cx="430" cy="118" r="4" className="fill-zinc-500" />
+        <text x="430" y="100" textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-300" fontSize="11" fontWeight="600">Industrial era</text>
+        <text x="430" y="196" textAnchor="middle" className="fill-zinc-400" fontSize="9">heating makes cold livable</text>
+      </g>
+      <g>
+        <circle cx="580" cy="56" r="4" className="fill-amber-500" />
+        <text x="576" y="38" textAnchor="end" className="fill-amber-600 dark:fill-amber-400" fontSize="11" fontWeight="600">now — warming</text>
+      </g>
+    </svg>
+  );
+}
+
+/* ── The air-conditioning paradox: a cooling loop that warms ─────────────── */
+function ACParadox() {
+  const cx = 320;
+  const cy = 118;
+  const r = 66;
+  const nodes = [
+    { a: -90, label: "It's hot", color: "fill-amber-500" },
+    { a: 0, label: "Turn on AC", color: "fill-blue-500" },
+    { a: 90, label: "More energy burned", color: "fill-zinc-500" },
+    { a: 180, label: "More emissions & waste heat", color: "fill-rose-500" },
+  ];
+  const pos = (a: number) => [cx + r * Math.cos((a * Math.PI) / 180), cy + r * Math.sin((a * Math.PI) / 180)];
+  return (
+    <svg viewBox="0 0 640 236" className="w-full h-auto" fill="none" role="img">
+      <circle cx={cx} cy={cy} r={r} className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1.5" strokeDasharray="4 6" />
+      {/* arrows around the loop */}
+      {[-45, 45, 135, 225].map((a, i) => {
+        const [x, y] = pos(a);
+        return <text key={i} x={x} y={y + 4} textAnchor="middle" className="fill-zinc-400" fontSize="14">↻</text>;
+      })}
+      {nodes.map((n, i) => {
+        const [x, y] = pos(n.a);
+        return (
+          <g key={i}>
+            <circle cx={x} cy={y} r="6" className={n.color} />
+            <text x={x} y={n.a === 90 ? y + 20 : n.a === -90 ? y - 12 : y - 12} textAnchor="middle" className="fill-zinc-600 dark:fill-zinc-300" fontSize="11" fontWeight="600">{n.label}</text>
+          </g>
+        );
+      })}
+      <text x={cx} y={cy - 4} textAnchor="middle" className="fill-zinc-500 dark:fill-zinc-400" fontSize="11" fontWeight="600">the loop</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" className="fill-zinc-400" fontSize="9">cooler inside, hotter outside</text>
+      <text x="320" y="228" textAnchor="middle" className="fill-zinc-400" fontSize="10" fontStyle="italic">the same Jevons trap: the fix, scaled up, feeds the problem</text>
+    </svg>
+  );
+}
+
 /* ── The recurring arc of a technology panic ─────────────────────────────── */
 function PanicArc() {
   return (
@@ -840,6 +914,16 @@ function PanicArc() {
 }
 
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "climate-history": {
+    node: <ClimateHistory />,
+    caption:
+      "It was never simply 'cold bad, hot good' or the reverse. Europe's Little Ice Age brought famine and the catastrophic crises of the 1600s; the warmer medieval centuries let farms and cathedrals spread. Extremes at either end hurt — and what changed the game was learning to engineer a temperate middle indoors.",
+  },
+  "ac-paradox": {
+    node: <ACParadox />,
+    caption:
+      "Air conditioning is a genuine lifesaver — and a loop. Cooling one room burns energy and dumps heat and emissions outside, warming the whole, which calls for more cooling. Global cooling demand may triple by mid-century (IEA). The technology that rescues us from the heat can, unmanaged, deepen it.",
+  },
   "panic-arc": {
     node: <PanicArc />,
     caption:
@@ -1000,4 +1084,7 @@ export const essayComponents = {
   ReboundGallery,
   GlobalReshuffle,
   PanicPattern,
+  CognitionCurve,
+  ClimatePhilosophers,
+  InwardOutward,
 };
