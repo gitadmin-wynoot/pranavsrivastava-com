@@ -11,6 +11,9 @@ import { MeaningMap } from "./meaning-map";
 import { SynonymSnap } from "./synonym-snap";
 import { AnalogyMachine } from "./analogy-machine";
 import { Embedding3D } from "./embedding-3d";
+import { ApprovalScenarios } from "./approval-scenarios";
+import { AutonomyMatrix } from "./autonomy-matrix";
+import { CheckpointTimeline } from "./checkpoint-timeline";
 import {
   Info,
   Lightbulb,
@@ -317,5 +320,8 @@ export const courseComponents = {
   SynonymSnap,
   AnalogyMachine,
   Embedding3D,
+  ApprovalScenarios,
+  AutonomyMatrix,
+  CheckpointTimeline,
   pre: CodeBlock,
 };

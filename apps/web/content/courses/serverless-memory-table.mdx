@@ -1,0 +1,790 @@
+---
+title: "The Serverless Memory Table"
+slug: "serverless-memory-table"
+summary: "Give stateful, human-in-the-loop LangGraph agents a durable memory on stateless AWS Lambda by building a custom DynamoDB checkpointer. From the mental model to a production-ready, multi-tenant implementation you can deploy."
+level: "Advanced"
+status: "published"
+order: 6
+track: "applied-ai"
+prereqs: ["react-loop"]
+tags: ["LangGraph", "AWS Lambda", "DynamoDB", "Serverless", "Human-in-the-Loop", "Agents", "Checkpointer", "Multi-tenant"]
+lessonCount: 9
+---
+
+Most people meet agents as a thin wrapper around a language model: send a prompt, get a reply, done. That works right up until the agent has to *do* something in the real world — book a slot, move money, change a record — and pauses to ask a human, "are you sure?" The moment your agent has to wait for an answer that might come in ten seconds or ten hours, the comfortable wrapper falls apart. Where does the half-finished workflow *live* while it waits?
+
+This course answers that question in the hardest place to answer it: on **AWS Lambda**, which forgets everything between invocations and refuses to run for more than fifteen minutes. We will build the thing that makes durable, pause-and-resume agents possible there — a custom **DynamoDB checkpointer** for LangGraph. By the end you will understand exactly why it is needed, and you will have a complete, multi-tenant implementation you can deploy.
+
+<Callout type="info" title="What this really teaches">
+The specific artefact is a checkpointer. The transferable idea is bigger: how to turn a stateless function-as-a-service into a reliable, long-running, human-in-the-loop *process*. That pattern shows up far beyond agents.
+</Callout>
+
+<LearningObjectives>
+- Explain the shift from a stateless LLM call to a durable, process-aware state machine
+- Judge when an agent's action genuinely requires human approval — and when gating it is harmful
+- Define what a LangGraph checkpointer is and the exact contract it must satisfy
+- Understand why serverless (Lambda) breaks in-memory state, and design around it
+- Design a DynamoDB single-table schema that stores checkpoints, intermediate writes, and operational metadata
+- Implement a production `BaseCheckpointSaver` with serialization, compression, and tenant isolation
+- Build a human-in-the-loop pause/resume flow that survives across separate Lambda invocations
+- Enforce secure multi-tenancy from a Cognito JWT, and deploy and operate the table safely
+</LearningObjectives>
+
+<ChapterHeader number={1} title="Background — from an LLM wrapper to a process" time={10} />
+
+Start with the mental model, because everything else follows from it.
+
+A plain chatbot is essentially **stateless**. You send the whole conversation, the model responds, and nothing needs to persist on the server — if the client keeps the message history, the server can forget you entirely between requests. This is why simple LLM apps scale so easily.
+
+An **agent** is different in kind, not just degree. It runs a *loop* (you saw this in [The ReAct Loop](/courses/react-loop)): think, act, observe, repeat. Along the way it accumulates real state — what it has tried, what tools returned, what it is waiting for. And crucially, a serious agent sometimes has to **stop and wait for a human**. Consider a booking agent that wants to override a customer's slot: responsible design does not let it act unilaterally. It proposes, then pauses for approval.
+
+<KeyTerm definition="A computation that remembers where it is between steps, can pause, and can be resumed later exactly where it left off — as opposed to a single request that runs start-to-finish and forgets everything.">Process-aware state machine</KeyTerm> is the phrase worth holding onto. The instant your agent can *pause and wait*, it stops being a request and becomes a process. And a process needs a place to keep its state while it waits — somewhere durable, outside the memory of any single running function.
+
+<Diagram title="Wrapper vs process" caption="A wrapper runs once and forgets. A process remembers, pauses, and resumes — possibly hours later, on a different machine.">
+
+```
+  LLM WRAPPER (stateless)
+  request ──► model ──► response ──► forgotten
+
+  AGENTIC PROCESS (stateful)
+  request ──► think ──► act ──► observe ──► think ──► [PAUSE: wait for human]
+                                                          │
+                          ...minutes or hours later...    │
+                                                          ▼
+              [RESUME exactly here] ──► act ──► done
+```
+
+</Diagram>
+
+Two vocabulary items we will use throughout:
+
+- **State** — the full data the workflow is carrying right now (the request, partial results, what it is waiting for).
+- **Checkpoint** — a saved snapshot of that state at a point in time, durable enough to reload later.
+
+<ChapterSummary>
+- A chatbot is stateless; an agent that can pause becomes a stateful *process*
+- A process needs a durable home for its state while it waits
+- Human-in-the-loop is the clearest case: propose, pause, wait, resume
+- Keep two words straight: *state* (now) and *checkpoint* (a saved snapshot)
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, why can a simple chatbot server "forget" a user between requests, while an agent often cannot?
+2. What single capability turns an agent from a request into a process?
+</Checkpoint>
+
+<ChapterHeader number={2} title="When a human must approve — the real-world cases" time={12} />
+
+Before we build the machinery, it is worth being precise about *why* it is needed — because "human in the loop" is often waved around as a virtue rather than a design decision. There are three distinct forces that put a person in front of an agent's action, and they show up in very different industries.
+
+**The first is law.** Several jurisdictions now require a human in specific loops. The EU's **GDPR, Article 22** gives people the right not to be subject to a decision based *solely* on automated processing where it produces legal or similarly significant effects — and an explicit right to obtain human intervention. The **EU AI Act** goes further for systems it classes as high-risk, requiring effective human oversight (Article 14). New York City's **Local Law 144** requires bias audits and candidate notification for automated hiring tools. If your agent denies a loan, screens a CV, or closes an account, this is not a philosophical debate; it is a compliance requirement.
+
+**The second is irreversibility.** Some actions cannot be taken back. Money that has settled, a deleted database, a sent email, a permanently banned account. Finance solved this long before AI existed with the **four-eyes principle** — a second authoriser for payments above a threshold — and the same logic transfers directly to an agent with payment tools.
+
+**The third is trust.** Sometimes nothing forces the pause and you should build it anyway, because being technically right and socially wrong still loses you a customer. Overriding somebody's booking is the example we will build.
+
+<ApprovalScenarios />
+
+<Callout type="important" title="The pattern under all of them">
+In every one of those domains the split is identical: **the agent does the work, the human owns the commitment.** The agent gathers, reasons, drafts a recommendation and explains it — then stops at the exact point where an action becomes irreversible or accountable. That stopping point is what an `interrupt` plus a durable checkpoint gives you.
+</Callout>
+
+Now the harder question, and the one most teams get wrong: *which* actions deserve a gate? Gating everything feels safe and is actively dangerous — a human asked to approve forty trivial things a day stops reading by the fifth, and your real safety control decays into a reflex click. This is approval fatigue, and it is the same failure mode as alarm fatigue in hospitals.
+
+Two properties predict regret better than anything else: **can it be undone**, and **how far does it reach**. Put them on two axes and the policy writes itself:
+
+<AutonomyMatrix />
+
+<Callout type="tip" title="A useful rule of thumb">
+Ask: *if this action is wrong, what does it cost to fix?* If the answer is "a click and ten seconds", let the agent run. If it is "a phone call, a refund, and an apology" — or "we cannot fix it" — buy the human's attention. Spend approvals like money, because that is what attention is.
+</Callout>
+
+<ChapterSummary>
+- Three forces demand a human: legal requirement, irreversibility, and trust
+- GDPR Art. 22, the EU AI Act's oversight duty, and NYC Local Law 144 make some loops non-optional
+- The universal shape is: the agent does the work, the human owns the commitment
+- Gate on *irreversibility × blast radius* — gating everything causes approval fatigue and destroys the control
+</ChapterSummary>
+
+<Checkpoint>
+1. Give one example each of an action gated by law, by irreversibility, and by trust alone.
+2. Your agent auto-tags support tickets. Should each tag require approval? Justify your answer using both axes of the matrix.
+3. What is approval fatigue, and why does gating low-risk actions make high-risk gates less safe?
+</Checkpoint>
+
+<ChapterHeader number={3} title="LangGraph and the checkpointer, defined" time={12} />
+
+**LangGraph** models an agent as a graph: **nodes** are steps (functions), **edges** decide what runs next, and a shared **state** object flows through them. Instead of one opaque model call, you get an explicit state machine you can inspect, pause, and resume — which is exactly what a durable agent needs.
+
+The component that gives a LangGraph app a memory is the <KeyTerm definition="A LangGraph object that saves and loads the graph's state at each super-step, enabling persistence, resumption, time-travel, and human-in-the-loop.">checkpointer</KeyTerm>. You attach one when you compile the graph, and from then on LangGraph automatically saves a checkpoint after every step. Persistence is what unlocks the features we care about:
+
+- **Durability** — the workflow survives a crash or a redeploy.
+- **Resumption** — a paused graph continues from the exact step it stopped at.
+- **Human-in-the-loop** — an `interrupt` pauses the graph; the checkpoint holds its place until a human replies.
+- **Time-travel & audit** — every past state is on record.
+
+LangGraph ships in-memory and SQLite/Postgres checkpointers. To run on Lambda with DynamoDB, we implement the same interface ourselves. That interface is a small class, `BaseCheckpointSaver`, with four methods that matter:
+
+| Method | Job | DynamoDB operation |
+|---|---|---|
+| `put` | Save a checkpoint (a state snapshot) | `PutItem` |
+| `put_writes` | Save the intermediate writes a step produced, before the next checkpoint | `BatchWriteItem` |
+| `get_tuple` | Load a checkpoint (latest, or a specific one) plus its pending writes | `GetItem` / `Query` |
+| `list` | List a thread's checkpoints, newest first | `Query` |
+
+<Callout type="note" title="Two things get stored, not one">
+A checkpointer persists both **checkpoints** (full snapshots) and **writes** (the smaller, per-task outputs produced *between* snapshots, so nothing is lost if the process dies mid-step). Your schema has to hold both. This trips people up, so we will design for it explicitly.
+</Callout>
+
+Every call is addressed by a `config` object carrying three identifiers, which become the backbone of our table:
+
+- `thread_id` — the unique id of one workflow/session (one user's booking, say).
+- `checkpoint_ns` — a namespace, usually empty, used by subgraphs.
+- `checkpoint_id` — a specific snapshot; omit it to mean "the latest".
+
+<Callout type="warning" title="Pin your versions">
+The checkpointer contract has evolved across `langgraph-checkpoint` releases (method signatures and helpers have shifted). Pin your dependencies, and treat the official `langgraph-checkpoint-sqlite` and `-postgres` packages as the reference implementations to check yours against.
+</Callout>
+
+<ChapterSummary>
+- LangGraph turns an agent into an inspectable state machine of nodes, edges, and shared state
+- A checkpointer saves/loads that state, enabling durability, resumption, HITL, and audit
+- We implement `BaseCheckpointSaver` — mainly `put`, `put_writes`, `get_tuple`, `list`
+- Storage holds both full *checkpoints* and intermediate *writes*, keyed by thread / namespace / checkpoint id
+</ChapterSummary>
+
+<Checkpoint>
+1. What is the difference between a *checkpoint* and a *write*, and why must a checkpointer store both?
+2. Which method would LangGraph call to resume a paused graph — and what does it pass to identify the workflow?
+</Checkpoint>
+
+<ChapterHeader number={4} title="The serverless problem" time={10} />
+
+Now the constraint that makes this interesting. **AWS Lambda** runs your code in a container that is spun up on demand and then frozen or destroyed. It gives you two hard facts to design around:
+
+1. **It is stateless.** Anything you hold in a Python variable is gone once the invocation ends. There is no reliable "next time" for in-memory state — the next request may hit a completely different container.
+2. **It is time-limited.** A single invocation may run for at most **fifteen minutes**. You cannot simply "wait" inside the function for a human to click approve.
+
+Put those together with a human-in-the-loop agent and the difficulty is stark. The graph runs, reaches the approval step, and must pause. But it cannot sit in memory waiting — the function has to return, and its memory will vanish. The approval might arrive an hour later, as a *separate* HTTP request that lands on a *different* Lambda container with no knowledge of the first.
+
+The only way through is to move the state *out* of the function and into durable storage, so the second invocation can pick up exactly where the first left off. That store is our DynamoDB table — the "serverless memory table" of the title. **DynamoDB** is the natural partner for Lambda: fully managed, serverless itself, single-digit-millisecond reads, and priced per request so an idle workflow costs almost nothing while it waits.
+
+<Diagram title="Two invocations, one workflow" caption="The state lives in DynamoDB, not in the function. That is what lets a second, unrelated request resume the first.">
+
+```
+  ── Invocation 1: start ─────────────────────────────
+  API Gateway ─► Lambda ─► LangGraph ─┐
+                                      ├─ save checkpoint ─► DynamoDB
+                    reach approval ───┘   (status = PAUSED_FOR_HUMAN)
+  Lambda returns "please approve"  ◄── function memory discarded
+
+  ============ human decides, minutes/hours later ============
+
+  ── Invocation 2: resume (a NEW container) ──────────
+  Approval webhook ─► Lambda ─► load checkpoint ◄─ DynamoDB
+                                LangGraph resumes at the approval step
+                                finish work ─► save ─► DynamoDB (COMPLETED)
+```
+
+</Diagram>
+
+<Callout type="important" title="The design goal in one sentence">
+The Lambda function should be able to die at any moment and be replaced by a fresh one, and the workflow must continue correctly — because all of its truth lives in DynamoDB, not in the function.
+</Callout>
+
+<ChapterSummary>
+- Lambda is stateless and capped at fifteen minutes, so it cannot hold a paused workflow in memory
+- A resume request arrives later on a different container with no memory of the first
+- The fix is to keep all state in durable storage — DynamoDB — and reload it per invocation
+- DynamoDB suits Lambda: serverless, fast, and cheap while an idle workflow waits
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can't a Lambda function simply "wait" inside the handler for a human to approve an action?
+2. What has to be true about where the workflow's state lives for a second, unrelated invocation to resume it?
+</Checkpoint>
+
+<ChapterHeader number={5} title="Designing the single-table schema" time={14} />
+
+DynamoDB rewards a **single-table design**: one table holds several item types, distinguished by how the keys are shaped, so related data sits in the same partition and is fetched in one query. We will store three kinds of item — checkpoints, writes, and (implicitly) the operational metadata on the checkpoint rows.
+
+**The keys.** Conceptually the workflow is identified by `thread_id` and a snapshot by `checkpoint_id`. Physically we shape the keys to do two jobs at once — co-locate a thread's data, *and* isolate tenants:
+
+- **Partition key `pk`** = `TENANT#thread_id`. Baking the tenant into the partition key means a request literally cannot address another tenant's data — isolation by construction, not by a filter you might forget. (More on this in Chapter 7.)
+- **Sort key `sk`** = a prefixed string that both distinguishes item types and orders snapshots:
+  - `CKPT#<ns>#<checkpoint_id>` for a checkpoint
+  - `WRITE#<ns>#<checkpoint_id>#<task_id>#<idx>` for an intermediate write
+
+Because `checkpoint_id` values sort chronologically, "get the latest checkpoint" is a single query with `ScanIndexForward=False, Limit=1`, and "get the writes for that checkpoint" is a `begins_with` query in the same partition.
+
+<Diagram title="One partition per workflow" caption="All of a workflow's checkpoints and writes live under one partition key, ordered and grouped by the sort key.">
+
+```
+  pk = ACME#booking-9f3
+  ┌──────────────────────────────────────────────────────────────┐
+  │ sk = CKPT#  #01J...a   status=RUNNING           checkpoint,meta │
+  │ sk = CKPT#  #01J...b   status=PAUSED_FOR_HUMAN  checkpoint,meta │  ◄─ latest
+  │ sk = WRITE# #01J...b#task-7#0000                channel,value   │
+  │ sk = WRITE# #01J...b#task-7#0001                channel,value   │
+  └──────────────────────────────────────────────────────────────┘
+     newest checkpoint = highest sk  →  one query, Limit 1
+```
+
+</Diagram>
+
+**The attributes.** Each checkpoint item carries the serialized state, the identifiers, a parent pointer (for time-travel), the operational metadata, and a TTL for automatic cleanup.
+
+| Attribute | Type | Purpose |
+|---|---|---|
+| `pk`, `sk` | String | Composite keys described above |
+| `tenant_id` | String | Tenant, derived from the verified JWT — also duplicated here for GSI queries |
+| `thread_id` | String | The workflow/session id |
+| `checkpoint_id` | String | This snapshot's id (chronologically sortable) |
+| `parent_checkpoint_id` | String | The previous snapshot, enabling time-travel/audit |
+| `type`, `checkpoint` | String, Binary | Serializer tag + the compressed serialized state |
+| `metadata_type`, `metadata` | String, Binary | Serializer tag + the compressed serialized metadata |
+| `status` | String | Operational status: `RUNNING`, `PAUSED_FOR_HUMAN`, `COMPLETED`, `FAILED` |
+| `next_node` | String | The node that runs next when the graph wakes up |
+| `ttl` | Number | Unix timestamp for DynamoDB TTL auto-deletion |
+
+Write items are smaller: `task_id`, `channel`, `type` + `value` (compressed), plus the same keys and TTL.
+
+<Callout type="tip" title="Why store status and next_node at all?">
+LangGraph does not need `status` or `next_node` — it can reconstruct everything from the serialized checkpoint. We denormalize them onto the row so *operations* is cheap: a dashboard that lists every workflow "paused for human" becomes a fast indexed query instead of deserializing thousands of blobs.
+</Callout>
+
+**Access patterns**, the DynamoDB way (design the table around the questions you will ask):
+
+| Question | How |
+|---|---|
+| Load the latest state of a workflow | Query `pk = TENANT#thread`, `sk begins_with CKPT#ns#`, newest first, limit 1 |
+| Load a specific historical checkpoint | GetItem on the exact `pk` + `sk` |
+| Load the writes for a checkpoint | Query `pk`, `sk begins_with WRITE#ns#ckpt#` |
+| List a workflow's history | Query `pk`, `sk begins_with CKPT#ns#` |
+| List all workflows paused for a tenant | GSI: partition `tenant_id`, sort `status` (sparse) |
+
+<ChapterSummary>
+- One table, several item types, distinguished by key shape (single-table design)
+- `pk = TENANT#thread_id` co-locates a workflow *and* isolates the tenant
+- `sk` prefixes separate checkpoints from writes and order snapshots chronologically
+- Denormalize `status` and `next_node` for cheap operational queries; add a TTL for cleanup
+- A GSI on `tenant_id` + `status` powers a "pending approvals" view
+</ChapterSummary>
+
+<Checkpoint>
+1. Why put the `tenant_id` into the partition key rather than only storing it as an attribute?
+2. Given the key design, how would you fetch the most recent checkpoint for a workflow in a single request?
+</Checkpoint>
+
+<ChapterHeader number={6} title="Implementing the checkpointer" time={18} />
+
+Here is a complete `BaseCheckpointSaver` for the schema above. Read it once for shape, then we will walk the important parts.
+
+<CodeFile filename="checkpointer.py">
+```python
+import zlib
+from datetime import datetime, timedelta, timezone
+from typing import Any, Iterator, Optional, Tuple
+
+import boto3
+from boto3.dynamodb.conditions import Key
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.base import (
+    BaseCheckpointSaver,
+    CheckpointTuple,
+    get_checkpoint_id,
+)
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+
+TTL_DAYS = 30
+
+
+def _ttl() -> int:
+    return int((datetime.now(timezone.utc) + timedelta(days=TTL_DAYS)).timestamp())
+
+
+class DynamoDBSaver(BaseCheckpointSaver):
+    """A durable LangGraph checkpointer backed by a single DynamoDB table.
+
+    Construct one per request, bound to the tenant_id from the verified JWT.
+    """
+
+    def __init__(self, table_name: str, tenant_id: str, region: Optional[str] = None):
+        super().__init__(serde=JsonPlusSerializer())
+        self.tenant_id = tenant_id
+        self._table = boto3.resource("dynamodb", region_name=region).Table(table_name)
+
+    # ---- key helpers ---------------------------------------------------
+    def _pk(self, thread_id: str) -> str:
+        return f"{self.tenant_id}#{thread_id}"          # tenant baked in
+
+    def _ckpt_sk(self, ns: str, checkpoint_id: str) -> str:
+        return f"CKPT#{ns}#{checkpoint_id}"
+
+    def _write_sk(self, ns: str, checkpoint_id: str, task_id: str, idx: int) -> str:
+        return f"WRITE#{ns}#{checkpoint_id}#{task_id}#{idx:04d}"
+
+    # ---- serialize + compress -----------------------------------------
+    def _dump(self, obj: Any) -> Tuple[str, bytes]:
+        type_, blob = self.serde.dumps_typed(obj)      # (tag, bytes)
+        return type_, zlib.compress(blob)
+
+    def _load(self, type_: str, blob: bytes) -> Any:
+        return self.serde.loads_typed((type_, zlib.decompress(bytes(blob))))
+
+    # ---- WRITE: save a checkpoint --------------------------------------
+    def put(self, config, checkpoint, metadata, new_versions) -> RunnableConfig:
+        thread_id = config["configurable"]["thread_id"]
+        ns = config["configurable"].get("checkpoint_ns", "")
+        checkpoint_id = checkpoint["id"]
+        parent_id = config["configurable"].get("checkpoint_id")
+
+        c_type, c_blob = self._dump(checkpoint)
+        m_type, m_blob = self._dump(metadata)
+
+        self._table.put_item(Item={
+            "pk": self._pk(thread_id),
+            "sk": self._ckpt_sk(ns, checkpoint_id),
+            "tenant_id": self.tenant_id,
+            "thread_id": thread_id,
+            "checkpoint_id": checkpoint_id,
+            "parent_checkpoint_id": parent_id,
+            "type": c_type,
+            "checkpoint": c_blob,
+            "metadata_type": m_type,
+            "metadata": m_blob,
+            "status": "RUNNING",
+            "ttl": _ttl(),
+        })
+        return {"configurable": {
+            "thread_id": thread_id,
+            "checkpoint_ns": ns,
+            "checkpoint_id": checkpoint_id,
+        }}
+
+    # ---- WRITE: save intermediate writes ------------------------------
+    def put_writes(self, config, writes, task_id, task_path="") -> None:
+        thread_id = config["configurable"]["thread_id"]
+        ns = config["configurable"].get("checkpoint_ns", "")
+        checkpoint_id = config["configurable"]["checkpoint_id"]
+        pk = self._pk(thread_id)
+        with self._table.batch_writer() as batch:
+            for idx, (channel, value) in enumerate(writes):
+                v_type, v_blob = self._dump(value)
+                batch.put_item(Item={
+                    "pk": pk,
+                    "sk": self._write_sk(ns, checkpoint_id, task_id, idx),
+                    "tenant_id": self.tenant_id,
+                    "task_id": task_id,
+                    "channel": channel,
+                    "type": v_type,
+                    "value": v_blob,
+                    "ttl": _ttl(),
+                })
+
+    # ---- READ: load a checkpoint (+ its pending writes) ---------------
+    def get_tuple(self, config) -> Optional[CheckpointTuple]:
+        thread_id = config["configurable"]["thread_id"]
+        ns = config["configurable"].get("checkpoint_ns", "")
+        pk = self._pk(thread_id)
+        checkpoint_id = get_checkpoint_id(config)      # None means "latest"
+
+        if checkpoint_id:
+            item = self._table.get_item(
+                Key={"pk": pk, "sk": self._ckpt_sk(ns, checkpoint_id)}
+            ).get("Item")
+        else:
+            items = self._table.query(
+                KeyConditionExpression=Key("pk").eq(pk)
+                & Key("sk").begins_with(f"CKPT#{ns}#"),
+                ScanIndexForward=False,                # newest first
+                Limit=1,
+            ).get("Items", [])
+            item = items[0] if items else None
+
+        if not item:
+            return None
+
+        ckpt_id = item["checkpoint_id"]
+        checkpoint = self._load(item["type"], item["checkpoint"])
+        metadata = self._load(item["metadata_type"], item["metadata"])
+
+        writes = self._table.query(
+            KeyConditionExpression=Key("pk").eq(pk)
+            & Key("sk").begins_with(f"WRITE#{ns}#{ckpt_id}#"),
+        ).get("Items", [])
+        pending = [
+            (w["task_id"], w["channel"], self._load(w["type"], w["value"]))
+            for w in writes
+        ]
+
+        parent = item.get("parent_checkpoint_id")
+        parent_config = (
+            {"configurable": {"thread_id": thread_id, "checkpoint_ns": ns,
+                              "checkpoint_id": parent}}
+            if parent else None
+        )
+        return CheckpointTuple(
+            config={"configurable": {"thread_id": thread_id, "checkpoint_ns": ns,
+                                     "checkpoint_id": ckpt_id}},
+            checkpoint=checkpoint,
+            metadata=metadata,
+            parent_config=parent_config,
+            pending_writes=pending,
+        )
+
+    # ---- READ: list a thread's checkpoints ----------------------------
+    def list(self, config, *, filter=None, before=None, limit=None) -> Iterator[CheckpointTuple]:
+        thread_id = config["configurable"]["thread_id"]
+        ns = config["configurable"].get("checkpoint_ns", "")
+        pk = self._pk(thread_id)
+        kwargs: dict = {
+            "KeyConditionExpression": Key("pk").eq(pk)
+            & Key("sk").begins_with(f"CKPT#{ns}#"),
+            "ScanIndexForward": False,
+        }
+        if limit:
+            kwargs["Limit"] = limit
+        for item in self._table.query(**kwargs).get("Items", []):
+            yield CheckpointTuple(
+                config={"configurable": {"thread_id": thread_id, "checkpoint_ns": ns,
+                                         "checkpoint_id": item["checkpoint_id"]}},
+                checkpoint=self._load(item["type"], item["checkpoint"]),
+                metadata=self._load(item["metadata_type"], item["metadata"]),
+                parent_config=None,
+                pending_writes=None,
+            )
+
+    # ---- operational metadata (denormalized, app-managed) -------------
+    def mark_status(self, config, status: str, next_node: Optional[str] = None) -> None:
+        thread_id = config["configurable"]["thread_id"]
+        ns = config["configurable"].get("checkpoint_ns", "")
+        checkpoint_id = config["configurable"]["checkpoint_id"]
+        expr, names, vals = "SET #s = :s", {"#s": "status"}, {":s": status}
+        if next_node is not None:
+            expr += ", next_node = :n"
+            vals[":n"] = next_node
+        self._table.update_item(
+            Key={"pk": self._pk(thread_id), "sk": self._ckpt_sk(ns, checkpoint_id)},
+            UpdateExpression=expr,
+            ExpressionAttributeNames=names,
+            ExpressionAttributeValues=vals,
+        )
+```
+</CodeFile>
+
+A few parts deserve a closer look.
+
+- **Serialization is not optional glue — it is the whole trick.** LangGraph state contains rich objects (messages, tool calls, custom types), not just strings. `JsonPlusSerializer.dumps_typed` turns any of it into a `(tag, bytes)` pair, and `loads_typed` turns it back. We wrap both in `zlib` compression, which matters for the next point.
+- **Compression buys you headroom.** A DynamoDB item is capped at **400 KB**. Agent state can grow (long histories, retrieved documents), and compression typically shaves it by half or more, keeping you under the limit and lowering write cost.
+- **`get_tuple` does two reads on purpose.** First the checkpoint, then its pending writes — because LangGraph needs both to correctly resume a step that was mid-flight when the process stopped.
+- **The tenant is inside the key, always.** Every read and write goes through `_pk`, which prepends `self.tenant_id`. There is no code path that touches a bare `thread_id`.
+
+<Callout type="tip" title="Async on Lambda">
+If your handler uses `graph.ainvoke(...)`, LangGraph calls the async methods (`aput`, `aput_writes`, `aget_tuple`, `alist`). The base class can delegate them to these sync methods, but for real concurrency use `aioboto3` and implement the async variants directly. For a single-request Lambda, plain synchronous `graph.invoke(...)` is simplest and perfectly fine.
+</Callout>
+
+<ChapterSummary>
+- The saver is constructed per request and bound to one tenant
+- `put`/`put_writes` serialize (JsonPlus) then compress (zlib) before writing binary blobs
+- `get_tuple` loads the checkpoint *and* its pending writes so a mid-step resume is correct
+- Compression keeps you under DynamoDB's 400 KB item limit and cuts cost
+- `mark_status` denormalizes operational state for cheap dashboards
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does the checkpointer compress the serialized state, and what hard limit is it respecting?
+2. When `get_tuple` is called with no `checkpoint_id`, how does it find "the latest" snapshot?
+</Checkpoint>
+
+<ChapterHeader number={7} title="Human-in-the-loop — pause and resume" time={14} />
+
+Now we spend the durability we just built. LangGraph's `interrupt` function stops the graph mid-node, hands a payload back to the caller, and — because a checkpointer is attached — saves the exact position so a later call can resume. On Lambda, "a later call" is a whole new invocation, and this is where the DynamoDB table earns its keep.
+
+Here is a minimal booking graph with an approval gate:
+
+<CodeFile filename="graph.py">
+```python
+from typing import Optional, TypedDict
+
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import interrupt
+
+
+class BookingState(TypedDict):
+    request: str
+    slot: Optional[str]
+    approved: Optional[bool]
+
+
+def propose_slot(state: BookingState) -> dict:
+    # (call your model/tools to pick a slot)
+    return {"slot": "2026-09-10T14:00"}
+
+
+def human_approval(state: BookingState) -> dict:
+    # Execution STOPS here and returns the payload to the caller.
+    # It resumes on this exact line when a decision arrives.
+    decision = interrupt({
+        "question": "Override the customer's slot to this time?",
+        "slot": state["slot"],
+    })
+    return {"approved": bool(decision.get("approve"))}
+
+
+def finalize(state: BookingState) -> dict:
+    if state["approved"]:
+        ...  # actually perform the booking override
+    return {}
+
+
+def build_graph(checkpointer):
+    g = StateGraph(BookingState)
+    g.add_node("propose_slot", propose_slot)
+    g.add_node("human_approval", human_approval)
+    g.add_node("finalize", finalize)
+    g.add_edge(START, "propose_slot")
+    g.add_edge("propose_slot", "human_approval")
+    g.add_edge("human_approval", "finalize")
+    g.add_edge("finalize", END)
+    return g.compile(checkpointer=checkpointer)   # ← durability attaches here
+```
+</CodeFile>
+
+And the Lambda handler that runs it. Notice it handles *both* invocations — the initial start and the later resume — because on Lambda they are separate HTTP requests hitting the same code:
+
+<CodeFile filename="handler.py">
+```python
+import json
+import os
+
+from langgraph.types import Command
+
+from auth import tenant_and_thread     # verifies the Cognito JWT (Chapter 7)
+from checkpointer import DynamoDBSaver
+from graph import build_graph
+
+TABLE = os.environ["AGENT_STATE_TABLE"]
+
+
+def _resp(code: int, body: dict) -> dict:
+    return {"statusCode": code, "body": json.dumps(body)}
+
+
+def handler(event, context):
+    # tenant_id comes ONLY from the verified token — never from the client body
+    tenant_id, thread_id, body = tenant_and_thread(event)
+
+    saver = DynamoDBSaver(TABLE, tenant_id=tenant_id)
+    graph = build_graph(saver)
+    config = {"configurable": {"thread_id": thread_id, "checkpoint_ns": ""}}
+
+    if body.get("resume") is not None:
+        # INVOCATION 2 — a human answered; continue from the interrupt
+        result = graph.invoke(Command(resume=body["resume"]), config)
+    else:
+        # INVOCATION 1 — start the workflow
+        result = graph.invoke(body["input"], config)
+
+    # After running, ask the graph where it stands
+    snapshot = graph.get_state(config)
+    latest = {"configurable": {**config["configurable"],
+                              "checkpoint_id": snapshot.config["configurable"]["checkpoint_id"]}}
+
+    if snapshot.next:  # there are pending nodes → we paused (e.g. for approval)
+        ask = result["__interrupt__"][0].value
+        saver.mark_status(latest, "PAUSED_FOR_HUMAN", next_node=",".join(snapshot.next))
+        return _resp(202, {"status": "PAUSED_FOR_HUMAN", "thread_id": thread_id, "ask": ask})
+
+    saver.mark_status(latest, "COMPLETED")
+    return _resp(200, {"status": "COMPLETED", "result": result})
+```
+</CodeFile>
+
+Walk the lifecycle once and the whole course clicks into place:
+
+<Steps>
+
+<Step number={1} title="Start">
+A request arrives. The handler builds a tenant-scoped saver and graph, and calls `graph.invoke(input, config)`. The graph proposes a slot, reaches `human_approval`, and hits `interrupt`.
+</Step>
+
+<Step number={2} title="Pause and persist">
+LangGraph saves a checkpoint to DynamoDB via `put`, capturing the exact position. The handler marks it `PAUSED_FOR_HUMAN`, records `next_node`, and returns `202` with the question. The Lambda container is now free to be frozen or destroyed — nothing is lost.
+</Step>
+
+<Step number={3} title="Wait, safely, for as long as it takes">
+The workflow sits in DynamoDB. It costs effectively nothing to wait an hour or a week. No function is running.
+</Step>
+
+<Step number={4} title="Resume on a new invocation">
+The human clicks approve; a webhook calls the same Lambda with the same `thread_id` and a `resume` value. A fresh container builds a fresh saver, and `graph.invoke(Command(resume=...), config)` loads the checkpoint via `get_tuple` and continues from the exact `interrupt` line.
+</Step>
+
+<Step number={5} title="Finish">
+`finalize` performs the booking, the graph reaches `END`, and the handler marks the workflow `COMPLETED`.
+</Step>
+
+</Steps>
+
+<Diagram title="Pause / resume across invocations" caption="The interrupt and the checkpointer together let one logical workflow span two physically separate function runs.">
+
+```
+  invoke(input) ─► propose ─► [interrupt] ─► put() ─► DynamoDB(PAUSED)
+                                    │
+                                    ▼
+                             return 202 "approve?"     ← container gone
+
+        · · · human approves later · · ·
+
+  invoke(Command(resume)) ─► get_tuple() ◄─ DynamoDB
+                             resume at interrupt line
+                             finalize ─► put() ─► DynamoDB(COMPLETED)
+```
+
+</Diagram>
+
+That is the flow in the abstract. It is worth watching it concretely — stepping through the same run while seeing exactly which rows appear in DynamoDB, and what happens to the table at the moment the Lambda container is destroyed:
+
+<CheckpointTimeline />
+
+<Callout type="important" title="Same thread_id is the whole contract">
+Resumption works because both invocations use the *same* `thread_id`. That id is how the second request finds the first request's saved state. Generate it deterministically from your business session (booking id, ticket id) and carry it through the approval link.
+</Callout>
+
+<ChapterSummary>
+- `interrupt` pauses a node and returns a payload; the checkpointer saves the exact position
+- On Lambda the start and the resume are two separate invocations of the same handler
+- Resume with `Command(resume=value)` and the *same* `thread_id`; `get_tuple` reloads the state
+- Between the two, the workflow waits in DynamoDB at near-zero cost
+</ChapterSummary>
+
+<Checkpoint>
+1. What two things must the second (resume) invocation supply for LangGraph to continue the paused workflow?
+2. Why is it safe for the Lambda container to be destroyed the instant it returns "please approve"?
+</Checkpoint>
+
+<ChapterHeader number={8} title="Multi-tenancy and security" time={12} />
+
+If more than one customer uses this system, a single leaked workflow is a serious breach. Multi-tenant isolation is not a feature to bolt on later; it is a property the schema and code must guarantee.
+
+**Rule one: the tenant identity comes only from a verified token.** Put a **Cognito** authorizer in front of the API. It validates the JWT and hands your Lambda the verified claims. You read `tenant_id` from those claims — *never* from the request body, query string, or a header the client controls, all of which an attacker can forge.
+
+<CodeFile filename="auth.py">
+```python
+def tenant_and_thread(event) -> tuple[str, str, dict]:
+    # API Gateway (HTTP API) with a Cognito JWT authorizer places the
+    # *verified* claims here. Trust these; trust nothing from the raw body.
+    claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
+    tenant_id = claims["custom:tenant_id"]          # a custom Cognito attribute
+
+    body = json.loads(event.get("body") or "{}")
+    thread_id = body["thread_id"]                    # which workflow, not which tenant
+    return tenant_id, thread_id, body
+```
+</CodeFile>
+
+**Rule two: isolate by construction, not by filter.** Because our partition key is `TENANT#thread_id`, and `tenant_id` is fixed from the token at construction time, the saver *cannot* form a key that points at another tenant. There is no `WHERE tenant = ?` to forget — the wrong tenant's data is simply unaddressable. This is the single most valuable property of the schema.
+
+**Rule three: defence in depth.** Isolation-by-key is strong, but layer more behind it:
+
+- **Least-privilege IAM.** The Lambda role gets only `GetItem`, `PutItem`, `Query`, `BatchWriteItem`, `UpdateItem` on this one table — nothing else.
+- **Physical key scoping (advanced).** For the strictest isolation, mint short-lived per-tenant credentials with STS and an IAM policy that uses the `dynamodb:LeadingKeys` condition, so even a compromised function cannot read outside its tenant's partitions.
+- **Encryption.** Enable server-side encryption at rest (on by default; use a KMS key you control for sensitive tenants) and TLS in transit (default for the SDK).
+- **Don't log secrets.** Log `tenant_id` and `thread_id` for tracing, never the deserialized state, which may hold personal data. This matters when we add observability next.
+
+<Callout type="warning" title="The classic mistake">
+Reading `tenant_id` from the request body "because it's easier" is how cross-tenant breaches happen. The client can send any value. Derive tenant identity from the verified token, every time, with no exceptions.
+</Callout>
+
+<ChapterSummary>
+- Derive `tenant_id` only from the verified Cognito JWT, never from client-controlled input
+- `pk = TENANT#thread_id` makes other tenants' data unaddressable — isolation by construction
+- Add least-privilege IAM, optional STS/`LeadingKeys` scoping, encryption, and careful logging
+- Treat isolation as a property to prove, not a filter to remember
+</ChapterSummary>
+
+<Checkpoint>
+1. Why is deriving `tenant_id` from the request body dangerous, and where should it come from instead?
+2. Explain "isolation by construction" — how does the key design prevent cross-tenant access even if a filter is forgotten?
+</Checkpoint>
+
+<ChapterHeader number={9} title="Deployment, operations, and limits" time={12} />
+
+The code is done; now make it survive production. First, the table:
+
+<CodeFile filename="create-table.sh">
+```bash
+aws dynamodb create-table \
+  --table-name Agent-State \
+  --attribute-definitions \
+      AttributeName=pk,AttributeType=S \
+      AttributeName=sk,AttributeType=S \
+  --key-schema \
+      AttributeName=pk,KeyType=HASH \
+      AttributeName=sk,KeyType=RANGE \
+  --billing-mode PAY_PER_REQUEST \
+  --sse-specification Enabled=true
+
+# Auto-expire old workflows to control cost and data retention
+aws dynamodb update-time-to-live \
+  --table-name Agent-State \
+  --time-to-live-specification "Enabled=true, AttributeName=ttl"
+
+# Recommended: turn on point-in-time recovery for a safety net
+aws dynamodb update-continuous-backups --table-name Agent-State \
+  --point-in-time-recovery-specification PointInTimeRecoveryEnabled=true
+```
+</CodeFile>
+
+Then the operational realities, each with its defence:
+
+<Steps>
+
+<Step number={1} title="Packaging the function">
+LangGraph and its dependencies are large. Package the Lambda as a **container image** (or a well-trimmed layer) so you are not fighting the zip size limit. Keep the handler's timeout modest — the design is that the graph *pauses*, not that a single run lasts long.
+</Step>
+
+<Step number={2} title="Cold starts">
+Importing LangChain/LangGraph adds cold-start latency. Reuse the boto3 client across warm invocations (module scope), and consider provisioned concurrency for latency-sensitive endpoints.
+</Step>
+
+<Step number={3} title="The 400 KB ceiling">
+Compression keeps most state under the item limit. For genuinely large state — big retrieved documents — offload the payload to S3 and store only an S3 pointer in the checkpoint, keeping the DynamoDB item small.
+</Step>
+
+<Step number={4} title="Idempotency">
+Lambda and API Gateway can retry. Checkpoints are addressed by id, so a repeated `put` is a harmless overwrite. The dangerous case is a repeated *resume* double-acting (double-booking): guard the side-effecting node with an idempotency key or a conditional write so applying the same decision twice is a no-op.
+</Step>
+
+<Step number={5} title="Observability">
+Log every run to your tracing stack (Langfuse in this project) with `tenant_id`, `thread_id`, node, status, tokens, and cost — and *not* the raw state. The denormalized `status` and `next_node` power a live "pending approvals" dashboard via the tenant/status GSI.
+</Step>
+
+</Steps>
+
+<Callout type="tip" title="You do not have to build this blind">
+Community DynamoDB checkpointers exist, and the official `langgraph-checkpoint-sqlite`/`-postgres` packages are the canonical reference. Building your own is still worth it here: it is how you get exact control over tenant isolation, compression, the schema, and the operational metadata your business needs.
+</Callout>
+
+<Callout type="important" title="What you have actually built">
+A pattern, not just a class. You have taken a stateless, time-boxed function and given it a durable, resumable, multi-tenant memory — enough to run a real human-in-the-loop process on serverless infrastructure. Swap the booking graph for any long-running approval workflow and the machinery underneath does not change.
+</Callout>
+
+<ChapterSummary>
+- Create an on-demand, encrypted DynamoDB table with TTL and point-in-time recovery
+- Ship the function as a container image; reuse clients; mind cold starts
+- Compress state and offload very large payloads to S3 to respect the 400 KB limit
+- Make resume idempotent so a decision can't double-act
+- Trace to Langfuse with ids and status — never the raw state — and drive a dashboard from the GSI
+</ChapterSummary>
+
+<Checkpoint>
+1. A resume webhook is accidentally delivered twice. Which node is dangerous, and how do you make it safe?
+2. Your agent occasionally carries a large retrieved document in state and blows past 400 KB. What is the fix that keeps the DynamoDB item small?
+3. Name two attributes you would happily log for tracing, and one you would never log — and why.
+</Checkpoint>
+
+---
+
+You now have the full picture: *why* a durable memory is needed the instant an agent can pause, *what* a LangGraph checkpointer must do, and *how* to implement one on DynamoDB that is compressed, multi-tenant, and safe to resume across separate Lambda invocations. The natural next steps are to wire this into an approvals dashboard (the GSI already supports it), to add the async methods if you move to `ainvoke`, and to reuse the exact same pattern for any long-running, human-gated workflow — refunds, moderation, deployments — not just bookings.
