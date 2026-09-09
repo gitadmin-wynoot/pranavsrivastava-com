@@ -1,0 +1,325 @@
+---
+title: "Giving AI a Memory"
+slug: "giving-ai-a-memory"
+summary: "A practical tour of what 'AI memory' actually means, how the tools people reach for day to day — claude-mem, mem0, Letta, LangGraph checkpointers, and the memory built into ChatGPT and Claude — really work, and when to choose which. Architect-level, hands-on, and honest about what's still unsolved."
+level: "Intermediate"
+status: "published"
+order: 7
+track: "applied-ai"
+prereqs: []
+tags: ["Memory", "LLMs", "Agents", "RAG", "claude-mem", "Architecture"]
+lessonCount: 8
+updatedAt: "2026-09-09"
+---
+
+"Does it have memory?" is one of the first questions anyone asks about an AI product, right after "is it smart?" — and it's the more interesting question, because most of what feels like intelligence in a good AI system is actually memory wearing a trench coat. A model that remembers your preferences looks thoughtful. A model that remembers nothing looks the same on every single call, no matter how capable it is underneath.
+
+This course is a working architect's tour of that problem: what "memory" is actually made of, the tools people reach for in 2026 to build it — claude-mem, mem0, Letta, LangGraph's own checkpointer, the memory baked into ChatGPT and Claude themselves — and, more usefully, when each one is the right call and when it's the wrong one. No hype, no single "best" answer. Just the trade-offs, the way you'd explain them to a colleague over coffee before a design review.
+
+<Callout type="info" title="Where this sits">
+If you've taken [The Serverless Memory Table](/courses/serverless-memory-table), you've already built one specific kind of memory — durable execution state on Lambda. This course is the wider map: every other kind of memory, what each is actually for, and how to pick between them.
+</Callout>
+
+<LearningObjectives>
+- Place memory correctly in the evolution from plain software to agents to whatever comes next
+- Tell apart the four different jobs people lump together as "AI memory"
+- Explain, at a real architectural level, how RAG and vector stores work as memory
+- Explain how claude-mem actually works, end to end, at a high level
+- Compare the current landscape — claude-mem, mem0, Letta, checkpointers, built-in memory — and know when to reach for which
+- Recognise what memory looks like in a shipped system across several industries
+- Build a minimal working memory layer yourself, in under 100 lines
+</LearningObjectives>
+
+<ChapterHeader number="1" title="The evolution — why memory is the next unlock" time="10" />
+
+Step back before we get technical. There's a clean line running through the last few years of AI products, and memory sits right at the hinge of it.
+
+<EvolutionLadder />
+
+Plain software never needed to "remember" in any interesting sense — a database row is memory, but nobody calls it that, because it's just... state. Then came the AI copilot era: genuinely useful, and genuinely goldfish-brained. Every chat starts from zero. Then agents arrived, wired up to real tools through protocols like MCP, taking multiple steps toward a goal — and the instant an agent can pause, retry, or hand off to a human, it needs somewhere durable to keep its place. That's not optional anymore; it's the difference between a demo and a product. And past that, hovering as a direction rather than a shipped thing, is AGI and, further out, ASI — systems that would need memory in a sense closer to how *we* mean it: continuous, compounding, a lifetime rather than a session. We'll leave that frontier to the essay this course leads into. Here, we're building for the rung we're actually standing on.
+
+<Callout type="tip" title="The pattern worth remembering">
+Every step up that ladder needed strictly more memory than the step before it to actually function. Capability and memory have been rising together, not by coincidence — an agent that can act but can't remember what it did is dangerous, not just annoying.
+</Callout>
+
+<ChapterSummary>
+- Traditional software has state, but nobody calls it "memory" — no decisions ride on it staying
+- AI copilots are useful and stateless — every session starts from zero
+- Agents + MCP made memory load-bearing: a paused agent has to remember exactly where it stopped
+- AGI/ASI is a direction, not a product — the frontier this course sets you up to think about
+</ChapterSummary>
+
+<Checkpoint>
+1. Why did memory become "load-bearing" specifically at the agent stage, rather than at the copilot stage?
+2. Name one thing that breaks in an agent system if memory is missing, that wouldn't break in a plain chatbot.
+</Checkpoint>
+
+<ChapterHeader number="2" title="What memory actually means for an LLM" time="12" />
+
+Here's the uncomfortable foundation everything else in this course sits on: **a language model has no memory of its own, ever.** Every single call is stateless — you send text in, it computes a response, and it forgets you exist the moment that response finishes streaming. There is no persistent "it" between calls. Anything that looks like memory is something *outside* the model, engineered by whoever built the system around it.
+
+Once you accept that, the interesting question becomes: what are the actual different jobs people are doing when they build that illusion? I find it clarifying to borrow a taxonomy from cognitive science — not because AI systems have minds, but because the four-way split maps cleanly onto four genuinely different engineering problems, and it's the same split the actual memory research (MemGPT's original paper, and the tools built on its ideas) reaches for too.
+
+<MemoryTaxonomy />
+
+<Callout type="important" title="The mistake I see most often">
+Teams build a vector store, call it "memory," and stop — but that's only semantic memory. The agent still can't hold a coherent multi-step task (working memory), doesn't know what happened last Tuesday specifically (episodic memory), and has no consistent behaviour baked in (procedural memory). Naming which job you actually need is most of the design work; the implementation is usually the easy part.
+</Callout>
+
+<ChapterSummary>
+- LLMs are stateless. Every call forgets everything the instant it finishes.
+- "Memory" is four different jobs wearing one word: working, episodic, semantic, procedural
+- Working memory is the context window; the other three live outside it, engineered in
+- Most systems only build one of the four and call it done — know which one(s) you actually need
+</ChapterSummary>
+
+<Checkpoint>
+1. A user says "remember I'm vegetarian" and a week later the assistant still avoids suggesting meat. Which memory type is doing that work?
+2. Why can't the context window alone give you episodic memory across separate sessions?
+</Checkpoint>
+
+<ChapterHeader number="3" title="RAG and vector stores as memory" time="13" />
+
+The most common way to build semantic memory is one you've likely already used for something else: retrieval-augmented generation, repurposed. If you've taken [Embeddings in Depth](/courses/embeddings-in-depth) or [Semantic Search](/courses/semantic-search), you already know the mechanics — this chapter is just pointing the same machinery at a new target.
+
+The idea, end to end:
+
+<Diagram title="RAG as memory — the loop" caption="The same retrieval pipeline you'd use for document search, pointed at facts about a user instead of a knowledge base.">
+{`
+  write path:
+  "user prefers window seats" ──► embed ──► store (vector DB)
+                                              │
+  read path (next conversation):              │
+  new query ──► embed ──► similarity search ◄─┘
+                              │
+                              ▼
+                    top-k relevant memories
+                              │
+                              ▼
+              injected into the context window
+                              │
+                              ▼
+                    model responds, now "knowing"
+`}
+</Diagram>
+
+Nothing here is exotic — it's the same embed-store-retrieve loop from semantic search, just with a different corpus (facts about one user or session, instead of a document set). What makes it "memory" rather than "search" is really just the write path: something has to decide what's *worth* remembering and turn a messy conversation into a clean, storable fact. That extraction step — turning "I guess I'd rather sit by the window, if that's not too much trouble" into `prefers: window_seat` — is where most of the real engineering effort goes, not in the vector database itself.
+
+<Callout type="warning" title="The failure mode to watch for">
+Naive systems store every message as a memory. This is how you end up with a bot that "remembers" you were annoyed on a Tuesday and brings it up forever. Extract durable facts, not transcripts — and give memories a way to expire or be corrected, the same way a person's understanding of you updates rather than accumulates without limit.
+</Callout>
+
+<ChapterSummary>
+- RAG-as-memory reuses the exact embed→store→retrieve pipeline from semantic search
+- The hard part isn't the vector database — it's extracting a durable fact from a messy conversation
+- Store facts, not raw transcripts, or you'll remember noise as confidently as signal
+- This is how you build semantic memory specifically — not the other three types
+</ChapterSummary>
+
+<Checkpoint>
+1. Why is "store every message as a memory" a bad default design?
+2. What's the actual engineering bottleneck in RAG-as-memory — the retrieval, or something earlier in the pipeline?
+</Checkpoint>
+
+<ChapterHeader number="4" title="claude-mem — how it works, at a high level" time="12" />
+
+claude-mem is worth its own chapter because it's a good, concrete example of the pattern above, wired directly into a coding workflow rather than a chat product — and because "does it have memory" is exactly what people ask about their coding assistant after the fifth time they've re-explained a decision.
+
+At a high level, tools in this family work the same general way, regardless of the exact implementation details (which move fast — always check the project's own docs for specifics):
+
+<Diagram title="The claude-mem pattern — high level" caption="Session end feeds session start. The developer never has to ask for it.">
+{`
+  ── during a session ─────────────────────────────
+  you + Claude Code work through a task
+  (decisions made, dead ends hit, code written)
+
+  ── at session end ───────────────────────────────
+  a hook fires ──► summarise what happened
+                        │
+                        ▼
+              embed + store locally
+              (a small local index, not a cloud service)
+
+  ── at the START of a NEW session ────────────────
+  a hook fires ──► search the local store for
+                    anything relevant to what
+                    you're about to work on
+                        │
+                        ▼
+              quietly inject the relevant bits
+              into the new session's context
+                        │
+                        ▼
+        Claude "remembers" — without you re-explaining
+`}
+</Diagram>
+
+The mechanism is exactly the RAG-as-memory loop from the last chapter, applied to *your own working sessions* rather than a customer's preferences: capture, summarise, embed, store, retrieve, inject. What makes it feel different in practice is *where* it sits — as hooks around the tool you're already using, rather than an API you have to call yourself — and that it's local-first: your session history isn't going to someone else's server by default.
+
+<Callout type="note" title="What this buys you, and what it doesn't">
+It's genuinely good for single-user continuity: "we already tried that approach last week and it didn't work" without you repeating yourself. It is not a multi-tenant memory system — there's no notion of per-customer isolation, because there's only one user: you. If you're building a product other people will use, you want mem0 or a hand-rolled store with real tenant boundaries, not this pattern.
+</Callout>
+
+<ChapterSummary>
+- claude-mem applies the RAG-as-memory pattern to your own coding sessions, via hooks
+- The loop: session ends → summarise → embed → store locally → next session starts → retrieve → inject
+- It's local-first and single-user by design — a personal continuity tool, not a product feature
+- The mechanism is nothing new; the "hooked into your workflow automatically" part is the actual innovation
+</ChapterSummary>
+
+<Checkpoint>
+1. What two chapters' worth of ideas does claude-mem actually combine?
+2. Why would claude-mem be the wrong architectural choice for a customer-facing product with thousands of users?
+</Checkpoint>
+
+<ChapterHeader number="5" title="The wider landscape — and when to choose what" time="14" />
+
+Now the part I actually get asked about in design reviews: given all of the above, what do you *reach for*? Here's the landscape as it stands, compared on the questions that matter — not a feature checklist, but the actual trade-off you're making.
+
+<MemoryToolCompare />
+
+If there's one rule of thumb I'd write on a whiteboard, it's this: **memory type should drive tool choice, not the other way round.** Don't reach for Letta because it's the most sophisticated option; reach for it because your agent genuinely needs to decide for itself what to keep close. Don't reach for a LangGraph checkpointer for semantic memory; it isn't one, and it never will be — it solves a completely different problem (see [The Serverless Memory Table](/courses/serverless-memory-table)).
+
+<Callout type="tip" title="The combination that shows up most often in production">
+A durable checkpointer for "don't lose the agent's place," paired with a semantic store (mem0, or your own) for "remember the user." Two different jobs, two different tools, doing exactly one thing each — which tends to age much better than one clever system trying to do both.
+</Callout>
+
+<ChapterSummary>
+- claude-mem: personal continuity across your own sessions, local-first
+- mem0: per-user semantic memory for a multi-user product
+- Letta/MemGPT: agents that actively manage their own memory over long runs
+- LangGraph checkpointer: durable execution state — not semantic memory at all
+- Built-in provider memory: convenient, but not something you can architect with
+</ChapterSummary>
+
+<Checkpoint>
+1. You're building a customer support bot for thousands of users, each with their own history. Which tool fits, and why do the other four not?
+2. Why is "durable execution state" a different problem from "remembering what the user likes," even though both get called memory?
+</Checkpoint>
+
+<ChapterHeader number="6" title="Memory across industries" time="12" />
+
+Abstractions are easier to hold onto with a face on them. Here's the same four memory types, grounded in systems people are actually shipping, across a spread of industries — because the shape of the problem repeats far more than the domain vocabulary suggests.
+
+<MemoryIndustryMap />
+
+Notice the pattern across all six: it's never "add memory," it's always a *specific* type of memory, chosen because of what breaks without it. A telecom support bot that only has working memory relitigates the same troubleshooting script every call. A healthcare scribe with only working memory forgets an allergy the instant the visit ends — which isn't an inconvenience, it's a hazard. The industry changes; the diagnostic question doesn't: *what, specifically, is this system forgetting that it shouldn't, and which of the four types would fix that?*
+
+<ChapterSummary>
+- The same four memory types recur across every industry — only the stakes and the specific facts change
+- Diagnose by asking what breaks without memory, not by defaulting to "add a vector store"
+- Higher-stakes domains (healthcare, finance) lean harder on getting semantic + episodic memory right
+- Procedural memory — consistent behaviour — matters more than people expect outside of "big" industries too
+</ChapterSummary>
+
+<Checkpoint>
+1. Pick an industry not covered above (retail, education, insurance...) and sketch which of the four memory types its main AI use case would need most.
+2. Why does a healthcare use case lean so heavily on getting memory right, compared to, say, marketing?
+</Checkpoint>
+
+<ChapterHeader number="7" title="Building a minimal memory layer yourself" time="16" />
+
+Theory earns its keep once you've built the smallest possible version of it. Here's a working semantic memory layer in well under 100 lines — the same embed-store-retrieve loop from chapter 3, made concrete. No framework, no dependencies beyond an embedding call and a list — small enough to actually understand every line of, and to extend once you do.
+
+<Steps>
+
+<Step number="1" title="Store: turn a fact into a retrievable memory">
+Embed the fact and keep it alongside its text and a timestamp. That's the entire "write path."
+</Step>
+
+<Step number="2" title="Recall: find what's relevant to the current moment">
+Embed the current query, compare it against every stored memory by cosine similarity, and take the closest few.
+</Step>
+
+<Step number="3" title="Inject: hand the result to the model like any other context">
+Recalled memories are just text. They go into the prompt exactly like a retrieved document would in RAG.
+</Step>
+
+</Steps>
+
+<CodeFile filename="memory.py">
+```python
+import numpy as np
+from anthropic import Anthropic
+
+client = Anthropic()
+_store: list[dict] = []  # {"text": str, "embedding": list[float], "at": str}
+
+
+def _embed(text: str) -> list[float]:
+    # Swap in your real embedding model — this is illustrative, not a live call.
+    # See "Embeddings in Depth" for the production version of this function.
+    return client.embeddings.create(model="text-embedding-3-small", input=text).data[0].embedding
+
+
+def remember(fact: str, at: str) -> None:
+    """Write path: turn a fact into a retrievable memory."""
+    _store.append({"text": fact, "embedding": _embed(fact), "at": at})
+
+
+def recall(query: str, k: int = 3) -> list[str]:
+    """Read path: return the k memories most relevant to the current query."""
+    if not _store:
+        return []
+    q = np.array(_embed(query))
+    scored = [
+        (np.dot(q, m["embedding"]) / (np.linalg.norm(q) * np.linalg.norm(m["embedding"])), m)
+        for m in _store
+    ]
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [m["text"] for _, m in scored[:k]]
+
+
+def respond(user_message: str) -> str:
+    """Recall relevant memories, inject them, then answer — the whole loop."""
+    memories = recall(user_message)
+    context = "\n".join(f"- {m}" for m in memories) or "(nothing relevant remembered yet)"
+    resp = client.messages.create(
+        model="claude-opus-4-8",
+        max_tokens=512,
+        system=f"Relevant things you remember about this user:\n{context}",
+        messages=[{"role": "user", "content": user_message}],
+    )
+    return resp.content[0].text
+```
+</CodeFile>
+
+<Callout type="warning" title="What this deliberately leaves out">
+No extraction (chapter 3's hard part — this assumes you already have a clean fact), no expiry, no de-duplication, no tenant isolation. Every production tool in chapter 5 exists to handle exactly those gaps well. Build this to understand the loop; reach for a real tool once you need the edges handled properly.
+</Callout>
+
+<ChapterSummary>
+- The whole loop is three functions: remember (embed + store), recall (embed + compare + rank), respond (recall + inject)
+- Cosine similarity between the query embedding and stored embeddings is doing all the "relevance" work
+- This is deliberately the simplest version — extraction, expiry, and isolation are the real production work
+- Understanding this makes every tool in chapter 5 legible: they're all this loop, engineered properly
+</ChapterSummary>
+
+<Checkpoint>
+1. In `recall`, what would happen to answer quality if `k` were set far too high, say 50?
+2. Which of the "deliberately left out" gaps would you need to close first to make this safe for a multi-user product?
+</Checkpoint>
+
+<ChapterHeader number="8" title="Where memory takes us next" time="7" />
+
+Zoom back out to the ladder from chapter one. Everything in this course — the taxonomy, claude-mem, the tool landscape, the code you just wrote — lives on the "Agents + MCP" rung. It's memory in service of a task: remember enough to act correctly, help a user, resume after a pause.
+
+The open, genuinely unsolved research question sits one rung up. What would it take for a system to have something closer to a continuous self — memory that compounds across a lifetime rather than resetting per product, per session, per vendor? Nobody credible claims to have that solved. It's one of the real open problems standing between where we are and the systems people mean when they say AGI.
+
+That's deliberately outside the scope of a hands-on course — it's the subject of an essay, not an architecture diagram. If you want to follow the thread from here to there — what general intelligence would actually require, what serious researchers disagree about, and what it might mean for the rest of us — that's where [The Last Invention](/essays/the-last-invention) picks up.
+
+<ChapterSummary>
+- Everything built in this course serves the "Agents + MCP" rung of the ladder — task-scoped memory
+- The unsolved frontier is memory that compounds across a lifetime, not a session — nobody has this yet
+- That frontier is a research and societal question, not a today's-architecture one
+- The essay this course leads into picks up exactly there
+</ChapterSummary>
+
+<Checkpoint>
+1. In your own words, what's the difference between the memory this course teaches and the memory an AGI-level system would need?
+2. Of everything in this course, which piece do you think is closest to being "solved," and which is furthest from it?
+</Checkpoint>
+
+---
+
+You now have the full map: what memory actually is (four jobs, not one), how the tools people reach for day to day actually work under the hood, a clear-headed way to choose between them, what it looks like across real industries, and a working implementation small enough to hold in your head. The honest closing thought is the same one that opened this course — most of what reads as intelligence in a shipped AI system is memory, engineered well. Everything else is mostly the model doing what it always does.

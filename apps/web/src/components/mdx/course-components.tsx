@@ -14,6 +14,10 @@ import { Embedding3D } from "./embedding-3d";
 import { ApprovalScenarios } from "./approval-scenarios";
 import { AutonomyMatrix } from "./autonomy-matrix";
 import { CheckpointTimeline } from "./checkpoint-timeline";
+import { MemoryTaxonomy } from "./memory-taxonomy";
+import { MemoryToolCompare } from "./memory-tool-compare";
+import { MemoryIndustryMap } from "./memory-industry-map";
+import { EvolutionLadder } from "./evolution-ladder";
 import {
   Info,
   Lightbulb,
@@ -351,5 +355,9 @@ export const courseComponents = {
   ApprovalScenarios,
   AutonomyMatrix,
   CheckpointTimeline,
+  MemoryTaxonomy,
+  MemoryToolCompare,
+  MemoryIndustryMap,
+  EvolutionLadder,
   pre: CodeBlock,
 };
