@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CircleInvite } from "@/components/circle-invite";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/circle" },
   title: "The Circle",
   description:
     "A small, invitation-only circle of people building with AI in and around Eindhoven — founders, builders, and senior engineers. By request.",

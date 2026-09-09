@@ -22,7 +22,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const lab = getLab(slug);
   if (!lab) return {};
-  return { title: lab.title, description: lab.summary };
+  return {
+    title: lab.title,
+    description: lab.summary,
+    alternates: { canonical: `/labs/${slug}` },
+  };
 }
 
 export default async function LabPage({ params }: Props) {

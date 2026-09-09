@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Telescope, Lightbulb, Zap, Cpu, Boxes, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about/research" },
   title: "Research Interests — Pranav Srivastava",
   description:
     "Deep dive into computer vision, knowledge representation, metaheuristic optimization, deep learning, and decentralized systems — and how they connect to real-world products.",

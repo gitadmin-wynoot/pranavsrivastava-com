@@ -5,6 +5,7 @@ import { getCourses, isCourseAvailable, type Course } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/courses" },
   title: "Courses",
   description:
     "Practical, code-first courses on AI systems, MCP, cloud architecture, and building personal AI tools.",

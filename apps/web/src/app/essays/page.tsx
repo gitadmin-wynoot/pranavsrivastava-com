@@ -5,6 +5,7 @@ import { getEssays } from "@/lib/content";
 import { EssaysBrowser, type EssayMeta } from "@/components/essays/essays-browser";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/essays" },
   title: "Essays",
   description:
     "Slower, reflective writing — AI and society, building and craft, systems, economics, product, and more. Filter by topic, or hit shuffle for a few to start with.",

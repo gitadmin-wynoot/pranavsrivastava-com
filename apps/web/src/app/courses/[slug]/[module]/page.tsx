@@ -46,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${mod.title} — ${course.title}`,
     description: mod.summary || course.summary,
+    alternates: { canonical: `/courses/${slug}/${moduleId}` },
   };
 }
 

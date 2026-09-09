@@ -23,7 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { track: slug } = await params;
   const track = getTrack(slug);
   if (!track) return {};
-  return { title: track.title, description: track.summary };
+  return {
+    title: track.title,
+    description: track.summary,
+    alternates: { canonical: `/learn/${slug}` },
+  };
 }
 
 const levelColor: Record<string, "blue" | "yellow" | "red" | "default"> = {

@@ -94,6 +94,7 @@ const depthAreas = [
 ];
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/about" },
   title: "About — Pranav Srivastava",
   description:
     "Product thinkengineer. 15+ years across telecom, banking, automotive, and asset finance. Helped build the KPN developer portal from incubator to significant revenue. MSc AI, MTU Cork. Founder of Wynoot. Netherlands.",

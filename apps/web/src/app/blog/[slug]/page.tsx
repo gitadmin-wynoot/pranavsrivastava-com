@@ -9,6 +9,8 @@ import { CodeBlock } from "@/components/mdx/code-block";
 import { ArticleListen } from "@/components/blog/article-listen";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/json-ld";
+import { articleSchema, breadcrumbSchema, SITE_URL } from "@/lib/schema";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,6 +28,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.summary,
+    alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.summary,
+      publishedTime: post.publishedAt,
+      authors: [SITE_URL],
+      section: post.category,
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.summary,
+    },
   };
 }
 
@@ -42,6 +59,22 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+      <JsonLd
+        data={articleSchema({
+          url: `${SITE_URL}/blog/${slug}`,
+          headline: post.title,
+          description: post.summary,
+          datePublished: post.publishedAt,
+          section: post.category,
+          keywords: post.tags,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Writing", url: `${SITE_URL}/blog` },
+          { name: post.title, url: `${SITE_URL}/blog/${slug}` },
+        ])}
+      />
       {/* Back */}
       <Link
         href="/blog"

@@ -18,6 +18,8 @@ import { CourseOutline } from "@/components/course/course-outline";
 import { RecommendedNext } from "@/components/course/recommended-next";
 import { ChapterNavSidebar, ChapterNavMobile } from "@/components/course/chapter-nav";
 import { formatDate } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/json-ld";
+import { courseSchema, breadcrumbSchema, SITE_URL } from "@/lib/schema";
 
 // Available courses offered as "what next" recommendations across course pages.
 function recommendationPool() {
@@ -44,7 +46,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const course = getCourse(slug);
   if (!course) return {};
-  return { title: course.title, description: course.summary };
+  return {
+    title: course.title,
+    description: course.summary,
+    alternates: { canonical: `/courses/${slug}` },
+    openGraph: {
+      type: "article",
+      title: course.title,
+      description: course.summary,
+      ...(course.updatedAt ? { modifiedTime: course.updatedAt } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: course.title,
+      description: course.summary,
+    },
+  };
 }
 
 // ── Multi-module course: module listing page ────────────────────────────────
@@ -278,9 +295,39 @@ export default async function CourseDetailPage({ params }: Props) {
   const course = getCourse(slug);
   if (!course) notFound();
 
+  const jsonLd = (
+    <>
+      <JsonLd
+        data={courseSchema({
+          url: `${SITE_URL}/courses/${slug}`,
+          name: course.title,
+          description: course.summary,
+          level: course.level,
+          tags: course.tags,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Courses", url: `${SITE_URL}/courses` },
+          { name: course.title, url: `${SITE_URL}/courses/${slug}` },
+        ])}
+      />
+    </>
+  );
+
   if (isMultiModuleCourse(slug)) {
-    return <MultiModuleCourseIndex slug={slug} />;
+    return (
+      <>
+        {jsonLd}
+        <MultiModuleCourseIndex slug={slug} />
+      </>
+    );
   }
 
-  return <SingleFileCourse slug={slug} />;
+  return (
+    <>
+      {jsonLd}
+      <SingleFileCourse slug={slug} />
+    </>
+  );
 }

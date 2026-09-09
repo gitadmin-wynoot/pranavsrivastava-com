@@ -5,6 +5,7 @@ import { getProjects } from "@/lib/content";
 import { Badge, statusVariant } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/ai-lab" },
   title: "Projects",
   description:
     "Things I have built and am building — shipped work, side experiments, and a few that are still half-finished. Real work over descriptions of it.",

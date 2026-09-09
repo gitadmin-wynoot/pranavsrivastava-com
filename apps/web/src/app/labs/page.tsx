@@ -5,6 +5,7 @@ import { getLabs, isLabAvailable, type Lab } from "@/lib/content";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/labs" },
   title: "Labs",
   description:
     "Hands-on, build-this-one-thing tutorials on AI systems — short, runnable, outcome-first. Build something real in under an hour.",

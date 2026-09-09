@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { atlasPlaces } from "@/lib/atlas";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/atlas" },
   title: "Atlas",
   description:
     "Every place this site mentions, mapped — a small sci-fi knowledge graph of why it matters.",

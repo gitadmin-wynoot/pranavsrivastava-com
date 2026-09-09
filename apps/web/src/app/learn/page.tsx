@@ -7,6 +7,7 @@ import { FeaturedCourses } from "@/components/course/featured-courses";
 import { CurriculumMap } from "@/components/learn/curriculum-map";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/learn" },
   title: "Learn",
   description:
     "A structured learning platform covering AI fundamentals, data engineering, applied AI, cloud architecture, and building your own AI OS. From academic foundations to production systems.",

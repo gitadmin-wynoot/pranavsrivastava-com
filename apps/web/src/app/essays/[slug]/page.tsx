@@ -9,6 +9,8 @@ import { CodeBlock } from "@/components/mdx/code-block";
 import { essayComponents } from "@/components/essays/figures";
 import { ArticleListen } from "@/components/blog/article-listen";
 import { formatDate } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/json-ld";
+import { articleSchema, breadcrumbSchema, SITE_URL } from "@/lib/schema";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -22,7 +24,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const essay = getEssay(slug);
   if (!essay) return {};
-  return { title: essay.title, description: essay.summary || essay.dek };
+  const description = essay.summary || essay.dek;
+  return {
+    title: essay.title,
+    description,
+    alternates: { canonical: `/essays/${slug}` },
+    openGraph: {
+      type: "article",
+      title: essay.title,
+      description,
+      publishedTime: essay.publishedAt,
+      authors: [SITE_URL],
+      section: essay.category,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: essay.title,
+      description,
+    },
+  };
 }
 
 export default async function EssayPage({ params }: Props) {
@@ -42,6 +62,21 @@ export default async function EssayPage({ params }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16">
+      <JsonLd
+        data={articleSchema({
+          url: `${SITE_URL}/essays/${slug}`,
+          headline: essay.title,
+          description: essay.summary || essay.dek,
+          datePublished: essay.publishedAt,
+          section: essay.category,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Essays", url: `${SITE_URL}/essays` },
+          { name: essay.title, url: `${SITE_URL}/essays/${slug}` },
+        ])}
+      />
       <Link
         href="/essays"
         className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mb-10"

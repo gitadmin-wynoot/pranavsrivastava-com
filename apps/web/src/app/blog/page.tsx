@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils";
 const MEDIUM_URL = "https://pranav-srivastava.medium.com";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/blog" },
   title: "Writing",
   description:
     "Essays and notes on building AI — agents, MCP, RAG, and the thinking behind real systems. Some here, longer ones on Medium.",
