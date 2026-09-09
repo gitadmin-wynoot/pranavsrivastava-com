@@ -152,22 +152,40 @@ export function Diagram({ title, caption, children }: DiagramProps) {
 // ── ChapterHeader ──────────────────────────────────────────────────────────
 
 interface ChapterHeaderProps {
-  number: number;
+  // Accept number | string: next-mdx-remote's compileMDX silently evaluates
+  // brace JSX-expression props (number={3}) to undefined in this pipeline —
+  // only plain string attributes (number="3") survive compilation intact.
+  // Coercing here means content can use either form and still render.
+  number: number | string;
   title: string;
-  time?: number;
+  time?: number | string;
+}
+
+// Stable, readable anchor for each chapter — "3. Designing the schema" → "ch-3-designing-the-schema".
+// The chapter nav (chapter-nav.tsx) reads these ids straight off the DOM, so
+// any course using ChapterHeader gets a working index for free.
+function chapterSlug(number: number, title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  return `ch-${number}-${slug}`;
 }
 
 export function ChapterHeader({ number, title, time }: ChapterHeaderProps) {
+  const n = Number(number);
+  const t = time !== undefined ? Number(time) : undefined;
   return (
-    <div className="mt-14 mb-6 not-prose">
+    <div id={chapterSlug(n, title)} className="mt-14 mb-6 not-prose scroll-mt-24">
       <div className="flex items-center gap-3 mb-3">
         <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-bold flex-shrink-0 shadow-sm">
-          {number}
+          {n}
         </span>
-        {time && (
+        {!!t && (
           <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-full">
             <Clock className="w-3 h-3" />
-            {time} min
+            {t} min
           </span>
         )}
       </div>
@@ -272,7 +290,8 @@ export function Step({
   title,
   children,
 }: {
-  number: number;
+  // number | string — see the note on ChapterHeaderProps above.
+  number: number | string;
   title: string;
   children: React.ReactNode;
 }) {
@@ -280,7 +299,7 @@ export function Step({
     <div className="relative flex gap-4 pb-6 last:pb-0 group">
       <div className="flex flex-col items-center">
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold flex-shrink-0 z-10">
-          {number}
+          {Number(number)}
         </span>
         <div className="w-px flex-1 bg-zinc-200 dark:bg-zinc-700 mt-2 group-last:hidden" />
       </div>

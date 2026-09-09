@@ -9,14 +9,17 @@ track: "applied-ai"
 prereqs: ["react-loop"]
 tags: ["LangGraph", "AWS Lambda", "DynamoDB", "Serverless", "Human-in-the-Loop", "Agents", "Checkpointer", "Multi-tenant"]
 lessonCount: 9
+updatedAt: "2026-09-09"
 ---
 
-Most people meet agents as a thin wrapper around a language model: send a prompt, get a reply, done. That works right up until the agent has to *do* something in the real world — book a slot, move money, change a record — and pauses to ask a human, "are you sure?" The moment your agent has to wait for an answer that might come in ten seconds or ten hours, the comfortable wrapper falls apart. Where does the half-finished workflow *live* while it waits?
+Picture a colleague with a strange condition: total amnesia every time they finish a task. Ask them a question, they answer, then they forget you ever spoke. That is fine for quick questions. But hand them something that needs a pause — "check with the manager first, then come back to this" — and they simply *can't*. The moment they finish speaking to you, the whole thread of what they were doing is gone. There is no "them" to come back to it.
 
-This course answers that question in the hardest place to answer it: on **AWS Lambda**, which forgets everything between invocations and refuses to run for more than fifteen minutes. We will build the thing that makes durable, pause-and-resume agents possible there — a custom **DynamoDB checkpointer** for LangGraph. By the end you will understand exactly why it is needed, and you will have a complete, multi-tenant implementation you can deploy.
+Now give that colleague one thing: a notebook. Before they forget, they scribble down exactly what they were doing and how far they got. Next time you need them, a fresh version of them — same skills, zero memory of before — opens the notebook, reads where things stood, and carries on as if no time had passed at all. The notebook is what makes the amnesia survivable. It turns a person who resets every few minutes into someone who can run a project across days.
+
+That colleague is **AWS Lambda**. It really does forget everything the instant it finishes running, and it is capped at fifteen minutes per turn, no exceptions. And the notebook is what this course builds: a durable memory table in **DynamoDB** that lets a **LangGraph** agent — one that sometimes has to stop and ask a human "are you sure?" before booking a slot, moving money, or changing a record — pause for as long as it needs to, and then pick up exactly where it left off, on a completely different, memory-less Lambda run. By the end you will understand precisely why that notebook is necessary, and you will have a complete, production-ready, multi-tenant implementation of it.
 
 <Callout type="info" title="What this really teaches">
-The specific artefact is a checkpointer. The transferable idea is bigger: how to turn a stateless function-as-a-service into a reliable, long-running, human-in-the-loop *process*. That pattern shows up far beyond agents.
+The specific artefact is a checkpointer. The transferable idea is bigger — and it is the notebook trick, generalised: how to give a stateless, time-boxed function a *memory*, so it can act like a reliable, long-running process instead of a goldfish. That pattern shows up far beyond agents.
 </Callout>
 
 <LearningObjectives>
@@ -30,7 +33,7 @@ The specific artefact is a checkpointer. The transferable idea is bigger: how to
 - Enforce secure multi-tenancy from a Cognito JWT, and deploy and operate the table safely
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Background — from an LLM wrapper to a process" time={10} />
+<ChapterHeader number="1" title="Background — from an LLM wrapper to a process" time="10" />
 
 Start with the mental model, because everything else follows from it.
 
@@ -73,7 +76,7 @@ Two vocabulary items we will use throughout:
 2. What single capability turns an agent from a request into a process?
 </Checkpoint>
 
-<ChapterHeader number={2} title="When a human must approve — the real-world cases" time={12} />
+<ChapterHeader number="2" title="When a human must approve — the real-world cases" time="12" />
 
 Before we build the machinery, it is worth being precise about *why* it is needed — because "human in the loop" is often waved around as a virtue rather than a design decision. There are three distinct forces that put a person in front of an agent's action, and they show up in very different industries.
 
@@ -112,7 +115,7 @@ Ask: *if this action is wrong, what does it cost to fix?* If the answer is "a cl
 3. What is approval fatigue, and why does gating low-risk actions make high-risk gates less safe?
 </Checkpoint>
 
-<ChapterHeader number={3} title="LangGraph and the checkpointer, defined" time={12} />
+<ChapterHeader number="3" title="LangGraph and the checkpointer, defined" time="12" />
 
 **LangGraph** models an agent as a graph: **nodes** are steps (functions), **edges** decide what runs next, and a shared **state** object flows through them. Instead of one opaque model call, you get an explicit state machine you can inspect, pause, and resume — which is exactly what a durable agent needs.
 
@@ -158,7 +161,7 @@ The checkpointer contract has evolved across `langgraph-checkpoint` releases (me
 2. Which method would LangGraph call to resume a paused graph — and what does it pass to identify the workflow?
 </Checkpoint>
 
-<ChapterHeader number={4} title="The serverless problem" time={10} />
+<ChapterHeader number="4" title="The serverless problem" time="10" />
 
 Now the constraint that makes this interesting. **AWS Lambda** runs your code in a container that is spun up on demand and then frozen or destroyed. It gives you two hard facts to design around:
 
@@ -204,7 +207,7 @@ The Lambda function should be able to die at any moment and be replaced by a fre
 2. What has to be true about where the workflow's state lives for a second, unrelated invocation to resume it?
 </Checkpoint>
 
-<ChapterHeader number={5} title="Designing the single-table schema" time={14} />
+<ChapterHeader number="5" title="Designing the single-table schema" time="14" />
 
 DynamoDB rewards a **single-table design**: one table holds several item types, distinguished by how the keys are shaped, so related data sits in the same partition and is fetched in one query. We will store three kinds of item — checkpoints, writes, and (implicitly) the operational metadata on the checkpoint rows.
 
@@ -276,7 +279,7 @@ LangGraph does not need `status` or `next_node` — it can reconstruct everythin
 2. Given the key design, how would you fetch the most recent checkpoint for a workflow in a single request?
 </Checkpoint>
 
-<ChapterHeader number={6} title="Implementing the checkpointer" time={18} />
+<ChapterHeader number="6" title="Implementing the checkpointer" time="18" />
 
 Here is a complete `BaseCheckpointSaver` for the schema above. Read it once for shape, then we will walk the important parts.
 
@@ -497,7 +500,7 @@ If your handler uses `graph.ainvoke(...)`, LangGraph calls the async methods (`a
 2. When `get_tuple` is called with no `checkpoint_id`, how does it find "the latest" snapshot?
 </Checkpoint>
 
-<ChapterHeader number={7} title="Human-in-the-loop — pause and resume" time={14} />
+<ChapterHeader number="7" title="Human-in-the-loop — pause and resume" time="14" />
 
 Now we spend the durability we just built. LangGraph's `interrupt` function stops the graph mid-node, hands a payload back to the caller, and — because a checkpointer is attached — saves the exact position so a later call can resume. On Lambda, "a later call" is a whole new invocation, and this is where the DynamoDB table earns its keep.
 
@@ -605,23 +608,23 @@ Walk the lifecycle once and the whole course clicks into place:
 
 <Steps>
 
-<Step number={1} title="Start">
+<Step number="1" title="Start">
 A request arrives. The handler builds a tenant-scoped saver and graph, and calls `graph.invoke(input, config)`. The graph proposes a slot, reaches `human_approval`, and hits `interrupt`.
 </Step>
 
-<Step number={2} title="Pause and persist">
+<Step number="2" title="Pause and persist">
 LangGraph saves a checkpoint to DynamoDB via `put`, capturing the exact position. The handler marks it `PAUSED_FOR_HUMAN`, records `next_node`, and returns `202` with the question. The Lambda container is now free to be frozen or destroyed — nothing is lost.
 </Step>
 
-<Step number={3} title="Wait, safely, for as long as it takes">
+<Step number="3" title="Wait, safely, for as long as it takes">
 The workflow sits in DynamoDB. It costs effectively nothing to wait an hour or a week. No function is running.
 </Step>
 
-<Step number={4} title="Resume on a new invocation">
+<Step number="4" title="Resume on a new invocation">
 The human clicks approve; a webhook calls the same Lambda with the same `thread_id` and a `resume` value. A fresh container builds a fresh saver, and `graph.invoke(Command(resume=...), config)` loads the checkpoint via `get_tuple` and continues from the exact `interrupt` line.
 </Step>
 
-<Step number={5} title="Finish">
+<Step number="5" title="Finish">
 `finalize` performs the booking, the graph reaches `END`, and the handler marks the workflow `COMPLETED`.
 </Step>
 
@@ -664,7 +667,7 @@ Resumption works because both invocations use the *same* `thread_id`. That id is
 2. Why is it safe for the Lambda container to be destroyed the instant it returns "please approve"?
 </Checkpoint>
 
-<ChapterHeader number={8} title="Multi-tenancy and security" time={12} />
+<ChapterHeader number="8" title="Multi-tenancy and security" time="12" />
 
 If more than one customer uses this system, a single leaked workflow is a serious breach. Multi-tenant isolation is not a feature to bolt on later; it is a property the schema and code must guarantee.
 
@@ -709,7 +712,7 @@ Reading `tenant_id` from the request body "because it's easier" is how cross-ten
 2. Explain "isolation by construction" — how does the key design prevent cross-tenant access even if a filter is forgotten?
 </Checkpoint>
 
-<ChapterHeader number={9} title="Deployment, operations, and limits" time={12} />
+<ChapterHeader number="9" title="Deployment, operations, and limits" time="12" />
 
 The code is done; now make it survive production. First, the table:
 
@@ -741,23 +744,23 @@ Then the operational realities, each with its defence:
 
 <Steps>
 
-<Step number={1} title="Packaging the function">
+<Step number="1" title="Packaging the function">
 LangGraph and its dependencies are large. Package the Lambda as a **container image** (or a well-trimmed layer) so you are not fighting the zip size limit. Keep the handler's timeout modest — the design is that the graph *pauses*, not that a single run lasts long.
 </Step>
 
-<Step number={2} title="Cold starts">
+<Step number="2" title="Cold starts">
 Importing LangChain/LangGraph adds cold-start latency. Reuse the boto3 client across warm invocations (module scope), and consider provisioned concurrency for latency-sensitive endpoints.
 </Step>
 
-<Step number={3} title="The 400 KB ceiling">
+<Step number="3" title="The 400 KB ceiling">
 Compression keeps most state under the item limit. For genuinely large state — big retrieved documents — offload the payload to S3 and store only an S3 pointer in the checkpoint, keeping the DynamoDB item small.
 </Step>
 
-<Step number={4} title="Idempotency">
+<Step number="4" title="Idempotency">
 Lambda and API Gateway can retry. Checkpoints are addressed by id, so a repeated `put` is a harmless overwrite. The dangerous case is a repeated *resume* double-acting (double-booking): guard the side-effecting node with an idempotency key or a conditional write so applying the same decision twice is a no-op.
 </Step>
 
-<Step number={5} title="Observability">
+<Step number="5" title="Observability">
 Log every run to your tracing stack (Langfuse in this project) with `tenant_id`, `thread_id`, node, status, tokens, and cost — and *not* the raw state. The denormalized `status` and `next_node` power a live "pending approvals" dashboard via the tenant/status GSI.
 </Step>
 

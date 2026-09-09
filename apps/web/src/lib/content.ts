@@ -117,6 +117,7 @@ export interface Course {
   tags: string[];
   lessonCount?: number;
   order?: number;      // position within its track's curriculum
+  updatedAt?: string;  // optional — shown as "Updated <date>" when present
   content: string;
 }
 
@@ -525,6 +526,7 @@ export function getCourse(slug: string): Course | null {
     prereqs: data.prereqs ?? [],
     tags: data.tags ?? [],
     lessonCount: data.lessonCount,
+    updatedAt: data.updatedAt,
     content,
   };
 }

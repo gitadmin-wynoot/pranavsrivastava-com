@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, BarChart, BookOpen, Tag } from "lucide-react";
+import { ArrowLeft, Clock, BarChart, BookOpen, Tag, CalendarClock } from "lucide-react";
 import { compileMDX } from "next-mdx-remote/rsc";
 import {
   getCourse,
@@ -16,6 +16,8 @@ import { Badge, statusVariant } from "@/components/ui/badge";
 import { courseComponents } from "@/components/mdx/course-components";
 import { CourseOutline } from "@/components/course/course-outline";
 import { RecommendedNext } from "@/components/course/recommended-next";
+import { ChapterNavSidebar, ChapterNavMobile } from "@/components/course/chapter-nav";
+import { formatDate } from "@/lib/utils";
 
 // Available courses offered as "what next" recommendations across course pages.
 function recommendationPool() {
@@ -165,85 +167,105 @@ async function SingleFileCourse({ slug }: { slug: string }) {
   const isPublished = course.status === "published";
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
-      {/* Back */}
-      <Link
-        href="/learn"
-        className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mb-10"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" /> Learning tracks
-      </Link>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      <div className="lg:flex lg:items-start lg:gap-12">
+        {/* Chapter index — sticky at lg+, sits to the left of the reading column */}
+        <aside className="lg:w-56 lg:shrink-0 lg:order-1">
+          <ChapterNavSidebar />
+        </aside>
 
-      {/* Course header card */}
-      <header className="mb-10 p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant={statusVariant[course.status]}>
-            {course.status.replace("-", " ")}
-          </Badge>
-          <Badge variant="outline">
-            <BarChart className="w-3 h-3 mr-1" />
-            {course.level}
-          </Badge>
-          {course.lessonCount && (
-            <Badge variant="outline">
-              <BookOpen className="w-3 h-3 mr-1" />
-              {course.lessonCount} chapters
-            </Badge>
+        {/* Reading column — same width as before the index was added */}
+        <div className="max-w-3xl lg:flex-1 lg:order-2">
+          {/* Back */}
+          <Link
+            href="/learn"
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors mb-10"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Learning tracks
+          </Link>
+
+          {/* Course header card */}
+          <header className="mb-10 p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Badge variant={statusVariant[course.status]}>
+                {course.status.replace("-", " ")}
+              </Badge>
+              <Badge variant="outline">
+                <BarChart className="w-3 h-3 mr-1" />
+                {course.level}
+              </Badge>
+              {course.lessonCount && (
+                <Badge variant="outline">
+                  <BookOpen className="w-3 h-3 mr-1" />
+                  {course.lessonCount} chapters
+                </Badge>
+              )}
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight mb-3">
+              {course.title}
+            </h1>
+            <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-base">
+              {course.summary}
+            </p>
+
+            {course.updatedAt && (
+              <p className="mt-3 flex items-center gap-1.5 text-xs text-zinc-400">
+                <CalendarClock className="w-3 h-3" />
+                Updated {formatDate(course.updatedAt)}
+              </p>
+            )}
+
+            {course.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-4">
+                {course.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 text-[11px] text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full"
+                  >
+                    <Tag className="w-2.5 h-2.5" />
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </header>
+
+          {!isPublished && (
+            <div className="mb-10 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-sm text-amber-700 dark:text-amber-400">
+              <strong>In development.</strong> This course is{" "}
+              {course.status.replace("-", " ")} — full content and lessons are
+              being written. The outline below gives you a preview of what is coming.
+            </div>
           )}
-        </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight mb-3">
-          {course.title}
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed text-base">
-          {course.summary}
-        </p>
+          <hr className="border-zinc-200 dark:border-zinc-800 mb-10" />
 
-        {course.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
-            {course.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 text-[11px] text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full"
-              >
-                <Tag className="w-2.5 h-2.5" />
-                {tag}
-              </span>
-            ))}
+          {/* Chapter index — mobile/tablet, collapsible, closed by default */}
+          <ChapterNavMobile />
+
+          <article className="prose max-w-none course-content">{content}</article>
+
+          {/* What next — a fresh, relevant recommendation each visit */}
+          <RecommendedNext
+            currentSlug={slug}
+            currentTrack={course.track}
+            candidates={recommendationPool()}
+          />
+
+          <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <Link
+              href="/learn"
+              className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> All tracks
+            </Link>
+            {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
+            <span className="text-sm text-zinc-400 cursor-not-allowed">
+              Questions? Get in touch →
+            </span>
           </div>
-        )}
-      </header>
-
-      {!isPublished && (
-        <div className="mb-10 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-sm text-amber-700 dark:text-amber-400">
-          <strong>In development.</strong> This course is{" "}
-          {course.status.replace("-", " ")} — full content and lessons are
-          being written. The outline below gives you a preview of what is coming.
         </div>
-      )}
-
-      <hr className="border-zinc-200 dark:border-zinc-800 mb-10" />
-
-      <article className="prose max-w-none course-content">{content}</article>
-
-      {/* What next — a fresh, relevant recommendation each visit */}
-      <RecommendedNext
-        currentSlug={slug}
-        currentTrack={course.track}
-        candidates={recommendationPool()}
-      />
-
-      <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-        <Link
-          href="/learn"
-          className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> All tracks
-        </Link>
-        {/* Contact disabled until backend is ready — restore <Link href="/contact"> to re-enable */}
-        <span className="text-sm text-zinc-400 cursor-not-allowed">
-          Questions? Get in touch →
-        </span>
       </div>
     </div>
   );
