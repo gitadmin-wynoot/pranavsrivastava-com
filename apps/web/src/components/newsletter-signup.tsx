@@ -44,7 +44,7 @@ export function NewsletterSignup() {
   return (
     <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-6 sm:p-8">
       <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-        Notes on AI that holds up in production
+        Notes on what I'm building
       </h2>
       <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mt-2 mb-5 max-w-xl">
         Every so often I write up something I learned shipping AI and software at

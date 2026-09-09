@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pranav Srivastava — AI that holds up in production",
+    default: "Pranav Srivastava — Building together",
     template: "%s · Pranav Srivastava",
   },
   description:
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://pranavsrivastava.com",
     siteName: "Pranav Srivastava",
-    title: "Pranav Srivastava — AI that holds up in production",
+    title: "Pranav Srivastava — Building together",
     description:
       "Hands-on labs, courses, and writing on building AI systems that hold up in production — from someone who does it at scale.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pranav Srivastava — AI that holds up in production",
+    title: "Pranav Srivastava — Building together",
     description:
       "Hands-on labs, courses, and writing on building AI systems that hold up in production.",
   },

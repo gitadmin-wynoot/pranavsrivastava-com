@@ -10,7 +10,7 @@ const MEDIUM_URL = "https://pranav-srivastava.medium.com";
 export const metadata: Metadata = {
   title: "Writing",
   description:
-    "Essays and notes on AI that holds up in production — agents, MCP, RAG, and the thinking behind real systems. Some here, longer ones on Medium.",
+    "Essays and notes on building AI — agents, MCP, RAG, and the thinking behind real systems. Some here, longer ones on Medium.",
 };
 
 export default async function WritingPage() {

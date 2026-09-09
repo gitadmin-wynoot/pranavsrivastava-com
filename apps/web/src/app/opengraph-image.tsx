@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Pranav Srivastava — AI that holds up in production";
+export const alt = "Pranav Srivastava — Building together";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -59,7 +59,7 @@ export default function OpengraphImage() {
             Pranav Srivastava
           </div>
           <div style={{ fontSize: 36, color: "#a1a1aa", marginTop: 22 }}>
-            AI that holds up in production.
+            Building together.
           </div>
         </div>
 
