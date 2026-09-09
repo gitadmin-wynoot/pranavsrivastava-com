@@ -1,35 +1,39 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// A plain light/dark toggle. Deliberately NOT a three-way system/light/dark
+// cycle: that version showed the icon for the raw `theme` setting and
+// advanced through "system" on every click — so the first click from
+// "system" often changed the setting but not the pixels on screen (system
+// was already resolving to the theme you were about to set explicitly),
+// which reads as the button doing nothing, or the opposite of what you
+// clicked. Using resolvedTheme (what's actually on screen right now) and
+// always flipping straight to its opposite means every click is a real,
+// visible change. The OS preference still drives the *first* visit via
+// defaultTheme="system" on the provider — this toggle just takes over once
+// someone has an opinion.
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Avoid hydration mismatch — render nothing until client mounts
   useEffect(() => setMounted(true), []);
   if (!mounted) return <div className="w-8 h-8" />;
 
-  const cycles: Array<"system" | "light" | "dark"> = ["system", "light", "dark"];
-  const current = (theme as "system" | "light" | "dark") ?? "system";
-  const next = cycles[(cycles.indexOf(current) + 1) % cycles.length];
-
-  const icons = {
-    light: <Sun className="w-4 h-4" />,
-    dark: <Moon className="w-4 h-4" />,
-    system: <Monitor className="w-4 h-4" />,
-  };
+  const isDark = resolvedTheme === "dark";
+  const next = isDark ? "light" : "dark";
 
   return (
     <button
       onClick={() => setTheme(next)}
       aria-label={`Switch to ${next} mode`}
-      title={`Theme: ${current} — click to switch to ${next}`}
+      title={`Currently ${resolvedTheme} — click to switch to ${next}`}
       className="p-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
     >
-      {icons[current]}
+      {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
     </button>
   );
 }
