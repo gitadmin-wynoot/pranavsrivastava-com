@@ -22,7 +22,7 @@ By the end of this course you will know how MCP works, you will have built three
 
 ---
 
-<ChapterHeader number={1} title="The Problem MCP Solves" time={8} />
+<ChapterHeader number="1" title="The Problem MCP Solves" time="8" />
 
 <LearningObjectives>
 - Understand why AI assistants are limited without external tools
@@ -118,7 +118,7 @@ MCP was created by Anthropic and released as an open standard in November 2024. 
 
 ---
 
-<ChapterHeader number={2} title="How MCP Works" time={10} />
+<ChapterHeader number="2" title="How MCP Works" time="10" />
 
 <LearningObjectives>
 - Understand the three-part architecture: Host, Client, Server
@@ -230,7 +230,7 @@ MCP uses **JSON-RPC 2.0** — a simple message format. Every message is JSON. Th
 
 ---
 
-<ChapterHeader number={3} title="Setting Up Your Environment" time={5} />
+<ChapterHeader number="3" title="Setting Up Your Environment" time="5" />
 
 <LearningObjectives>
 - Install the Python MCP SDK using pip or uv
@@ -287,7 +287,7 @@ If the server starts and waits silently (no output, no error), your setup is cor
 
 ---
 
-<ChapterHeader number={4} title="Your First MCP Server" time={15} />
+<ChapterHeader number="4" title="Your First MCP Server" time="15" />
 
 <LearningObjectives>
 - Build a real MCP server with multiple tools
@@ -418,7 +418,7 @@ The docstring **is** your tool's UI. Claude only knows what you write there. Vag
 
 ---
 
-<ChapterHeader number={5} title="File System Tools" time={20} />
+<ChapterHeader number="5" title="File System Tools" time="20" />
 
 <LearningObjectives>
 - Build a file server with read, write, list, and delete tools
@@ -556,7 +556,7 @@ The `.resolve()` call expands all `../` segments before we check. That is why it
 
 ---
 
-<ChapterHeader number={6} title="Database Tools" time={20} />
+<ChapterHeader number="6" title="Database Tools" time="20" />
 
 <LearningObjectives>
 - Build a SQLite MCP server with query and insert tools
@@ -706,7 +706,7 @@ The `query_database` tool only allows SELECT statements — it checks for this e
 
 ---
 
-<ChapterHeader number={7} title="Web and API Tools" time={15} />
+<ChapterHeader number="7" title="Web and API Tools" time="15" />
 
 <LearningObjectives>
 - Build tools that fetch webpage content and call REST APIs
@@ -790,7 +790,7 @@ FastMCP supports async tools — just mark them `async def`. The framework handl
 
 ---
 
-<ChapterHeader number={8} title="Resources and Prompts" time={12} />
+<ChapterHeader number="8" title="Resources and Prompts" time="12" />
 
 <LearningObjectives>
 - Understand when to use Resources instead of Tools
@@ -861,7 +861,7 @@ In Claude Desktop, prompts are invocable from the `/` command menu.
 
 ---
 
-<ChapterHeader number={9} title="Security Patterns" time={12} />
+<ChapterHeader number="9" title="Security Patterns" time="12" />
 
 <LearningObjectives>
 - Know the 6 security rules for MCP servers
@@ -926,7 +926,7 @@ A tool that runs `subprocess.run(user_input, shell=True)` gives arbitrary code e
 
 ---
 
-<ChapterHeader number={10} title="Hands-on Project: Personal Content Assistant" time={30} />
+<ChapterHeader number="10" title="Hands-on Project: Personal Content Assistant" time="30" />
 
 <LearningObjectives>
 - Combine file, database, and web tools in one server

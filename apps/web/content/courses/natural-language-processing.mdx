@@ -24,7 +24,7 @@ Two reasons. First, the ideas (embeddings, classification) are still inside toda
 - Know the everyday NLP tasks (classification, entity extraction) still in wide use
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Why language is so hard" time={11} />
+<ChapterHeader number="1" title="Why language is so hard" time="11" />
 
 To a computer, "bank" in *"river bank"* and *"savings bank"* is the same string — yet the meanings are opposite worlds. Human language is full of this: ambiguity, sarcasm, context, idioms ("it's raining cats and dogs"), and meaning that depends on who is speaking and when.
 
@@ -36,7 +36,7 @@ Early systems tried to handle language with hand-written grammar rules, and drow
 - NLP advanced by learning from examples instead of coding rules
 </ChapterSummary>
 
-<ChapterHeader number={2} title="From counting words to capturing meaning" time={14} />
+<ChapterHeader number="2" title="From counting words to capturing meaning" time="14" />
 
 The first practical trick was simple: **count the words.** Represent a document by how often each word appears (a "bag of words"). Spam filters worked this way — emails heavy with "free," "winner," "click" scored as spam. Crude, but useful, and still fine for many tasks today.
 
@@ -61,7 +61,7 @@ Embeddings are the Maths course's "things become points in space," applied to la
 2. In one sentence, what does an embedding do for a word?
 </Checkpoint>
 
-<ChapterHeader number={3} title="The everyday NLP tasks still in use" time={12} />
+<ChapterHeader number="3" title="The everyday NLP tasks still in use" time="12" />
 
 Long before chatbots, NLP quietly powered features you use daily — and these still run on simpler, cheaper models where an LLM would be overkill:
 
@@ -79,7 +79,7 @@ Need to label a million support tickets by topic, fast and cheap? A small classi
 - For high-volume, narrow tasks, small NLP models often beat an LLM on speed and cost
 </ChapterSummary>
 
-<ChapterHeader number={4} title="The leap to language models" time={11} />
+<ChapterHeader number="4" title="The leap to language models" time="11" />
 
 The old methods had a ceiling. Bag-of-words ignored order; early embeddings gave each word *one* fixed meaning (so "bank" could not be both river and money). The missing piece was *context* — understanding each word in light of the words around it.
 

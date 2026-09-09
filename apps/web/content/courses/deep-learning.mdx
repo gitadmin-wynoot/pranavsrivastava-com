@@ -24,7 +24,7 @@ Classical machine learning needs you to tell it *what to look at* — "consider 
 - Understand transfer learning — why you rarely start from scratch
 </LearningObjectives>
 
-<ChapterHeader number={1} title="What a neural network actually is" time={13} />
+<ChapterHeader number="1" title="What a neural network actually is" time="13" />
 
 The name sounds intimidating, but the idea is gentle. A neural network is built from tiny units called <KeyTerm definition="A tiny unit that takes in numbers, weighs them, adds them up, and passes on a result. Stacked in layers, they form a neural network.">neurons</KeyTerm>. Each neuron does something trivial: take some numbers in, multiply each by a "weight" (how much it cares about that input), add them up, and pass the result on.
 
@@ -40,7 +40,7 @@ Remember from the maths course: the inputs are a *vector*, each layer is a *matr
 - It is the maths-course ideas (vectors, matrices, gradient descent) stacked up
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Why depth is the magic" time={13} />
+<ChapterHeader number="2" title="Why depth is the magic" time="13" />
 
 Here is the insight that makes deep learning special. Each layer learns to spot *bigger ideas built from the layer below it.* You never tell it what to look for — it discovers a hierarchy on its own.
 
@@ -74,7 +74,7 @@ Learning features automatically is powerful but hungry. Deep learning needs *lot
 2. Why did deep learning take over from classical ML for tasks like image recognition?
 </Checkpoint>
 
-<ChapterHeader number={3} title="CNNs — networks that see" time={13} />
+<ChapterHeader number="3" title="CNNs — networks that see" time="13" />
 
 A <KeyTerm definition="Convolutional Neural Network — a network design that scans an image with small filters, ideal for vision tasks.">CNN</KeyTerm> (Convolutional Neural Network) is the design built for images. Its trick is to scan the picture with small "filters" — little windows that slide across the image looking for one thing each (a vertical edge, a patch of red, a curve).
 
@@ -96,7 +96,7 @@ In regions with too few radiologists, a CNN does not replace the doctor — it t
 - Used in phone cameras, medical imaging, manufacturing, and self-driving
 </ChapterSummary>
 
-<ChapterHeader number={4} title="RNNs — networks that read sequences" time={12} />
+<ChapterHeader number="4" title="RNNs — networks that read sequences" time="12" />
 
 Images are static, but lots of data comes in *order*: words in a sentence, notes in a melody, days of stock prices. For these, what came *before* changes the meaning of what comes *next*. "I grew up in France, so I speak fluent ___" — to fill the blank you must remember "France" from earlier.
 
@@ -114,7 +114,7 @@ RNNs read sequences one step at a time and forget long-range context. The breakt
 - Their weakness (forgetting long-range context) set the stage for transformers
 </ChapterSummary>
 
-<ChapterHeader number={5} title="Transfer learning — standing on giants" time={11} />
+<ChapterHeader number="5" title="Transfer learning — standing on giants" time="11" />
 
 Training a deep network from scratch needs enormous data and compute — out of reach for most projects. <KeyTerm definition="Reusing a model already trained on a huge dataset and adapting it to your smaller, specific task.">Transfer learning</KeyTerm> is the brilliant shortcut: take a network someone already trained on millions of images, and *reuse* it for your task.
 

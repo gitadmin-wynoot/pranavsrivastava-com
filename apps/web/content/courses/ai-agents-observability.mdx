@@ -22,7 +22,7 @@ This course takes you from zero to a working multi-agent system, with full obser
 
 ---
 
-<ChapterHeader number={1} title="What is an AI Agent?" time={10} />
+<ChapterHeader number="1" title="What is an AI Agent?" time="10" />
 
 <LearningObjectives>
 - Understand the key difference between a chatbot and an agent
@@ -127,7 +127,7 @@ If you can write the steps as a fixed Python function, do that instead of an age
 
 ---
 
-<ChapterHeader number={2} title="The Agent Loop — ReAct" time={12} />
+<ChapterHeader number="2" title="The Agent Loop — ReAct" time="12" />
 
 <LearningObjectives>
 - Understand the ReAct pattern (Reason + Act)
@@ -200,7 +200,7 @@ Some models (Claude 3.7+) support extended thinking — the model produces visib
 
 ---
 
-<ChapterHeader number={3} title="Tools and Function Calling" time={20} />
+<ChapterHeader number="3" title="Tools and Function Calling" time="20" />
 
 <LearningObjectives>
 - Define tools using the Anthropic API format
@@ -341,7 +341,7 @@ The model can only use a tool as well as you describe it. A bad description lead
 
 ---
 
-<ChapterHeader number={4} title="Single-Agent Patterns" time={20} />
+<ChapterHeader number="4" title="Single-Agent Patterns" time="20" />
 
 <LearningObjectives>
 - Build three single-agent patterns using LangGraph
@@ -469,7 +469,7 @@ Code execution is powerful but risky. Always sandbox it — use a container, a V
 
 ---
 
-<ChapterHeader number={5} title="Memory — What Agents Remember" time={15} />
+<ChapterHeader number="5" title="Memory — What Agents Remember" time="15" />
 
 <LearningObjectives>
 - Understand the four types of agent memory
@@ -579,7 +579,7 @@ def log_episode(task: str, steps: list[str], outcome: str, cost_usd: float):
 
 ---
 
-<ChapterHeader number={6} title="Multi-Agent Systems" time={18} />
+<ChapterHeader number="6" title="Multi-Agent Systems" time="18" />
 
 <LearningObjectives>
 - Understand why multiple agents outperform a single agent on complex tasks
@@ -747,7 +747,7 @@ builder.add_conditional_edges("editor", needs_revision, {
 
 ---
 
-<ChapterHeader number={7} title="Agent Frameworks" time={25} />
+<ChapterHeader number="7" title="Agent Frameworks" time="25" />
 
 <LearningObjectives>
 - Understand the strengths and trade-offs of six agent frameworks
@@ -976,7 +976,7 @@ Install: `pip install smolagents`
 
 ---
 
-<ChapterHeader number={8} title="Observability with Langfuse" time={15} />
+<ChapterHeader number="8" title="Observability with Langfuse" time="15" />
 
 <LearningObjectives>
 - Understand why observability is essential for agent systems
@@ -1097,7 +1097,7 @@ guard = CostGuard(max_usd=0.50)
 
 ---
 
-<ChapterHeader number={9} title="Human-in-the-Loop" time={15} />
+<ChapterHeader number="9" title="Human-in-the-Loop" time="15" />
 
 <LearningObjectives>
 - Know which actions require human approval and which do not
@@ -1210,7 +1210,7 @@ for event in app.stream(Command(resume={"approved": True}), config=thread):
 
 ---
 
-<ChapterHeader number={10} title="Hands-on Project: Multi-Agent Research Pipeline" time={40} />
+<ChapterHeader number="10" title="Hands-on Project: Multi-Agent Research Pipeline" time="40" />
 
 <LearningObjectives>
 - Build a complete 3-agent pipeline (Researcher → Writer → Publisher)

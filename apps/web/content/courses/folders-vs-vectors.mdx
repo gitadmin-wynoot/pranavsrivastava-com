@@ -26,7 +26,7 @@ You can give an AI knowledge as a **folder** — organised, human-readable files
 - Combine them into one architecture, and see why that beats either alone
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Two ways to hand over knowledge" time={9} />
+<ChapterHeader number="1" title="Two ways to hand over knowledge" time="9" />
 
 Picture giving a new colleague everything they need to do a job. You could hand them a **well-organised binder** — labelled sections, a table of contents, cross-references — and let them flip to what they need. Or you could give them a **magic index** that, for any question, instantly surfaces the most relevant paragraphs from a giant pile of documents, even if they used different words than the documents do.
 
@@ -43,7 +43,7 @@ Before comparing them, let's be sure what each *is*, because the words hide simp
 - They are complementary tools, not competitors
 </ChapterSummary>
 
-<ChapterHeader number={2} title="What is a folder, really?" time={11} />
+<ChapterHeader number="2" title="What is a folder, really?" time="11" />
 
 You already know what a folder is: files inside folders, with names, that you can open and read, and that can link to each other. That is the whole idea — and it turns out to be a surprisingly good way to store knowledge *for an AI*, not just for a person.
 
@@ -67,7 +67,7 @@ Andrej Karpathy called this the "LLM-wiki" pattern, with a memorable line: *LLMs
 - Agents can both read and update files — the bookkeeping humans hate, models do gladly
 </ChapterSummary>
 
-<ChapterHeader number={3} title="What is a vector, really?" time={12} />
+<ChapterHeader number="3" title="What is a vector, really?" time="12" />
 
 Start with one tiny idea. Some different words mean almost the *same* thing — **cat, kitten, feline** — and so do **car, vehicle, automobile**. A computer that understood *meaning* should treat the words in each group as basically the same. Press the button and watch it do exactly that:
 
@@ -103,7 +103,7 @@ So what is a <KeyTerm definition="A database that stores embeddings (points on t
 - A vector database stores these points and finds the nearest ones fast; RAG answers from them
 </ChapterSummary>
 
-<ChapterHeader number={4} title="OKF — the folder way, in depth" time={12} />
+<ChapterHeader number="4" title="OKF — the folder way, in depth" time="12" />
 
 In June 2026, Google Cloud introduced the **Open Knowledge Format** to make the folder approach a real standard. It is deliberately, almost stubbornly, simple: **a directory of markdown files, each with a little YAML frontmatter**, plus a few conventions so different tools can read the same bundle.
 
@@ -126,7 +126,7 @@ Google shipped it with working pieces: an *enrichment agent* that walks BigQuery
 - Deliberately not a knowledge graph/RDF — it bets on markdown that every tool already reads
 </ChapterSummary>
 
-<ChapterHeader number={5} title="Folder vs Vector — the honest comparison" time={11} />
+<ChapterHeader number="5" title="Folder vs Vector — the honest comparison" time="11" />
 
 Neither wins outright; they are good at different things.
 
@@ -151,7 +151,7 @@ The pattern you'll notice: **vectors are for *finding* things by meaning; folder
 - Vectors *find* by meaning; folders *know* precisely — different jobs
 </ChapterSummary>
 
-<ChapterHeader number={6} title="The ultimate architecture — use both" time={12} />
+<ChapterHeader number="6" title="The ultimate architecture — use both" time="12" />
 
 Here is the punchline: you do not choose. The strongest design **layers them** — and OKF was explicitly built to allow it. Google's own note is that an OKF bundle *can* be embedded and indexed for vector search, while still preserving the structured relationships "that vector similarity alone might miss."
 

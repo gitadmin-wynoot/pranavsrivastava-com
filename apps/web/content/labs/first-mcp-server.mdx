@@ -25,7 +25,7 @@ You need Python 3.10+ and about 30 minutes. We use [`uv`](https://docs.astral.sh
 
 <Steps>
 
-<Step number={1} title="Set up the project">
+<Step number="1" title="Set up the project">
 
 Create a folder and install the MCP SDK.
 
@@ -41,7 +41,7 @@ If you prefer pip: `python -m venv .venv && source .venv/bin/activate && pip ins
 
 </Step>
 
-<Step number={2} title="Write the server">
+<Step number="2" title="Write the server">
 
 Create `server.py`. We expose one tool — a tiny "word stats" tool — so you can see the whole loop without external APIs.
 
@@ -78,7 +78,7 @@ That is the entire server. The `@mcp.tool()` decorator turns a normal Python fun
 
 </Step>
 
-<Step number={3} title="Run and inspect it">
+<Step number="3" title="Run and inspect it">
 
 The MCP Inspector is the fastest way to see your tool working — it gives you a UI to call the tool by hand.
 
@@ -96,7 +96,7 @@ The Inspector is acting as an MCP client. It discovered your tool, read its sche
 
 </Step>
 
-<Step number={4} title="Connect it to a real client">
+<Step number="4" title="Connect it to a real client">
 
 To use it from a desktop AI client that speaks MCP, point its config at your server.
 

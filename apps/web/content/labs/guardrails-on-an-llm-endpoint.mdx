@@ -55,7 +55,7 @@ uv add anthropic fastapi "uvicorn[standard]"
 
 <Steps>
 
-<Step number={1} title="The unguarded endpoint (the thing we're fixing)">
+<Step number="1" title="The unguarded endpoint (the thing we're fixing)">
 
 Start with the naïve version so the gaps are obvious. Create `main.py`:
 
@@ -88,7 +88,7 @@ This works — and will also write you a poem, answer legal questions, and follo
 
 </Step>
 
-<Step number={2} title="Input gate — block before the model spends a token">
+<Step number="2" title="Input gate — block before the model spends a token">
 
 Cheap, deterministic checks that run first: length limits, an obvious prompt-injection tripwire, and a small blocklist. Add above the endpoint:
 
@@ -124,7 +124,7 @@ Keyword rules are fast, free, and explainable — start here. They also miss par
 
 </Step>
 
-<Step number={3} title="Scope the model — the system prompt is a guardrail too">
+<Step number="3" title="Scope the model — the system prompt is a guardrail too">
 
 The strongest, cheapest guardrail is telling the model what it is. A tight system prompt keeps it on-topic without any extra call:
 
@@ -141,7 +141,7 @@ SYSTEM = (
 
 </Step>
 
-<Step number={4} title="Output gate — validate the answer before it leaves">
+<Step number="4" title="Output gate — validate the answer before it leaves">
 
 Even a well-scoped model can occasionally say something you don’t want to ship. Check the output, and use the model’s **own** refusal signal as a free extra guardrail:
 
@@ -167,7 +167,7 @@ The API can return `stop_reason == "refusal"` when its own safety training decli
 
 </Step>
 
-<Step number={5} title="Wire the gates around the call — with an audit log">
+<Step number="5" title="Wire the gates around the call — with an audit log">
 
 Now assemble the guarded endpoint. Every request produces a logged decision: allowed, or blocked with a reason.
 
@@ -211,7 +211,7 @@ def ask(body: Ask):
 
 </Step>
 
-<Step number={6} title="Run it and try to break it">
+<Step number="6" title="Run it and try to break it">
 
 <CodeFile filename="terminal">
 ```bash

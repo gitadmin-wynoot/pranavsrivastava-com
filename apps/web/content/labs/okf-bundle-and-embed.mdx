@@ -31,7 +31,7 @@ uv add anthropic sentence-transformers numpy pyyaml
 
 <Steps>
 
-<Step number={1} title="Build the OKF bundle">
+<Step number="1" title="Build the OKF bundle">
 
 An OKF bundle is just a folder of markdown files, each with a little YAML frontmatter (the only required field is `type`). This script writes a tiny one. Create and run `build_bundle.py`:
 
@@ -96,7 +96,7 @@ That folder *is* your knowledge base — human-readable, git-versionable, no dat
 
 </Step>
 
-<Step number={2} title="Load and parse the bundle">
+<Step number="2" title="Load and parse the bundle">
 
 Reading an OKF bundle is just walking the folder and splitting each file into its frontmatter (structured fields) and its body (the markdown). Create `ask.py`:
 
@@ -125,7 +125,7 @@ print("Loaded:", [d["path"] for d in docs])
 
 </Step>
 
-<Step number={3} title="Embed the files — the vector half">
+<Step number="3" title="Embed the files — the vector half">
 
 Now turn each file into a vector so we can find it by meaning. We embed the title, description, and body together.
 
@@ -146,7 +146,7 @@ vectors = embedder.encode(texts, normalize_embeddings=True)
 
 </Step>
 
-<Step number={4} title="Find with vectors, ground in the folder">
+<Step number="4" title="Find with vectors, ground in the folder">
 
 This is the whole architecture in one function: embed the question, find the nearest **file** (vector find), then hand the model that file&apos;s exact contents and make it answer *only* from there, citing the path (folder ground).
 
@@ -187,7 +187,7 @@ ask("What does an order row contain, and how does it link to customers?")
 
 </Step>
 
-<Step number={5} title="Run it">
+<Step number="5" title="Run it">
 
 <CodeFile filename="terminal">
 ```bash

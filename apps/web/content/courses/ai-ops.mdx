@@ -24,7 +24,7 @@ Building asks "does it work?" Operating asks "does it keep working — cheaply, 
 - Catch quality drift and roll back safely when something goes wrong
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Monitoring — catch problems before users do" time={12} />
+<ChapterHeader number="1" title="Monitoring — catch problems before users do" time="12" />
 
 In production, things go wrong quietly: a tool starts failing, answers get slower, quality slips after a change. You want to find out from a *dashboard*, not from an angry customer. Monitoring is watching the vital signs of your live system, all the time.
 
@@ -44,7 +44,7 @@ A dashboard helps when you look at it; an *alert* finds you when you're not. Set
 - Set alerts so issues find you, not the other way around
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Cost — keeping the bill predictable" time={13} />
+<ChapterHeader number="2" title="Cost — keeping the bill predictable" time="13" />
 
 AI systems have an unusual danger: their cost scales with *usage*, and usage can spike. Every model call costs money (per token), every tool call may too. A popular feature — or a runaway loop — can turn a comfortable bill into a frightening one overnight.
 
@@ -52,19 +52,19 @@ The levers that keep cost under control:
 
 <Steps>
 
-<Step number={1} title="Caching">
+<Step number="1" title="Caching">
 If the same question comes in twice, serve the saved answer instead of paying for the model again. Common questions get answered for free after the first time.
 </Step>
 
-<Step number={2} title="Right-sizing the model">
+<Step number="2" title="Right-sizing the model">
 Big models cost more. Use a small, cheap model for easy steps (sorting, classifying) and the expensive one only where real intelligence is needed.
 </Step>
 
-<Step number={3} title="Trimming context">
+<Step number="3" title="Trimming context">
 You pay per token of input. The context discipline from earlier in the track is also a *cost* discipline — a leaner window is a cheaper call.
 </Step>
 
-<Step number={4} title="Budgets and limits">
+<Step number="4" title="Budgets and limits">
 Cap spend per user and per task. The step limit from Loop Engineering is a cost control as much as a safety one — it stops a runaway loop from running up a fortune.
 </Step>
 
@@ -85,7 +85,7 @@ A system that works but costs ten times what it earns is a failed system. Treati
 2. Why is caching especially valuable for an assistant that gets the same common questions?
 </Checkpoint>
 
-<ChapterHeader number={3} title="Security & guardrails — when the system can act" time={13} />
+<ChapterHeader number="3" title="Security & guardrails — when the system can act" time="13" />
 
 Once an AI system is public and can take actions, people *will* test its limits — some curious, some malicious. <KeyTerm definition="Rules and checks around an AI system that prevent unsafe, off-topic, or manipulated behaviour.">Guardrails</KeyTerm> are the protections that keep it behaving no matter what comes in.
 
@@ -104,7 +104,7 @@ Design as if some users are actively trying to break the system, because some wi
 - Enforce safety in the harness and permissions — never trust the prompt alone
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Drift & rollback — staying good over time" time={12} />
+<ChapterHeader number="4" title="Drift & rollback — staying good over time" time="12" />
 
 A system that was excellent at launch can quietly get worse. Models get updated, user behaviour shifts, the world changes, a "small" prompt tweak backfires. This silent decline is called <KeyTerm definition="When an AI system's quality slowly degrades over time as models, data, or usage change.">drift</KeyTerm>, and the only defence is to keep measuring.
 

@@ -24,7 +24,7 @@ There are very few equations here. The goal is intuition — the mental pictures
 - See all four ideas working together inside a single AI prediction
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Vectors — turning anything into numbers" time={12} />
+<ChapterHeader number="1" title="Vectors — turning anything into numbers" time="12" />
 
 A computer cannot understand a photo, a word, or a customer. It only understands numbers. So the first job in any AI system is to turn things into lists of numbers. That list is called a <KeyTerm definition="An ordered list of numbers that describes something — like [age, height, income] describing a person.">vector</KeyTerm>.
 
@@ -42,7 +42,7 @@ This is the whole idea behind recommendations, search, and "find me more like th
 - Closeness between vectors means similarity — the basis of search and recommendations
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Matrices — machines that transform" time={12} />
+<ChapterHeader number="2" title="Matrices — machines that transform" time="12" />
 
 If a vector is a single thing described as numbers, a <KeyTerm definition="A grid of numbers that transforms vectors — rotating, stretching, or reshaping them.">matrix</KeyTerm> is a grid of numbers that *transforms* vectors. The best way to picture a matrix is as a machine: a vector goes in, a changed vector comes out.
 
@@ -67,7 +67,7 @@ You do not need to multiply matrices by hand — the computer does that billions
 2. Why does turning a photo or a word into numbers make it useful to an AI?
 </Checkpoint>
 
-<ChapterHeader number={3} title="Probability — reasoning when you are not sure" time={12} />
+<ChapterHeader number="3" title="Probability — reasoning when you are not sure" time="12" />
 
 Real life is uncertain, and AI models live in that uncertainty. They almost never say "this is definitely a cat." They say "I am 92% sure this is a cat." <KeyTerm definition="A way of measuring how likely something is, from 0 (impossible) to 1 (certain).">Probability</KeyTerm> is the language of that uncertainty.
 
@@ -85,7 +85,7 @@ Because models output probabilities, not certainties, a good AI system always as
 - Bayes' theorem = updating your belief as new evidence arrives (spam filters, fraud, diagnosis)
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Gradients — how a model actually learns" time={14} />
+<ChapterHeader number="4" title="Gradients — how a model actually learns" time="14" />
 
 Here is the question that unlocks all of AI: how does a model *learn* from examples? The answer is a beautifully simple idea called **gradient descent**.
 
@@ -117,25 +117,25 @@ Each step is tiny, and there are millions of numbers to adjust. That is why trai
 2. Why does a model give a probability (like 92%) instead of a flat yes or no?
 </Checkpoint>
 
-<ChapterHeader number={5} title="All four, inside one prediction" time={10} />
+<ChapterHeader number="5" title="All four, inside one prediction" time="10" />
 
 Let us watch the four ideas work together when an AI labels a photo as "a dog":
 
 <Steps>
 
-<Step number={1} title="Vector">
+<Step number="1" title="Vector">
 The photo becomes a long vector of numbers (pixel brightnesses).
 </Step>
 
-<Step number={2} title="Matrices">
+<Step number="2" title="Matrices">
 That vector flows through the network's matrices, getting reshaped at each layer — edges, then shapes, then "dog-like" features.
 </Step>
 
-<Step number={3} title="Probability">
+<Step number="3" title="Probability">
 The final numbers become a probability list: dog 0.94, cat 0.05, fox 0.01. The model reports its confidence.
 </Step>
 
-<Step number={4} title="Gradients (during training)">
+<Step number="4" title="Gradients (during training)">
 Earlier, while learning, every time the model guessed wrong, gradient descent nudged those matrices a little — until "dog" photos reliably produced high "dog" numbers.
 </Step>
 

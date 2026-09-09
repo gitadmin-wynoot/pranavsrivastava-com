@@ -33,7 +33,7 @@ uv add anthropic
 
 <Steps>
 
-<Step number={1} title="Give the agent two tools">
+<Step number="1" title="Give the agent two tools">
 
 An agent is only as capable as its tools. We give it two tiny ones — a fact lookup and a calculator — so it can answer a question no single lookup could. Create `agent.py`:
 
@@ -56,7 +56,7 @@ def calculator(expression: str) -> str:
 
 </Step>
 
-<Step number={2} title="Describe the tools to the model">
+<Step number="2" title="Describe the tools to the model">
 
 The model can only use a tool if it knows the tool exists and what shape its input takes. That is what a tool schema is.
 
@@ -92,7 +92,7 @@ handlers = {
 
 </Step>
 
-<Step number={3} title="Write the loop — this is ReAct">
+<Step number="3" title="Write the loop — this is ReAct">
 
 Here is the whole thing. The `for` loop *is* the ReAct loop: the model's text is the **Thought**, a `tool_use` block is the **Action**, the `tool_result` you feed back is the **Observation**, and a turn with no tool call is the **Finish**.
 
@@ -147,7 +147,7 @@ print("\n✅ ANSWER:", agent(
 
 </Step>
 
-<Step number={4} title="Run it and watch the loop">
+<Step number="4" title="Run it and watch the loop">
 
 <CodeFile filename="terminal">
 ```bash

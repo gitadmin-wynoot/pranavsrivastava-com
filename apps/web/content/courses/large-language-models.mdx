@@ -24,7 +24,7 @@ An LLM is a giant transformer trained to guess the next word in a piece of text,
 - Understand *why* LLMs hallucinate, so you can use them wisely
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Predicting the next word — the whole game" time={13} />
+<ChapterHeader number="1" title="Predicting the next word — the whole game" time="13" />
 
 Give an LLM the words "The capital of France is" and it predicts the most likely next word: "Paris." Give it "Once upon a" and it predicts "time." That is the entire core skill — guess what comes next.
 
@@ -42,21 +42,21 @@ Before predicting, the model chops text into pieces called <KeyTerm definition="
 - It generates text one token at a time, feeding its output back in
 </ChapterSummary>
 
-<ChapterHeader number={2} title="How an LLM is made: three stages" time={14} />
+<ChapterHeader number="2" title="How an LLM is made: three stages" time="14" />
 
 A raw next-word predictor is knowledgeable but unruly — it will happily continue offensive text or ramble. Turning it into a helpful assistant takes three stages:
 
 <Steps>
 
-<Step number={1} title="Pre-training — read almost everything">
+<Step number="1" title="Pre-training — read almost everything">
 The model reads a vast amount of text (books, websites, code) and learns to predict the next token. This is where it absorbs language and world knowledge. It is hugely expensive and done once. The result is powerful but raw.
 </Step>
 
-<Step number={2} title="Fine-tuning — learn to follow instructions">
+<Step number="2" title="Fine-tuning — learn to follow instructions">
 The model is then trained on examples of *good answers to instructions* — questions paired with helpful, well-structured responses. This teaches it to behave like an assistant rather than just autocompleting text.
 </Step>
 
-<Step number={3} title="Human feedback (RLHF) — learn to be helpful and safe">
+<Step number="3" title="Human feedback (RLHF) — learn to be helpful and safe">
 Finally, humans rate the model's answers, and it is nudged toward the responses people prefer — more helpful, honest, and harmless. This is the reinforcement learning you met in the ML course, applied to politeness and usefulness.
 </Step>
 
@@ -77,7 +77,7 @@ Pre-training gives the model its *knowledge*. Fine-tuning gives it *manners*. Hu
 2. What does each of the three training stages contribute — in one phrase each?
 </Checkpoint>
 
-<ChapterHeader number={3} title="The dials: context window and temperature" time={12} />
+<ChapterHeader number="3" title="The dials: context window and temperature" time="12" />
 
 Two settings shape how an LLM behaves, and knowing them makes you far more effective.
 
@@ -95,7 +95,7 @@ Need a correct, consistent answer? Low temperature. Need fresh ideas or varied p
 - Temperature trades reliability (low) for creativity (high)
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Why LLMs hallucinate — and what to do" time={13} />
+<ChapterHeader number="4" title="Why LLMs hallucinate — and what to do" time="13" />
 
 LLMs sometimes state false things with total confidence. This is called <KeyTerm definition="When an LLM generates fluent, confident text that is simply not true.">hallucination</KeyTerm>, and understanding *why* it happens is the key to using these tools safely.
 

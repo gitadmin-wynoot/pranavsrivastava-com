@@ -24,7 +24,7 @@ Think of the model as a brilliant, fast, slightly unpredictable engine. The harn
 - Know what to log so you can see — and fix — what your system did
 </LearningObjectives>
 
-<ChapterHeader number={1} title="The model is the engine, not the car" time={12} />
+<ChapterHeader number="1" title="The model is the engine, not the car" time="12" />
 
 A bare model takes text in and gives text out. That is all. To make it *do* something useful and trustworthy, you wrap it in machinery:
 
@@ -58,7 +58,7 @@ The next chapters take the three you have not met yet: permissions, evaluations,
 - Engineering the harness is most of the work in a real AI product
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Permissions — the model should not be able to do everything" time={13} />
+<ChapterHeader number="2" title="Permissions — the model should not be able to do everything" time="13" />
 
 Once a model can use tools, it can take *actions* — and actions have consequences. A support agent that can issue refunds could, if it misunderstands, issue a refund it should not. The protection is the same idea that protects human employees: **least privilege** — give it exactly the powers it needs for its job, and nothing more.
 
@@ -86,7 +86,7 @@ An AI agent handling internal IT requests can be allowed to reset a password (lo
 2. Give an example of an action you'd allow freely and one you'd require human approval for.
 </Checkpoint>
 
-<ChapterHeader number={3} title="Evaluations — knowing if it's actually good" time={13} />
+<ChapterHeader number="3" title="Evaluations — knowing if it's actually good" time="13" />
 
 You cannot improve what you cannot measure, and "it seemed fine when I tried it" is not measurement. <KeyTerm definition="A repeatable test set that scores how well your AI system performs, so you can tell if changes help or hurt.">Evaluations</KeyTerm> (evals) are a fixed set of test cases — questions with known good answers — that you run your system against to get a real score.
 
@@ -104,7 +104,7 @@ A simple eval set might be 50 real questions with ideal answers. You score the s
 - Evals are the AI equivalent of unit tests: improve with evidence, not hope
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Observability — seeing what it did" time={12} />
+<ChapterHeader number="4" title="Observability — seeing what it did" time="12" />
 
 When an AI system gives a strange answer or takes a wrong action, your first question is *why?* — and you can only answer that if you *recorded* what happened. <KeyTerm definition="Recording what your AI system did at each step — inputs, retrieved context, tool calls, and outputs — so you can understand and debug it.">Observability</KeyTerm> means logging the whole story of each request.
 

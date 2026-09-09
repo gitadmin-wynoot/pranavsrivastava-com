@@ -164,18 +164,25 @@ interface ChapterHeaderProps {
 // Stable, readable anchor for each chapter — "3. Designing the schema" → "ch-3-designing-the-schema".
 // The chapter nav (chapter-nav.tsx) reads these ids straight off the DOM, so
 // any course using ChapterHeader gets a working index for free.
-function chapterSlug(number: number, title: string): string {
+function chapterSlug(number: number | undefined, title: string): string {
   const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
-  return `ch-${number}-${slug}`;
+  // Falls back to "x" (not a digit) if the chapter number couldn't be
+  // resolved — the nav's ch-(\d+)- pattern simply won't number that entry,
+  // rather than baking a broken id like "ch-NaN-..." into the page.
+  return `ch-${number ?? "x"}-${slug}`;
 }
 
 export function ChapterHeader({ number, title, time }: ChapterHeaderProps) {
-  const n = Number(number);
-  const t = time !== undefined ? Number(time) : undefined;
+  // Guard against NaN, not just undefined: a malformed/unconvertible prop
+  // should render as if it weren't there, never as the literal text "NaN".
+  const nRaw = Number(number);
+  const n = Number.isFinite(nRaw) ? nRaw : undefined;
+  const tRaw = time !== undefined ? Number(time) : undefined;
+  const t = tRaw !== undefined && Number.isFinite(tRaw) ? tRaw : undefined;
   return (
     <div id={chapterSlug(n, title)} className="mt-14 mb-6 not-prose scroll-mt-24">
       <div className="flex items-center gap-3 mb-3">
@@ -295,11 +302,13 @@ export function Step({
   title: string;
   children: React.ReactNode;
 }) {
+  const nRaw = Number(number);
+  const n = Number.isFinite(nRaw) ? nRaw : undefined;
   return (
     <div className="relative flex gap-4 pb-6 last:pb-0 group">
       <div className="flex flex-col items-center">
         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold flex-shrink-0 z-10">
-          {Number(number)}
+          {n}
         </span>
         <div className="w-px flex-1 bg-zinc-200 dark:bg-zinc-700 mt-2 group-last:hidden" />
       </div>

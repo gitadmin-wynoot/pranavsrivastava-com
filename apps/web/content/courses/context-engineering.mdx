@@ -24,7 +24,7 @@ Two teams build the same AI feature with the same model. One is reliable and sha
 - Decide what an AI system should remember and what it should forget
 </LearningObjectives>
 
-<ChapterHeader number={1} title="The model only sees its context" time={12} />
+<ChapterHeader number="1" title="The model only sees its context" time="12" />
 
 An LLM has no memory of you, no access to your files, no awareness of anything except the text you place in its context window *right now*. Whatever is in that window, it uses. Whatever is missing, it cannot use — and will often guess to fill the gap.
 
@@ -40,7 +40,7 @@ Stop asking "how do I word this prompt?" and start asking "what does the model n
 - The key question is "what does it need to see?" not "how do I phrase it?"
 </ChapterSummary>
 
-<ChapterHeader number={2} title="The context window is a budget" time={13} />
+<ChapterHeader number="2" title="The context window is a budget" time="13" />
 
 The window has a fixed size (a token limit). Everything competes for that space: your instructions, the retrieved documents, the conversation so far, examples, tool results. You cannot pour in *everything* — and even if you could, you should not.
 
@@ -74,21 +74,21 @@ A common beginner mistake is to stuff in the entire manual "just in case." It ba
 2. Rewrite the question "how do I phrase this prompt?" the way a context engineer would ask it.
 </Checkpoint>
 
-<ChapterHeader number={3} title="Select, order, and compress" time={13} />
+<ChapterHeader number="3" title="Select, order, and compress" time="13" />
 
 Good context engineering is three moves, done well:
 
 <Steps>
 
-<Step number={1} title="Select — include only what's relevant">
+<Step number="1" title="Select — include only what's relevant">
 Pull in the documents, history, and tool results that actually bear on *this* task, and leave the rest out. This is where RAG (last course) earns its keep — fetching just the relevant passages instead of the whole library.
 </Step>
 
-<Step number={2} title="Order — put the important things where they're seen">
+<Step number="2" title="Order — put the important things where they're seen">
 Models pay most attention to the start and end of the context, less to the middle. Place the key instruction and the most relevant facts prominently — not buried in the middle of a wall of text.
 </Step>
 
-<Step number={3} title="Compress — shrink without losing meaning">
+<Step number="3" title="Compress — shrink without losing meaning">
 Summarise long histories, trim boilerplate, replace ten verbose paragraphs with the three sentences that matter. Compression frees budget for what counts.
 </Step>
 
@@ -104,7 +104,7 @@ A customer-support assistant could dump the customer's entire 2-year history int
 - Compress: summarise and trim so the budget holds signal, not filler
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Memory — what to keep, what to forget" time={11} />
+<ChapterHeader number="4" title="Memory — what to keep, what to forget" time="11" />
 
 Conversations and tasks pile up information faster than the window can hold. So a system must decide, continuously, what to *carry forward* and what to *let go*. This is memory design, and it is pure context engineering over time.
 

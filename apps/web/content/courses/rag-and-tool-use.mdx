@@ -24,7 +24,7 @@ RAG gives the model *facts to read*. Tools give the model *things it can do*. To
 - Know when to retrieve, when to use a tool, and when to just answer
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Why a model needs the outside world" time={12} />
+<ChapterHeader number="1" title="Why a model needs the outside world" time="12" />
 
 From the last course: an LLM predicts plausible text from a frozen snapshot of what it read during training. That creates three hard limits:
 
@@ -44,7 +44,7 @@ A bank wants an assistant that answers staff questions from its 4,000-page polic
 - The fix: keep the model fixed and supply the right information at question time
 </ChapterSummary>
 
-<ChapterHeader number={2} title="RAG, step by step" time={14} />
+<ChapterHeader number="2" title="RAG, step by step" time="14" />
 
 <KeyTerm definition="Retrieval-Augmented Generation — fetching relevant documents and giving them to the model so it answers from real sources.">RAG</KeyTerm> stands for Retrieval-Augmented Generation. Despite the name, the idea is simple: **find the relevant facts, then let the model answer using them.**
 
@@ -67,7 +67,7 @@ With RAG, answers are grounded in real, current, citable sources. The model stop
 2. What does the "retrieve" step actually look for, and how does it find it?
 </Checkpoint>
 
-<ChapterHeader number={3} title="Tools — letting the model act" time={13} />
+<ChapterHeader number="3" title="Tools — letting the model act" time="13" />
 
 RAG lets the model *read*. Tools let it *do*. A <KeyTerm definition="A function or service the model can call — a calculator, a web search, a database query, an API — to get information or take an action.">tool</KeyTerm> is any capability you hand the model: a calculator, a web search, a database lookup, sending an email, running code.
 
@@ -101,7 +101,7 @@ LLMs are weak at exact arithmetic, current data, and precise lookups — exactly
 - Tools provide the exactness and real-world actions LLMs lack
 </ChapterSummary>
 
-<ChapterHeader number={4} title="When to retrieve, when to use a tool, when to just answer" time={11} />
+<ChapterHeader number="4" title="When to retrieve, when to use a tool, when to just answer" time="11" />
 
 A good AI system does not RAG or call tools for *everything* — that would be slow and wasteful. Part of the craft is choosing:
 

@@ -24,7 +24,7 @@ The person calling your API — often another developer — is your *user*, and 
 - Make your API self-explanatory with documentation and a standard spec
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Name things like a human would" time={12} />
+<ChapterHeader number="1" title="Name things like a human would" time="12" />
 
 A well-named API is almost self-explanatory. The core REST convention: **resources are nouns, addressed by URL; the verb lives in the HTTP method, not the name.**
 
@@ -47,7 +47,7 @@ Once you set a convention (plural nouns, nesting like `/users/42/orders`), follo
 - Pick one convention and follow it everywhere — predictability is the feature
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Errors that help, not haunt" time={13} />
+<ChapterHeader number="2" title="Errors that help, not haunt" time="13" />
 
 When something goes wrong, your error response is the only thing the caller has to work with. A good one turns a frustrated developer into a productive one. A bad one — a bare `400` with no explanation — turns them into a support ticket.
 
@@ -83,7 +83,7 @@ There's even a standard shape for API errors: [RFC 9457, *Problem Details for HT
 2. What three things should a good error response always do?
 </Checkpoint>
 
-<ChapterHeader number={3} title="Versioning — change without breaking people" time={12} />
+<ChapterHeader number="3" title="Versioning — change without breaking people" time="12" />
 
 Here's a hard truth: the moment other people depend on your API, you can't freely change it. Rename a field and every app using it breaks. But you also can't freeze forever. The answer is <KeyTerm definition="Offering multiple versions of an API so existing users keep working while new users get improvements.">versioning</KeyTerm> — running the old shape and the new shape side by side.
 
@@ -99,7 +99,7 @@ Once people build on your API, **breaking changes are betrayals of trust.** Plan
 - Plan for change: version early, deprecate with plenty of warning, never break silently
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Security — who's calling, and what may they do?" time={12} />
+<ChapterHeader number="4" title="Security — who's calling, and what may they do?" time="12" />
 
 Most APIs shouldn't answer just anyone. Two questions sit at the heart of API security:
 
@@ -118,7 +118,7 @@ OAuth 2.0 is defined in [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749
 - Use OAuth 2.0 for user-delegated access; always use HTTPS; never leak secrets
 </ChapterSummary>
 
-<ChapterHeader number={5} title="Documentation — an API nobody can read doesn't exist" time={11} />
+<ChapterHeader number="5" title="Documentation — an API nobody can read doesn't exist" time="11" />
 
 The best-designed API is useless if a developer can't figure out how to call it. Documentation isn't an afterthought; it's how your API gets adopted. And the good news: you can largely *generate* it.
 

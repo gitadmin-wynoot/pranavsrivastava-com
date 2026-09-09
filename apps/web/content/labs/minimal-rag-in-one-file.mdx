@@ -60,7 +60,7 @@ uv add anthropic sentence-transformers numpy
 
 <Steps>
 
-<Step number={1} title="Start with some documents">
+<Step number="1" title="Start with some documents">
 
 Real systems load files; we’ll use a tiny company handbook so the retrieval is easy to sanity-check. Create `rag.py`:
 
@@ -85,7 +85,7 @@ Our facts are already one idea each. Long documents aren’t — you must split 
 
 </Step>
 
-<Step number={2} title="Embed the documents into vectors">
+<Step number="2" title="Embed the documents into vectors">
 
 An <KeyTerm definition="A list of numbers representing a piece of text's meaning, so that similar meanings sit close together in space.">embedding</KeyTerm> turns text into a vector where similar meanings land near each other. We compute one per document, once.
 
@@ -107,7 +107,7 @@ That NumPy array *is* your vector index. For thousands of docs you'd reach for a
 
 </Step>
 
-<Step number={3} title="Retrieve the most relevant passages">
+<Step number="3" title="Retrieve the most relevant passages">
 
 To answer a question, embed it the same way, then find the closest document vectors by cosine similarity.
 
@@ -130,7 +130,7 @@ Run it (`uv run rag.py`). You’ll see the leave and sick-leave facts surface fo
 
 </Step>
 
-<Step number={4} title="Answer — grounded, with citations">
+<Step number="4" title="Answer — grounded, with citations">
 
 Now hand the retrieved passages to the model with a strict instruction: answer only from these sources, cite them, and admit when the answer isn’t there.
 
@@ -170,7 +170,7 @@ You’ll get something like: *“You accrue 25 days of paid leave per year [1]. 
 
 </Step>
 
-<Step number={5} title="Prove the grounding works">
+<Step number="5" title="Prove the grounding works">
 
 The whole value of RAG is that the model *stops making things up*. Test both sides:
 

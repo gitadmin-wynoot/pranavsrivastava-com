@@ -57,7 +57,7 @@ uv add langgraph langgraph-checkpoint-sqlite langchain-anthropic
 
 <Steps>
 
-<Step number={1} title="A stateless agent (the goldfish)">
+<Step number="1" title="A stateless agent (the goldfish)">
 
 First, an agent with no memory, so you can feel the problem. Create `agent.py`:
 
@@ -86,7 +86,7 @@ Each `graph.invoke(...)` starts from an empty slate. Tell it your name in one ca
 
 </Step>
 
-<Step number={2} title="Add a checkpointer — instant short-term memory">
+<Step number="2" title="Add a checkpointer — instant short-term memory">
 
 A checkpointer saves the state after every step. Swap the compile line to use one backed by a SQLite file:
 
@@ -113,7 +113,7 @@ Run it (`uv run agent.py`). The second call answers **“Pranav”** — because
 
 </Step>
 
-<Step number={3} title="Persist across runs — real long-term memory">
+<Step number="3" title="Persist across runs — real long-term memory">
 
 Here’s the part that makes it more than a chat loop: the memory is on **disk**. Split the two turns into separate scripts and run them minutes apart.
 
@@ -171,7 +171,7 @@ The second process was never told your favourite language. It read it from `memo
 
 </Step>
 
-<Step number={4} title="Keep users apart with thread IDs">
+<Step number="4" title="Keep users apart with thread IDs">
 
 The `thread_id` is what isolates memories. Different IDs are different, private conversations — sharing one SQLite file, never leaking into each other.
 

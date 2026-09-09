@@ -24,7 +24,7 @@ An AI agent is: a goal, some tools, a memory, and a *loop* that ties them togeth
 - Know when a simple fixed workflow beats a free-roaming loop
 </LearningObjectives>
 
-<ChapterHeader number={1} title="The core loop: plan, act, observe, repeat" time={13} />
+<ChapterHeader number="1" title="The core loop: plan, act, observe, repeat" time="13" />
 
 A single model call is one shot: question in, answer out. But many real tasks cannot be done in one shot — they need several steps, and each step depends on what the last one revealed. So an agent runs a loop.
 
@@ -61,7 +61,7 @@ The power is that the agent *adapts as it goes* — it did not need the whole pl
 - This lets agents handle multi-step tasks a single answer never could
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Self-correction: learning from what went wrong" time={13} />
+<ChapterHeader number="2" title="Self-correction: learning from what went wrong" time="13" />
 
 The loop's quiet superpower is *recovering from mistakes mid-task.* Because the agent observes the result of each action, it can notice when something failed and try a different approach — without a human stepping in.
 
@@ -82,7 +82,7 @@ Self-correction only works if the agent actually *sees* the outcome of its actio
 2. Why can a looping agent fix its own buggy code when a single model call cannot?
 </Checkpoint>
 
-<ChapterHeader number={3} title="Making loops converge — not spin" time={13} />
+<ChapterHeader number="3" title="Making loops converge — not spin" time="13" />
 
 Loops are powerful and *dangerous*. A poorly designed loop can run forever, repeat the same failed action, or wander away from the goal — burning time and money. A core job of loop engineering is making sure the loop *converges*: it gets closer to done and then stops.
 
@@ -90,19 +90,19 @@ The guard rails that make loops safe:
 
 <Steps>
 
-<Step number={1} title="A clear 'done' condition">
+<Step number="1" title="A clear 'done' condition">
 The agent must be able to recognise success — the test passed, the booking is confirmed, the question is answered. Vague goals make loops that never end.
 </Step>
 
-<Step number={2} title="A step limit (a budget)">
+<Step number="2" title="A step limit (a budget)">
 Cap the number of loops. If the agent hasn't finished in, say, 10 steps, stop and report — rather than spinning forever. A budget protects your time and cost.
 </Step>
 
-<Step number={3} title="Loop detection">
+<Step number="3" title="Loop detection">
 Notice when the agent repeats the same action with the same result — a sign it is stuck. Break out and try a different path or ask a human.
 </Step>
 
-<Step number={4} title="Progress checks">
+<Step number="4" title="Progress checks">
 Every few steps, ask: am I actually getting closer? If not, change strategy instead of grinding on.
 </Step>
 
@@ -118,7 +118,7 @@ The most common way agents fail in production is not a wrong answer — it is a 
 - Add loop detection and progress checks to catch stuck agents early
 </ChapterSummary>
 
-<ChapterHeader number={4} title="When a fixed workflow beats a free loop" time={11} />
+<ChapterHeader number="4" title="When a fixed workflow beats a free loop" time="11" />
 
 A free-roaming loop — where the agent decides each step itself — is flexible but unpredictable. For many real tasks, you do not want that freedom. If the steps are always the same (fetch order → check status → draft reply → send), a **fixed workflow** is better: more reliable, cheaper, easier to test.
 

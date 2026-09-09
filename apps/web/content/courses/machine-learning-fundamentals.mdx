@@ -24,7 +24,7 @@ Machine learning is teaching a computer to spot patterns from examples, so it ca
 - Judge whether a model is actually good, using the right measure for the job
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Rules vs. learning — when examples win" time={12} />
+<ChapterHeader number="1" title="Rules vs. learning — when examples win" time="12" />
 
 Imagine writing software to spot spam email. The rules approach: *if it contains "free money", mark as spam.* Spammers write "fr3e m0ney" and you are back to square one. You add another rule. They adapt again. You lose.
 
@@ -40,7 +40,7 @@ Use machine learning when the rules are too many, too subtle, or keep changing �
 - Not every problem needs ML — simple, stable logic is better as plain rules
 </ChapterSummary>
 
-<ChapterHeader number={2} title="The three families of learning" time={14} />
+<ChapterHeader number="2" title="The three families of learning" time="14" />
 
 Almost all machine learning falls into three families, and the difference comes down to *what the computer is shown.*
 
@@ -71,7 +71,7 @@ Modern AI mixes these. A chatbot is first trained in a self-supervised way on te
 2. You have a pile of news articles and want to auto-group them by topic, with no pre-set topics. Which family?
 </Checkpoint>
 
-<ChapterHeader number={3} title="How a model fits the data" time={12} />
+<ChapterHeader number="3" title="How a model fits the data" time="12" />
 
 At heart, training a model means *finding the line (or curve, or boundary) that best fits your examples.* Picture house prices: bigger houses cost more. Plot size against price, and the model draws the line that best runs through the dots. Now, given a new house's size, it reads the price off the line.
 
@@ -101,7 +101,7 @@ How does it find the best line? Exactly the "walking downhill" idea from the mat
 - The "best fit" is found by gradient descent — stepping downhill to less error
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Overfitting — the trap that catches everyone" time={14} />
+<ChapterHeader number="4" title="Overfitting — the trap that catches everyone" time="14" />
 
 Here is the most important warning in all of machine learning. A model can do *too well* on the examples it studied — by memorising them instead of learning the real pattern. This is called <KeyTerm definition="When a model memorises its training examples (including their noise) instead of learning the general pattern, so it fails on new data.">overfitting</KeyTerm>, and it is the number one reason AI projects disappoint in the real world.
 
@@ -138,7 +138,7 @@ Almost every "amazing" AI demo that flops in production flopped because of overf
 2. A teammate reports a model with 98% accuracy. What is the one question you must ask?
 </Checkpoint>
 
-<ChapterHeader number={5} title="Judging a model with the right measure" time={12} />
+<ChapterHeader number="5" title="Judging a model with the right measure" time="12" />
 
 "Accuracy" sounds like the obvious way to judge a model — what fraction did it get right? But accuracy can lie, badly. Suppose 1 in 1,000 transactions is fraud. A lazy model that says "never fraud" is 99.9% accurate — and completely useless, because it never catches a single fraud.
 

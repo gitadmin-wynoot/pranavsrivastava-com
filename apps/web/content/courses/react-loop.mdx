@@ -26,7 +26,7 @@ ReAct interleaves **thinking** and **doing**: the model writes a thought about w
 - Connect ReAct to production agents (function calling, frameworks) and its failure modes
 </LearningObjectives>
 
-<ChapterHeader number={1} title="Watch the loop turn" time={12} />
+<ChapterHeader number="1" title="Watch the loop turn" time="12" />
 
 The fastest way to understand ReAct is to watch one run. Below is a real trace. Hit **Next move** and follow the agent as it thinks, acts, observes, and thinks again — notice that it never answers until it has actually *looked*:
 
@@ -50,7 +50,7 @@ Reasoning alone can plan but can't check facts. Acting alone can fetch facts but
 - Interleaving reasoning and acting lets each cover the other's weakness
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Where the idea comes from — and the evidence" time={12} />
+<ChapterHeader number="2" title="Where the idea comes from — and the evidence" time="12" />
 
 ReAct is not folklore; it is a 2022 research result. In *"ReAct: Synergizing Reasoning and Acting in Language Models"* (Yao et al., Princeton and Google, published at ICLR 2023), the authors showed that prompting a model to interleave reasoning traces with tool actions beat both reasoning-only and acting-only baselines — often by a lot.
 
@@ -82,7 +82,7 @@ The win wasn't just accuracy — it was *trust and control*. Because the agent t
 - A readable, grounded reasoning trace makes the agent inspectable and correctable
 </ChapterSummary>
 
-<ChapterHeader number={3} title="The anatomy of a good loop" time={12} />
+<ChapterHeader number="3" title="The anatomy of a good loop" time="12" />
 
 Switch the simulator above to **the paper's example** and step through it — the Colorado orogeny question is the exact trace from the ReAct paper. Watch how it *decomposes* a hard multi-hop question:
 
@@ -107,7 +107,7 @@ Notice the "Search" and "Lookup" actions — that's <KeyTerm definition="Retriev
 - Search/Lookup actions are agentic RAG: retrieval the agent chooses, mid-loop
 </ChapterSummary>
 
-<ChapterHeader number={4} title="From paper to production" time={12} />
+<ChapterHeader number="4" title="From paper to production" time="12" />
 
 Almost every agent you use today is a descendant of ReAct. When a model does "function calling" — deciding to call a tool, reading the result, and continuing — that *is* the ReAct loop, with the Thought/Action/Observation format handled by the API instead of hand-written prompt examples.
 
@@ -163,7 +163,7 @@ ReAct is powerful, not magic. Agents can **loop** (repeating the same failing ac
 - Real failure modes — looping, drift, bad observations — are solved by harness engineering, not clever prompts
 </ChapterSummary>
 
-<ChapterHeader number={5} title="When to reach for it" time={8} />
+<ChapterHeader number="5" title="When to reach for it" time="8" />
 
 ReAct shines when a task needs **information or actions the model doesn't already have** and can't get in one shot: multi-step questions, anything that touches live data, tool-driven workflows, decisions that unfold over several moves.
 

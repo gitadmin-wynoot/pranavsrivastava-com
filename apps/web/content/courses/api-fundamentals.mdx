@@ -24,7 +24,7 @@ This assumes no coding background. We define every term as it appears and build 
 - Be able to read what an API call is doing, even if you've never coded
 </LearningObjectives>
 
-<ChapterHeader number={1} title="What an API actually is" time={11} />
+<ChapterHeader number="1" title="What an API actually is" time="11" />
 
 <KeyTerm definition="Application Programming Interface — an agreed way for one program to ask another program for something.">API</KeyTerm> stands for **Application Programming Interface**. Forget the intimidating name. An API is just **an agreed way for one program to ask another program for something** — and get an answer back.
 
@@ -42,7 +42,7 @@ APIs are why software can be built from pieces. You don't build a maps system, a
 - APIs let software be built by connecting existing pieces instead of rebuilding everything
 </ChapterSummary>
 
-<ChapterHeader number={2} title="The heartbeat: request and response" time={12} />
+<ChapterHeader number="2" title="The heartbeat: request and response" time="12" />
 
 Every API works on one simple rhythm: a <KeyTerm definition="A message a client sends to ask an API for something.">request</KeyTerm> goes out, and a <KeyTerm definition="The API's answer, sent back to the client.">response</KeyTerm> comes back. The thing making the request (your app, a browser, a phone) is called the **client**. The thing answering is the **server**.
 
@@ -67,17 +67,17 @@ Open [`https://api.github.com/users/torvalds`](https://api.github.com/users/torv
 2. In "GET /users/42", who is the client and who is the server, and what comes back?
 </Checkpoint>
 
-<ChapterHeader number={3} title="How an API is built: the four parts" time={13} />
+<ChapterHeader number="3" title="How an API is built: the four parts" time="13" />
 
 When someone "builds an API," they're really defining four simple things. Once you see them, every API becomes readable.
 
 <Steps>
 
-<Step number={1} title="Endpoints — the addresses">
+<Step number="1" title="Endpoints — the addresses">
 An <KeyTerm definition="A specific address (URL) on an API that represents one kind of thing you can ask for.">endpoint</KeyTerm> is a web address for one kind of thing. `/users` for users, `/orders` for orders, `/users/42` for one specific user. Building an API starts with deciding these addresses — your "menu."
 </Step>
 
-<Step number={2} title="Methods — the verbs">
+<Step number="2" title="Methods — the verbs">
 Each request carries a **method** that says what you want to *do*. There are four everyday ones:
 - **GET** — read something ("get me user 42")
 - **POST** — create something ("add a new user")
@@ -87,11 +87,11 @@ Each request carries a **method** that says what you want to *do*. There are fou
 Same address, different verb, different action. `GET /users/42` reads; `DELETE /users/42` removes.
 </Step>
 
-<Step number={3} title="Data — what goes in and comes out">
+<Step number="3" title="Data — what goes in and comes out">
 When you create or update, you send data *in* (the new user's details). The server sends data *back* (the result). Both travel as JSON. Building an API means deciding the shape of this data.
 </Step>
 
-<Step number={4} title="Status codes — did it work?">
+<Step number="4" title="Status codes — did it work?">
 Every response carries a 3-digit <KeyTerm definition="A standard number an API returns to say what happened — e.g. 200 OK, 404 Not Found.">status code</KeyTerm> reporting what happened. You already know one: **404** (not found). The everyday ones:
 - **200** — OK, here's your answer
 - **201** — created successfully
@@ -116,7 +116,7 @@ None of this is invented per-company — it rides on shared standards. The reque
 - It all rides on shared standards — HTTP and JSON — so anything can talk to anything
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Putting it together — a tiny mental model" time={9} />
+<ChapterHeader number="4" title="Putting it together — a tiny mental model" time="9" />
 
 Let's trace one real interaction end to end, so it sticks. You tap "place order" in a shopping app:
 

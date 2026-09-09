@@ -24,7 +24,7 @@ Everything before this built up to attention. Everything after it is built on at
 - Know why this architecture, and not a cleverer one, powers today's AI
 </LearningObjectives>
 
-<ChapterHeader number={1} title="The problem: a sentence read through a straw" time={12} />
+<ChapterHeader number="1" title="The problem: a sentence read through a straw" time="12" />
 
 Recall the RNN from the Deep Learning course: it reads a sentence one word at a time, carrying a small memory forward. The trouble is that memory fades. By the end of a long paragraph, the beginning is a blur.
 
@@ -40,7 +40,7 @@ Older networks process words in order and struggle to connect words that are far
 - This long-range problem is exactly what attention was invented to solve
 </ChapterSummary>
 
-<ChapterHeader number={2} title="Attention: letting the model look around" time={14} />
+<ChapterHeader number="2" title="Attention: letting the model look around" time="14" />
 
 Attention throws out the straw. Instead of reading word by word and forgetting, the model looks at the **whole sentence at once** and, for each word, decides *which other words matter most to understanding it.*
 
@@ -74,7 +74,7 @@ Attention is the model, for each word, deciding how much to focus on every other
 2. In your own words, what does "self-attention" mean?
 </Checkpoint>
 
-<ChapterHeader number={3} title="The transformer: attention, stacked and parallel" time={13} />
+<ChapterHeader number="3" title="The transformer: attention, stacked and parallel" time="13" />
 
 A <KeyTerm definition="The neural network architecture, built from layers of attention, behind virtually all modern large language models.">transformer</KeyTerm> is what you get when you stack many attention layers together. Each layer lets every word gather context from every other word; the next layer builds richer understanding on top of that; and so on, deepening meaning at each level — just like the layer hierarchy from the Deep Learning course.
 
@@ -93,7 +93,7 @@ That second point is easy to overlook but it is half the story. Because transfor
 - Superpower 2: it processes all words in parallel, so it trains fast and scales
 </ChapterSummary>
 
-<ChapterHeader number={4} title="Why this one idea won" time={11} />
+<ChapterHeader number="4" title="Why this one idea won" time="11" />
 
 There were many clever architectures over the years. Why did the transformer take over so completely? Because it hit a rare sweet spot: it was **better at understanding** (long-range attention) *and* **cheaper to scale** (parallel training) at the same time. Usually you trade one for the other. The transformer gave both.
 

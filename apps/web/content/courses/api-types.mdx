@@ -24,7 +24,7 @@ You won't use all of these, and you don't need to learn them deeply here. The go
 - Be able to choose the right style for a given job — and cite the standard
 </LearningObjectives>
 
-<ChapterHeader number={1} title="REST — the default, and for good reason" time={13} />
+<ChapterHeader number="1" title="REST — the default, and for good reason" time="13" />
 
 <KeyTerm definition="Representational State Transfer — the dominant API style, built directly on the verbs and addresses of the web.">REST</KeyTerm> is the style you met in the last course without knowing its name. Addresses (`/users/42`), verbs (GET, POST, PUT, DELETE), JSON in and out, status codes. That *is* REST. It's the most common API style on earth because it's simple, it rides on the plain mechanics of the web, and anyone can read it.
 
@@ -42,7 +42,7 @@ REST isn't a product; it's an architectural style described by Roy Fielding in h
 - Defined as an architectural style (Fielding, 2000) on top of HTTP — start here by default
 </ChapterSummary>
 
-<ChapterHeader number={2} title="GraphQL — ask for exactly what you need" time={13} />
+<ChapterHeader number="2" title="GraphQL — ask for exactly what you need" time="13" />
 
 REST has one mild frustration: each endpoint returns a *fixed* shape. Want a user's name and just their last three orders? You might have to call `/users/42`, then `/users/42/orders`, then trim what you don't need — several round trips, often with too much or too little data.
 
@@ -76,7 +76,7 @@ GraphQL was created at Facebook and is now an open spec governed by the [GraphQL
 2. Why might a small, simple app *not* need GraphQL?
 </Checkpoint>
 
-<ChapterHeader number={3} title="gRPC — fast talk between services" time={12} />
+<ChapterHeader number="3" title="gRPC — fast talk between services" time="12" />
 
 REST and GraphQL are friendly for browsers and humans. But inside a large system, your own services need to talk to *each other* constantly — and there, human-readability matters less than raw speed.
 
@@ -94,7 +94,7 @@ gRPC is an open framework from Google, now under the Cloud Native Computing Foun
 - Internal plumbing, not a public browser API — open framework from Google (uses Protocol Buffers)
 </ChapterSummary>
 
-<ChapterHeader number={4} title="SOAP — the strict elder, still in the building" time={11} />
+<ChapterHeader number="4" title="SOAP — the strict elder, still in the building" time="11" />
 
 <KeyTerm definition="Simple Object Access Protocol — an older, strict, XML-based API standard still common in banking, insurance, and government systems.">SOAP</KeyTerm> predates REST and is far more rigid. Messages are wrapped in verbose **XML** (an older, tag-heavy data format), with formal rules, strict contracts, and built-in standards for security and reliability. That strictness made it the choice for big, high-stakes enterprise systems — and it's why you'll still meet it in banking, insurance, payments, and government.
 
@@ -112,7 +112,7 @@ SOAP is a W3C standard — see the [SOAP specification](https://www.w3.org/TR/so
 - You'll connect to it more than build it — a W3C standard
 </ChapterSummary>
 
-<ChapterHeader number={5} title="WebSockets — when the server needs to talk back" time={12} />
+<ChapterHeader number="5" title="WebSockets — when the server needs to talk back" time="12" />
 
 Everything so far follows the same rhythm: the client asks, the server answers, then it's over. But some things need a *live, two-way* connection — a chat message arriving, a stock price ticking, a multiplayer game, a collaborative document updating as someone else types. You can't have the client constantly asking "anything new? anything new?"
 
@@ -130,7 +130,7 @@ WebSocket is an IETF standard defined in [RFC 6455](https://datatracker.ietf.org
 - Perfect for real-time features (chat, live data, games) — an IETF standard (RFC 6455)
 </ChapterSummary>
 
-<ChapterHeader number={6} title="Choosing well — the one-page guide" time={9} />
+<ChapterHeader number="6" title="Choosing well — the one-page guide" time="9" />
 
 Here's the whole course on a single screen. When in doubt, start at the top.
 
