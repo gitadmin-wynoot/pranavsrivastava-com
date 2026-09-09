@@ -32,6 +32,9 @@ import { IntelligenceLadder } from "./intelligence-ladder";
 import { CivilizationalShifts } from "./civilizational-shifts";
 import { SectorImpact } from "./sector-impact";
 import { ForecastSpread } from "./forecast-spread";
+import { RandomnessTimeline } from "./randomness-timeline";
+import { RandomnessSpectrum } from "./randomness-spectrum";
+import { WillowBenchmark } from "./willow-benchmark";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -951,7 +954,42 @@ function GreatFilter() {
   );
 }
 
+/* ── "God does not play dice" — and the experiment that answered him ─────── */
+function GodsDiceDebate() {
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      {/* Einstein */}
+      <circle cx="130" cy="70" r="7" className="fill-amber-500" />
+      <text x="130" y="48" textAnchor="middle" className="fill-amber-600 dark:fill-amber-400" fontSize="13" fontWeight="600">Einstein</text>
+      <text x="130" y="64" textAnchor="middle" className="fill-zinc-400" fontSize="10">1935</text>
+      <text x="130" y="98" textAnchor="middle" className="fill-zinc-600 dark:fill-zinc-300" fontSize="11" fontStyle="italic">"God does not play dice"</text>
+      <text x="130" y="114" textAnchor="middle" className="fill-zinc-400" fontSize="10">there must be hidden variables</text>
+
+      {/* Bohr */}
+      <circle cx="510" cy="70" r="7" className="fill-blue-500" />
+      <text x="510" y="48" textAnchor="middle" className="fill-blue-600 dark:fill-blue-400" fontSize="13" fontWeight="600">Bohr</text>
+      <text x="510" y="64" textAnchor="middle" className="fill-zinc-400" fontSize="10">1935</text>
+      <text x="510" y="98" textAnchor="middle" className="fill-zinc-600 dark:fill-zinc-300" fontSize="11" fontStyle="italic">the randomness is real</text>
+      <text x="510" y="114" textAnchor="middle" className="fill-zinc-400" fontSize="10">there is nothing hidden to find</text>
+
+      <line x1="180" y1="70" x2="460" y2="70" className="stroke-zinc-200 dark:stroke-zinc-700" strokeWidth="1" strokeDasharray="4 5" />
+      <text x="320" y="150" textAnchor="middle" className="fill-zinc-400" fontSize="10">a disagreement with no experiment to settle it — for 29 years</text>
+
+      {/* Bell */}
+      <line x1="320" y1="160" x2="320" y2="178" className="stroke-zinc-300 dark:stroke-zinc-600" strokeWidth="1.5" />
+      <path d="M320,178 l-4,-8 l8,0 z" className="fill-zinc-400 dark:fill-zinc-500" />
+      <circle cx="320" cy="196" r="6" className="fill-rose-500" />
+      <text x="320" y="216" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11" fontWeight="600">Bell's theorem, 1964 — testable at last</text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "gods-dice-debate": {
+    node: <GodsDiceDebate />,
+    caption:
+      "The argument that ran for a generation. In 1935 Einstein, Podolsky and Rosen argued quantum mechanics had to be incomplete — some 'hidden variable' must secretly fix the outcome, we just hadn't found it. Bohr held that the randomness was the whole, final story. For decades it was a matter of taste — a beautiful argument nobody could actually test. John Bell changed that in 1964, showing the two views made different, measurable predictions. Every experiment run since — decades of them, ever more loophole-free, honoured with the 2022 Nobel Prize — has come out on Bohr's side.",
+  },
   "great-filter": {
     node: <GreatFilter />,
     caption:
@@ -1134,4 +1172,7 @@ export const essayComponents = {
   CivilizationalShifts,
   SectorImpact,
   ForecastSpread,
+  RandomnessTimeline,
+  RandomnessSpectrum,
+  WillowBenchmark,
 };

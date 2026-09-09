@@ -1,0 +1,67 @@
+---
+title: "God's Dice"
+slug: "gods-dice"
+dek: "Humans threw dice for five thousand years before working out what chance even was — and it turns out we still hadn't finished the job. A grounded tour of the difference between 'unpredictable' and 'truly random,' Einstein's famous objection, the experiment that settled it, and what Google's Willow chip actually demonstrated in December 2024."
+summary: "Deep Roots, part four — picking the dice thread back up from The Oldest Game. Why a thrown die isn't actually random (just too complex to predict), why your computer's 'random' numbers never have been either, and why quantum measurement is the one place physics currently believes genuine chance exists. Covers Einstein and Bohr's real 1935 disagreement, Bell's theorem and its 2022 Nobel Prize, and Google's Willow chip — its below-threshold error correction result and its random-circuit-sampling benchmark, both explained plainly and both given their honest caveats. Interactive figures and sources."
+category: "Systems & Tech"
+series: "Deep Roots"
+seriesPart: 4
+published: true
+publishedAt: "2026-09-09"
+---
+
+[The last Deep Roots](/essays/the-oldest-game) ended on a line I've kept turning over since: humans threw dice, in one form or another, for roughly five thousand years before anyone worked out the mathematics of what the dice were actually doing. Pascal and Fermat finally cracked probability in 1654, arguing by letter over a gambler's dispute. Case closed, you'd think — humanity finally understood chance.
+
+Except it hadn't, not really. Pascal and Fermat gave us a beautiful way to *calculate* with uncertainty. They never answered the much stranger question sitting underneath it: is a thrown die actually random, or does it just look that way because we're not smart enough to track every spin, every gust of air, every wobble on the felt? That question sat unresolved for another two hundred and seventy years, until a physicist wrote a paper that made Einstein deeply uncomfortable, and it wasn't fully settled until an experiment run, depending how you count, sometime in the last few decades. This essay is that story — and it ends, appropriately, with a machine in Google's basement that spent five minutes doing something a supercomputer couldn't finish before the sun burns out.
+
+## Unpredictable is not the same word as undetermined
+
+Here's the distinction the last two hundred years of physics were quietly building toward, and once you see it you can't unsee it in every "random" thing around you.
+
+<RandomnessSpectrum />
+
+A thrown die is *unpredictable* — nobody, with today's tools, can call the face before it lands. But in the sense physicists mean by "determined," it's about as ordinary as a light switch: the same throw, thrown the exact same way, lands the exact same face, every single time. Newton's laws don't leave room for anything else. The "randomness" of a die is entirely a statement about the limits of *our* measurement, not a fact about the die.
+
+That distinction — unpredictable to us, versus undetermined by anything — turns out to be exactly where quantum mechanics broke rank with everything that came before it. And getting there took one of the more entertaining detours in the history of computing.
+
+## The machine that couldn't tell the truth
+
+Once computers existed, the obvious move was to ask one for a random number. This turned out to be surprisingly close to a philosophical trap, because a computer, at bottom, is the most relentlessly deterministic object humans have ever built — every gate does exactly what its inputs demand, with no room for a coin flip anywhere in the design.
+
+<RandomnessTimeline />
+
+John von Neumann, who built the first practical method for faking it in 1946, was characteristically blunt about what he'd actually made: *"anyone who considers arithmetical methods of producing random digits is, of course, in a state of sin."* He wasn't being modest. A pseudo-random number generator is a formula — feed it the same starting seed twice, and you get the identical "random" sequence twice. It's not random. It's a magic trick that's unpredictable only if you don't know the seed, which is precisely why relying on one for anything security-critical is a well-known way to get burned. Modern systems patch this by harvesting genuine physical noise — the timing jitter of your disk, thermal wobble inside a chip — but even that is still, underneath, classical chaos: in principle predictable, just monstrously impractical to actually measure precisely enough.
+
+Which leaves the honest question hanging in the air through the entire history above: does *anything* undetermined actually exist, anywhere in nature? Or is "random" just a word we use for "too complicated for us, specifically, right now"?
+
+## Einstein said no. The universe said otherwise.
+
+In 1935, Einstein — together with Boris Podolsky and Nathan Rosen — published a paper arguing that quantum mechanics, for all its predictive success, had to be an *incomplete* description of reality. Their reasoning was elegant: quantum theory said certain outcomes were genuinely, fundamentally random, with nothing beneath them. Einstein found that intolerable. There must, he insisted, be some deeper layer — "hidden variables" — that we simply hadn't discovered yet, the same way a die's outcome is secretly fixed by physics we haven't measured. His own words for it, from a letter around the same period, have outlived the argument itself: *God does not play dice.*
+
+Niels Bohr disagreed, and for nearly thirty years the disagreement between two of the smartest people alive had nowhere to go, because nobody could think of an experiment that would tell you who was right. It read, to most physicists, like a matter of philosophical taste.
+
+<EssayFigure name="gods-dice-debate" />
+
+Then, in 1964, a physicist named John Bell found the crack. He proved that if Einstein were right — if hidden variables secretly determined every outcome in advance — measurements on certain paired ("entangled") particles would have to obey a specific mathematical limit. And if Bohr were right, that limit would be *broken*. Suddenly this wasn't philosophy anymore. It was a number you could go and measure. Physicists spent the following decades doing exactly that, closing loophole after loophole in ever more careful experiments — work honoured with the 2022 Nobel Prize in Physics, awarded to John Clauser, Alain Aspect and Anton Zeilinger. Every experiment, run over and over, with increasing rigour, has come out the same way: Bohr's side. As far as our best-tested physics can currently tell, there is no hidden layer. When a quantum measurement happens, the outcome is not merely unknown to us. It is, in the strongest sense physics has a word for, undetermined until that instant — the one place in the entire universe, as best we can currently tell, where the dice are actually real.
+
+## Willow, and the benchmark that is itself made of randomness
+
+Which brings the story to December 2024, and a 105-qubit chip Google calls Willow. It's worth being precise about what it actually showed, because coverage of results like this tends to slide from "genuinely remarkable" into "science fiction" within a single headline, and the truth sits, characteristically, in the more interesting middle.
+
+<WillowBenchmark />
+
+The second of those two results is the one that ties this whole essay together, and it's worth sitting with *why*. The benchmark Willow ran — random circuit sampling — works by executing a quantum circuit specifically designed so its output is, itself, a giant sample of genuine quantum randomness, of exactly the kind Bell's experiments confirmed is real. Verifying that Willow's output matches the statistical fingerprint quantum theory predicts is, in effect, checking that the chip is faithfully generating the one kind of true chance the universe is known to contain — at a scale and speed no ordinary computer stands any chance of tracking, because simulating it classically means tracking probability amplitudes across a state space that doubles with every added qubit. This isn't a chip that's merely *fast*. It's a chip whose headline trick is manufacturing, on demand, the very thing five thousand years of dice, three hundred years of probability theory, and one very stubborn argument between Einstein and Bohr were all, in their own way, circling.
+
+## What actual, provable randomness is good for
+
+This isn't only a philosophical curiosity — it has a genuinely practical payoff, and it connects straight back to something I wrote about a few essays ago. In [Giving AI a Memory](/courses/giving-ai-a-memory) and [When AI Holds the Keys](/essays/the-api-is-the-attack-surface), the quiet assumption everywhere is that a secret key — the thing standing between a system and whoever wants to break in — is actually unpredictable. Most of the time, under the hood, that key was generated by a pseudo-random algorithm: unpredictable in practice, but not undetermined in principle, and cryptographic history has a long list of systems broken because someone found a flaw in exactly that gap. A quantum random number generator closes it for real. Several are already commercially deployed, doing precisely this: harvesting genuine quantum indeterminacy — the same kind Bell's theorem vouches for — to generate keys that aren't merely hard to guess, but are not, even in principle, predictable by anyone, ever, no matter how much computing power or cleverness they bring to it. That is a categorically different, and stronger, promise than anything a formula can offer.
+
+## The oldest question, answered for the first time
+
+I keep coming back to the shape of this whole arc, because it's such a clean example of what Deep Roots is actually about. A Sumerian throwing a carved bone five thousand years ago and a physicist reading Willow's output this week are, it turns out, asking the exact same question: *is this really chance, or does something already know how it'll land?* For virtually the entire span between them, the honest answer was: we don't know, and worse, we didn't even have a way to ask properly. Pascal and Fermat gave humanity the mathematics of chance without ever answering whether chance was real. It took a stubborn refusal from Einstein, a clever theorem from Bell, decades of increasingly careful experiments, and finally a chip cold enough to sit near absolute zero, to get an actual answer.
+
+And the answer, as best as physics can currently tell us, is *yes* — somewhere, genuinely, the universe rolls real dice, with nothing whatsoever loaded into them, and nothing hiding underneath. Einstein spent the last decades of his life uneasy about that possibility. I find it, honestly, rather wonderful: after everything — the epics, the wagers, the equations, the arguments — it turns out the universe wasn't hiding its secret from us out of spite. There was, for once, actually a secret. We just had to build something clever enough to go and check.
+
+---
+
+**Sources & further reading:** On the late birth of probability, Gerolamo Cardano's *Liber de ludo aleae* and the Pascal–Fermat correspondence of 1654 (as cited in the previous Deep Roots, *The Oldest Game*); John von Neumann's 1951 remark on pseudo-random methods ("in a state of sin"), widely cited in the computer-science and statistics literature; on entropy pools and PRNGs, the standard cryptographic distinction between deterministic and hardware/physical random number generators; Einstein, Podolsky & Rosen, "Can Quantum-Mechanical Description of Physical Reality Be Considered Complete?" (1935); John Stewart Bell, "On the Einstein Podolsky Rosen Paradox" (1964); the 2022 Nobel Prize in Physics, awarded to John Clauser, Alain Aspect and Anton Zeilinger "for experiments with entangled photons, establishing the violation of Bell inequalities and pioneering quantum information science"; Google Quantum AI, "Willow" (published in *Nature*, December 2024), on below-threshold quantum error correction and random circuit sampling; and, for the honest caveat on quantum-supremacy-style claims, IBM's 2019 response disputing Google's original Sycamore claim. Figures for Willow's benchmark comparison are Google's own published estimates; treat them, as the essay does, as claims rather than settled consensus.
