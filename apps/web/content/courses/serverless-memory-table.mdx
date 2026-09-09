@@ -12,14 +12,14 @@ lessonCount: 9
 updatedAt: "2026-09-09"
 ---
 
-Picture a colleague with a strange condition: total amnesia every time they finish a task. Ask them a question, they answer, then they forget you ever spoke. That is fine for quick questions. But hand them something that needs a pause — "check with the manager first, then come back to this" — and they simply *can't*. The moment they finish speaking to you, the whole thread of what they were doing is gone. There is no "them" to come back to it.
+You know the feeling of calling a support line, explaining your whole problem, getting cut off, and calling back — and the person who picks up has no idea who you are. A good one pulls up your ticket, reads what the last agent wrote, and carries on like nothing was lost. You never notice the handoff. The notes did the work.
 
-Now give that colleague one thing: a notebook. Before they forget, they scribble down exactly what they were doing and how far they got. Next time you need them, a fresh version of them — same skills, zero memory of before — opens the notebook, reads where things stood, and carries on as if no time had passed at all. The notebook is what makes the amnesia survivable. It turns a person who resets every few minutes into someone who can run a project across days.
+That is, almost exactly, the problem this course solves. Except the "agent" here is an AWS Lambda function, and it does not even get the dignity of being disconnected — it just ends, on purpose, the moment it finishes a piece of work. Lambda keeps nothing in memory between runs, and it will not run past fifteen minutes, full stop. So the instant your LangGraph agent needs to pause — "check with a human before booking this slot, then pick this back up" — you are in the exact same spot as that support call: whoever answers next, possibly hours later, on a completely different machine, needs the full notes of where things stood.
 
-That colleague is **AWS Lambda**. It really does forget everything the instant it finishes running, and it is capped at fifteen minutes per turn, no exceptions. And the notebook is what this course builds: a durable memory table in **DynamoDB** that lets a **LangGraph** agent — one that sometimes has to stop and ask a human "are you sure?" before booking a slot, moving money, or changing a record — pause for as long as it needs to, and then pick up exactly where it left off, on a completely different, memory-less Lambda run. By the end you will understand precisely why that notebook is necessary, and you will have a complete, production-ready, multi-tenant implementation of it.
+This course builds those notes: a durable memory table in **DynamoDB** that lets a **LangGraph** agent pause for as long as it needs and then resume on a fresh Lambda run as if no time had passed at all. By the end you will know exactly why that is necessary, and you will have a complete, production-ready, multi-tenant version of it to deploy.
 
 <Callout type="info" title="What this really teaches">
-The specific artefact is a checkpointer. The transferable idea is bigger — and it is the notebook trick, generalised: how to give a stateless, time-boxed function a *memory*, so it can act like a reliable, long-running process instead of a goldfish. That pattern shows up far beyond agents.
+The specific artefact is a checkpointer. The idea underneath it is bigger: how you give a stateless, time-boxed function a memory — the ticket-notes trick, generalised — so it behaves like a reliable process instead of starting from scratch every single time. That pattern shows up well beyond agents.
 </Callout>
 
 <LearningObjectives>
