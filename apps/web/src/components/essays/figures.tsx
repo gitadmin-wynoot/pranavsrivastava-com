@@ -28,6 +28,10 @@ import { PanicPattern } from "./panic-pattern";
 import { CognitionCurve } from "./cognition-curve";
 import { ClimatePhilosophers } from "./climate-philosophers";
 import { InwardOutward } from "./two-paths";
+import { IntelligenceLadder } from "./intelligence-ladder";
+import { CivilizationalShifts } from "./civilizational-shifts";
+import { SectorImpact } from "./sector-impact";
+import { ForecastSpread } from "./forecast-spread";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -913,7 +917,46 @@ function PanicArc() {
   );
 }
 
+/* ── The Great Filter: why the sky is quiet ───────────────────────────────── */
+function GreatFilter() {
+  const filters = [
+    { x: 110, label: "Simple life", sub: "abiogenesis" },
+    { x: 220, label: "Complex life", sub: "the eukaryote jump" },
+    { x: 330, label: "Intelligence", sub: "tool use, language" },
+    { x: 440, label: "Civilisation", sub: "surviving itself" },
+    { x: 550, label: "Interstellar reach", sub: "the step we haven't seen" },
+  ];
+  return (
+    <svg viewBox="0 0 640 220" className="w-full h-auto" fill="none" role="img">
+      <line x1="60" y1="110" x2="600" y2="110" className="stroke-zinc-200 dark:stroke-zinc-800" strokeWidth="1.5" />
+      <text x="60" y="128" className="fill-zinc-400" fontSize="10">a billion planets start here</text>
+      <text x="600" y="128" textAnchor="end" className="fill-zinc-400" fontSize="10">almost none arrive here</text>
+
+      {filters.map((f, i) => (
+        <g key={i}>
+          <line x1={f.x} y1="94" x2={f.x} y2="126" className="stroke-rose-400/70 dark:stroke-rose-500/60" strokeWidth="2" strokeDasharray="3 4" />
+          <circle cx={f.x} cy="110" r="5" className="fill-zinc-500 dark:fill-zinc-400" />
+          <text x={f.x} y="78" textAnchor="middle" className="fill-zinc-700 dark:fill-zinc-200" fontSize="11" fontWeight="600">{f.label}</text>
+          <text x={f.x} y="60" textAnchor="middle" className="fill-zinc-400" fontSize="9">{f.sub}</text>
+        </g>
+      ))}
+
+      <text x="320" y="164" textAnchor="middle" className="fill-rose-600 dark:fill-rose-400" fontSize="11" fontStyle="italic">
+        each dashed line is a "great filter" — a step almost nothing gets past
+      </text>
+      <text x="320" y="188" textAnchor="middle" className="fill-zinc-400" fontSize="10">
+        the unsettling question: is our hardest filter behind us, or still ahead?
+      </text>
+    </svg>
+  );
+}
+
 const figures: Record<string, { node: ReactNode; caption: string }> = {
+  "great-filter": {
+    node: <GreatFilter />,
+    caption:
+      "The Fermi paradox, plainly stated: the universe is old and vast enough that it should be loud with other civilisations, and it is silent. One candidate answer, the Great Filter, is that somewhere between lifeless chemistry and a civilisation that reaches the stars sits at least one step almost nothing gets past. If it's behind us — the origin of life, say — we got lucky and the sky ahead is genuinely ours. If it's ahead of us, something about the step we're approaching right now (general intelligence, among the candidates) tends to end civilisations before they get any further. Nobody knows which. That is the honest, unsettling shape of the question — not a prediction either way.",
+  },
   "climate-history": {
     node: <ClimateHistory />,
     caption:
@@ -1087,4 +1130,8 @@ export const essayComponents = {
   CognitionCurve,
   ClimatePhilosophers,
   InwardOutward,
+  IntelligenceLadder,
+  CivilizationalShifts,
+  SectorImpact,
+  ForecastSpread,
 };
