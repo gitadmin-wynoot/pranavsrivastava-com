@@ -5,6 +5,11 @@ import { ArrowRight, Check } from "lucide-react";
 
 type State = "idle" | "loading" | "done" | "error" | "soon";
 
+// Flip to true once the invite backend (BUTTONDOWN_API_KEY + /api/circle) is
+// confirmed working. Until then the form renders disabled so no one hits a
+// broken submit. Same convention as NewsletterSignup's SIGNUPS_ENABLED.
+const INVITES_ENABLED = false;
+
 export function CircleInvite() {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
@@ -36,6 +41,33 @@ export function CircleInvite() {
       setState("error");
       setMessage("Network hiccup. Try again in a moment.");
     }
+  }
+
+  if (!INVITES_ENABLED) {
+    return (
+      <div className="space-y-3 max-w-md">
+        <input
+          type="email"
+          disabled
+          placeholder="you@email.com"
+          className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-400 placeholder:text-zinc-400 opacity-60 cursor-not-allowed"
+        />
+        <textarea
+          disabled
+          placeholder="One line: what are you building or working on?"
+          rows={2}
+          className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-400 placeholder:text-zinc-400 opacity-60 cursor-not-allowed resize-none"
+        />
+        <button
+          type="button"
+          disabled
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-sm font-medium rounded-full cursor-not-allowed"
+        >
+          Request an invite <ArrowRight className="w-4 h-4" />
+        </button>
+        <p className="text-xs text-zinc-400">✦ Requests open shortly — thanks for the interest.</p>
+      </div>
+    );
   }
 
   if (state === "done" || state === "soon") {
