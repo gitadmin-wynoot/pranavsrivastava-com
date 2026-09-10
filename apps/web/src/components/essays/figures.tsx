@@ -35,6 +35,7 @@ import { ForecastSpread } from "./forecast-spread";
 import { RandomnessTimeline } from "./randomness-timeline";
 import { RandomnessSpectrum } from "./randomness-spectrum";
 import { WillowBenchmark } from "./willow-benchmark";
+import { PSHECurve } from "./pshe-curve";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -1175,4 +1176,5 @@ export const essayComponents = {
   RandomnessTimeline,
   RandomnessSpectrum,
   WillowBenchmark,
+  PSHECurve,
 };
