@@ -35,9 +35,6 @@ import { ForecastSpread } from "./forecast-spread";
 import { RandomnessTimeline } from "./randomness-timeline";
 import { RandomnessSpectrum } from "./randomness-spectrum";
 import { WillowBenchmark } from "./willow-benchmark";
-import { StarShapedProfile } from "./star-shaped-profile";
-import { SeniorQuestions } from "./senior-questions";
-import { FraudPatternGallery } from "./fraud-pattern-gallery";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -1178,7 +1175,4 @@ export const essayComponents = {
   RandomnessTimeline,
   RandomnessSpectrum,
   WillowBenchmark,
-  StarShapedProfile,
-  SeniorQuestions,
-  FraudPatternGallery,
 };
