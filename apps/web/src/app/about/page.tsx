@@ -186,7 +186,7 @@ export default function AboutPage() {
           {[
             { big: "15+ years", small: "across six industries" },
             { big: "MSc in AI", small: "earned at night, beside the job" },
-            { big: "Still at KPN", small: "CPaaS · AI · API management" },
+            { big: "Incubator → revenue", small: "took KPN's developer portal from a side project to real money" },
             { big: "Wynoot", small: "building it in parallel" },
             { big: "Skiing at 35", small: "a beginner again, on purpose" },
             { big: "30+ countries", small: "explorer — and still counting" },
@@ -263,6 +263,28 @@ export default function AboutPage() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* ── How he actually adds value ──────────────────────────────────────── */}
+      <div className="mb-12 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br from-zinc-50 to-white dark:from-zinc-900/60 dark:to-zinc-950 p-6 sm:p-7">
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+          Not one deep skill — a few
+        </h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed mb-4 max-w-2xl">
+          Fifteen years of systems work, plus the fraud-adjacent instincts you
+          pick up building in banking and telecom, plus a real product story
+          (the KPN developer portal — an internal incubator project he helped
+          grow into meaningful revenue), plus the applied-AI depth this whole
+          site is built from. He&apos;s been deliberate about naming that spread
+          honestly, including the parts that are still newer and thinner than
+          the rest, rather than smoothing it into a single tidy job title.
+        </p>
+        <Link
+          href="/essays/the-questions-ive-learned-to-ask"
+          className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+        >
+          The essay on what he&apos;s actually learned to ask <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {/* ── Beyond the code ───────────────────────────────────────────────── */}
