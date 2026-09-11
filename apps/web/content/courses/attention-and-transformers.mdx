@@ -1,119 +1,367 @@
 ---
 title: "Attention & Transformers"
 slug: "attention-and-transformers"
-summary: "The single idea — letting a model decide what to pay attention to — that fixed the memory problem in older networks and became the architecture behind every modern AI. Explained from scratch, in plain words."
+summary: "The single idea — letting a model decide what to pay attention to — that fixed the memory problem in older networks and became the architecture behind every modern AI. Built from true first principles: the actual query/key/value maths, worked by hand, plus positional encoding, multi-head attention, and the full transformer block — explained so clearly a 15-year-old could follow every step."
 level: "Intermediate"
 status: "published"
 order: 4
 track: "ai-foundations"
 prereqs: ["deep-learning"]
-tags: ["Attention", "Transformers", "Self-Attention", "LLMs"]
-lessonCount: 5
+tags: ["Attention", "Transformers", "Self-Attention", "LLMs", "Positional Encoding", "Multi-Head Attention"]
+lessonCount: 10
+updatedAt: "2026-09-11"
 ---
 
-Almost every AI you have heard of — ChatGPT, Claude, image generators, translation — runs on one architecture: the *transformer*. And the transformer is built on one elegant idea: **attention.** This course explains that idea so clearly you will see why it changed everything.
+Almost every AI you have heard of — ChatGPT, Claude, Gemini, image generators, translation, even the tool folding proteins in a lab — runs on one architecture: the **transformer**. And the transformer is built from one idea, repeated and stacked: **attention**. This course does not wave its hands at that idea. It builds it from the ground up — the actual arithmetic, worked by hand with numbers small enough to check yourself — until you could, if you wanted to, explain the whole thing to a curious 14-year-old without lying to them once.
 
 <Callout type="info" title="Why this is the most important course in the track">
-Everything before this built up to attention. Everything after it is built on attention. If one idea is worth truly understanding in modern AI, it is this one.
+Everything before this built up to attention. Everything after it is built on top of attention. If there is one idea worth truly, properly understanding in modern AI, it is this one — so we are going to take our time with it.
 </Callout>
 
 <LearningObjectives>
-- Understand the exact problem with older networks that attention solves
-- Grasp "attention" through everyday analogies — deciding what to focus on
-- See why transformers are fast *and* good at long-range understanding
-- Know why this architecture, and not a cleverer one, powers today's AI
+- Feel, in your gut, exactly why older networks struggled with long sentences
+- Understand attention as a mechanism, not a metaphor — Query, Key, Value, worked by hand
+- Read a real attention pattern and explain why it changes with context
+- Know why a model needs to be told word order separately, and how positional encoding does it
+- Understand multi-head attention and why one "spotlight" was never going to be enough
+- See the complete transformer block — every piece, and what each one is for
+- Explain why speed and quality together, not either alone, is what let this architecture take over
+- Know the difference between an encoder and a decoder, and why ChatGPT writes one word at a time
+- Recognise the same idea at work outside text — vision, audio, biology
 </LearningObjectives>
 
 <ChapterHeader number="1" title="The problem: a sentence read through a straw" time="12" />
 
-Recall the RNN from the Deep Learning course: it reads a sentence one word at a time, carrying a small memory forward. The trouble is that memory fades. By the end of a long paragraph, the beginning is a blur.
+Before attention existed, the standard way to have a neural network read a sentence was a <KeyTerm definition="A neural network that processes a sequence one item at a time, carrying forward a small summary (its 'hidden state') as memory.">recurrent neural network</KeyTerm>, or RNN — covered in the [Deep Learning](/courses/deep-learning) course. Picture it like someone reading a book one word at a time through a cardboard tube, jotting a short note in the margin after every word to remind themselves what mattered so far, then covering that word up and moving to the next. The note is all they carry forward. Everything not captured in the note is gone.
 
-Consider: *"The trophy did not fit in the brown suitcase because **it** was too big."* What does "it" refer to — the trophy or the suitcase? You know instantly: the trophy. But an RNN, having shuffled word-by-word, often loses that thread. It read the sentence through a straw, remembering only a little at a time.
+That "note" is called the hidden state, and it has a fixed size — the same number of numbers, no matter how long the sentence gets. Try to picture what that means: a two-word sentence and a two-hundred-word paragraph get squeezed into the exact same amount of memory. Something has to get dropped, and it's usually whatever came first.
 
-<Callout type="note" title="The core limitation">
-Older networks process words in order and struggle to connect words that are far apart. But language is full of long-range connections — a pronoun here referring to a noun ten words back. Something better was needed.
+Here's where that actually bites. Read this sentence and answer instantly, without thinking about it:
+
+> *"The trophy did not fit in the brown suitcase because **it** was too big."*
+
+What does "it" refer to? You knew before you finished reading — the trophy, obviously; a suitcase being "too big" wouldn't stop something fitting *inside* it. Now read this one:
+
+> *"The trophy did not fit in the brown suitcase because **it** was too **small**."*
+
+Change one word — "big" to "small" — and "it" now means the *suitcase*. You didn't even notice yourself doing this. Your brain silently reached all the way back across ten words, picked out exactly the right noun, and updated its answer the instant "small" appeared. That's not a party trick. Linguists call this exact kind of sentence a *Winograd schema*, and it's used as a genuine test of whether a system understands language or is just pattern-matching, because getting it right requires holding the whole sentence in mind at once, not reading it through a straw.
+
+<Callout type="note" title="The core limitation, stated plainly">
+An RNN reads in order and keeps a fixed-size note. Long-range connections — a pronoun here referring to a noun ten words back — are exactly the kind of thing that note tends to lose. Language is *full* of these connections. Something fundamentally different was needed, not just a bigger note.
 </Callout>
 
 <ChapterSummary>
-- RNNs read sequentially and forget long-range context
-- Language constantly links far-apart words (pronouns, references)
-- This long-range problem is exactly what attention was invented to solve
-</ChapterSummary>
-
-<ChapterHeader number="2" title="Attention: letting the model look around" time="14" />
-
-Attention throws out the straw. Instead of reading word by word and forgetting, the model looks at the **whole sentence at once** and, for each word, decides *which other words matter most to understanding it.*
-
-When the model processes "it" in our sentence, attention lets it glance back and ask: *which earlier word am I really about?* It weighs every word and decides "trophy" matters most. It has, quite literally, learned where to *pay attention*.
-
-<Diagram title="Attention links each word to the words that matter" caption="Processing 'it', the model attends most strongly to 'trophy'">
-
-```
-  The  trophy  did  not  fit  ...  because   it   was big
-        ▲                                    │
-        └──────────── strong attention ──────┘
-        (weaker attention to every other word too)
-```
-
-</Diagram>
-
-A human analogy: reading a contract, when you hit "the aforementioned party," your eyes flick back to find who that was. You do not re-read the whole document — you *attend* to the relevant part. Attention gives a model that same ability, for every word, all at once.
-
-<Callout type="tip" title="The plain-English definition">
-Attention is the model, for each word, deciding how much to focus on every other word. "Self-attention" just means it does this *within the same sentence* — words attending to other words in their own text.
-</Callout>
-
-<ChapterSummary>
-- Attention lets the model see the whole input at once, not through a straw
-- For each word, it decides which other words matter most
-- This directly captures the long-range links that older networks missed
+- RNNs read one word at a time and compress everything into a fixed-size "note" (the hidden state)
+- Long sentences overflow that note — early words fade as new ones arrive
+- Winograd sentences (the trophy/suitcase pair) prove real understanding requires the *whole* sentence at once, not a summary of it
+- This is precisely the problem attention was invented to solve
 </ChapterSummary>
 
 <Checkpoint>
-1. Why does "it" in the trophy sentence trip up an RNN but not an attention-based model?
-2. In your own words, what does "self-attention" mean?
+1. Why does changing "big" to "small" flip the meaning of "it" — and why is that hard for an RNN specifically?
+2. In your own words, what is a "hidden state," and why is its fixed size the actual source of the problem?
 </Checkpoint>
 
-<ChapterHeader number="3" title="The transformer: attention, stacked and parallel" time="13" />
+<ChapterHeader number="2" title="The core idea: what 'paying attention' really means" time="10" />
 
-A <KeyTerm definition="The neural network architecture, built from layers of attention, behind virtually all modern large language models.">transformer</KeyTerm> is what you get when you stack many attention layers together. Each layer lets every word gather context from every other word; the next layer builds richer understanding on top of that; and so on, deepening meaning at each level — just like the layer hierarchy from the Deep Learning course.
+Before any maths, let's get the *feeling* of attention right, because the feeling is the whole idea — the arithmetic in the next chapter is just a way of making the feeling precise enough for a computer to do it.
 
-It has two superpowers:
+You already do this constantly. At a noisy party, dozens of conversations are hitting your ears at once, but the moment someone across the room says your name, you hear it instantly — your brain was quietly monitoring everything, ready to snap focus onto whatever mattered. Psychologists call this the *cocktail party effect*, and it's a genuinely good description of what attention does inside a model: it isn't reading one thing at a time and forgetting the rest. It's looking at *everything at once*, and deciding, for whatever it's currently focused on, which of all the other things actually matter — and by how much.
 
-1. **It captures long-range meaning** — any word can attend directly to any other, no matter how far apart. The straw is gone.
-2. **It is fast to train** — because it looks at all words *at the same time* (in parallel) rather than one after another, it makes full use of modern hardware. RNNs were stuck going one step at a time.
+Or think about skimming a long legal contract. You hit the phrase "the aforementioned party" and your eyes don't re-read the whole document from the top — they *flick back* to the exact clause that defined who that was, ignore everything else on the page, and return. That flick — precise, selective, instant — is attention. Not reading everything with equal care. Reading everything, but *unevenly*, on purpose, based on what's relevant right now.
 
-<Callout type="important" title="Why speed mattered so much">
-That second point is easy to overlook but it is half the story. Because transformers train in parallel, researchers could train them on enormous amounts of text affordably. Bigger training became practical — and *that* is what produced today's large language models. The architecture did not just understand better; it scaled better.
+<Callout type="tip" title="The one-sentence definition, before the maths">
+Attention is a model, for each word, deciding how strongly to focus on every other word — including itself — when building that word's meaning. &ldquo;Self-attention&rdquo; just means it's doing this within one piece of text, words attending to other words in their own sentence.
 </Callout>
 
 <ChapterSummary>
-- A transformer stacks many attention layers, deepening understanding at each
-- Superpower 1: any word can connect to any other (long-range meaning)
-- Superpower 2: it processes all words in parallel, so it trains fast and scales
+- Attention looks at the whole input at once, then decides what to focus on — like the cocktail-party effect
+- It isn't "read everything equally." It's "read everything, but weight it by relevance"
+- Self-attention: words in a sentence deciding how much to focus on other words in that same sentence
 </ChapterSummary>
 
-<ChapterHeader number="4" title="Why this one idea won" time="11" />
+<ChapterHeader number="3" title="Query, Key, Value — the actual mechanism" time="20" />
 
-There were many clever architectures over the years. Why did the transformer take over so completely? Because it hit a rare sweet spot: it was **better at understanding** (long-range attention) *and* **cheaper to scale** (parallel training) at the same time. Usually you trade one for the other. The transformer gave both.
+Here is the part almost every "attention explained simply" article skips, and it's the part that actually matters. The cocktail-party feeling is nice, but *how does a model actually compute "focus on this word 70% and that one 20%"?* This chapter builds it from scratch, with a library-desk analogy and numbers small enough to check by hand.
 
-That combination meant: feed it more text and more computing power, and it kept getting better — predictably. This "just add scale" property is why a single architecture now underlies chatbots, code assistants, translation, image generation, and more. They are, under the hood, the same machine pointed at different data.
+Imagine a librarian's front desk. Every word in the sentence, as it's processed, does three things:
 
-<Callout type="note" title="One architecture, everywhere">
-The same transformer idea powers text models, image models (vision transformers), audio, and even protein-folding research. Learning it once unlocks understanding across all of modern AI — which is why this course sits at the centre of the track.
+- It writes a **Query** — a short description, as a list of numbers, of *what it's looking for* to complete its own meaning.
+- It writes a **Key** — a short tag describing *what kind of information it offers* to anyone searching.
+- It carries a **Value** — its actual content, what gets handed over if it's chosen.
+
+Query, Key and Value are the same idea a search engine uses: your search box is the Query, the index tags on every webpage are the Keys, and the actual page content is the Value. Attention is a search, run separately for *every single word*, against *every other word in the sentence*, all at once.
+
+<QKVExplainer />
+
+Walk through what just happened, because every one of those five steps has a name worth knowing: the model computed a **score** for how well the Query matched each Key (a dot product — just "multiply and add," a way of measuring how alike two lists of numbers are); it ran those scores through **softmax**, which is a clean mathematical way of turning any list of numbers into honest percentages that add up to exactly 1; and it used those percentages to blend the Values into one new, context-aware meaning. That entire five-step recipe — Query, Key, Score, Softmax, weighted Value — *is* attention. Everything else in this course is either preparing inputs for that recipe or stacking many copies of it together.
+
+<Callout type="important" title="Where do Query, Key and Value actually come from?">
+They aren't hand-written. Each word starts as a plain embedding (see [Embeddings in Depth](/courses/embeddings-in-depth)), and the model learns three matrices during training — one that turns an embedding into a Query, one into a Key, one into a Value. Training is, in large part, the model slowly discovering *what makes a good Query* and *what makes a good Key* for the kinds of relationships that actually show up in language.
+</Callout>
+
+<CodeFile filename="tiny_attention.py">
+```python
+import numpy as np
+
+def softmax(x):
+    x = x - np.max(x)  # for numerical stability
+    e = np.exp(x)
+    return e / e.sum()
+
+def self_attention(X, Wq, Wk, Wv):
+    """
+    X:  (seq_len, d_model) — one embedding row per word
+    Wq, Wk, Wv: (d_model, d_k) — learned projection matrices
+    Returns: (seq_len, d_k) — one new, context-aware vector per word
+    """
+    Q = X @ Wq                          # every word's Query
+    K = X @ Wk                          # every word's Key
+    V = X @ Wv                          # every word's Value
+
+    d_k = K.shape[-1]
+    scores = (Q @ K.T) / np.sqrt(d_k)   # every Query vs. every Key
+    weights = np.apply_along_axis(softmax, 1, scores)  # rows sum to 1
+
+    return weights @ V                  # weighted blend of Values
+
+# A toy sentence with 4 words, each an 8-number embedding
+X = np.random.randn(4, 8)
+Wq, Wk, Wv = (np.random.randn(8, 8) for _ in range(3))
+
+output = self_attention(X, Wq, Wk, Wv)
+print(output.shape)  # (4, 8) — one new, context-aware vector per word
+```
+</CodeFile>
+
+<Callout type="note" title="Why divide by the square root of d_k?">
+One detail from the code worth understanding: scores are divided by the square root of the Key size before softmax. Without it, scores from wide vectors can grow very large, which pushes softmax toward an almost all-or-nothing 100%/0% split and makes training unstable. This single scaling step is why the technique's full name is "scaled dot-product attention."
 </Callout>
 
 <ChapterSummary>
-- The transformer uniquely combined better understanding with cheaper scaling
-- That let it improve simply by adding more data and compute
-- One architecture now powers text, images, audio, and science — all built on attention
+- Every word produces a Query (what it needs), a Key (what it offers), and a Value (its actual content)
+- Score = Query · Key (a dot product — how alike two number-lists are)
+- Softmax turns scores into percentages that sum to 1
+- The output is a weighted blend of every word's Value, using those percentages
+- Q, K, V come from three matrices the model learns during training — nobody hand-writes them
 </ChapterSummary>
 
 <Checkpoint>
-1. Name the transformer's two superpowers and why each matters.
-2. Why did "trains in parallel" turn out to be just as important as "understands better"?
+1. In the worked example, why does "it" end up mostly blended with "trophy" rather than split evenly across all words?
+2. What would happen to the output if every Key were identical? (Hint: think about what softmax would produce.)
+</Checkpoint>
+
+<ChapterHeader number="4" title="Seeing it work: a real attention pattern" time="10" />
+
+Theory earns its keep once you can actually watch it happen. Here is the Winograd sentence from Chapter 1, with attention weights laid out exactly the way a real trained model's would look — pick a word, see where its attention goes, and watch what happens when one word in the sentence changes.
+
+<AttentionHeatmap />
+
+Sit with the second example for a second, because it's the whole argument in one click. Nothing about *where* "it" sits in the sentence changed — same position, ninth word, every time. The only thing that changed was *meaning* — "big" swapped for "small" — and the model's attention followed the meaning, not the position. That is the entire case for attention over the old straw-reading approach, made concrete: it isn't tracking distance. It's tracking relevance.
+
+<ChapterSummary>
+- Attention weights are context-sensitive, not position-sensitive
+- Swapping one word can completely change where attention flows, even though word position stays fixed
+- This is direct evidence attention captures meaning, not just "look nearby"
+</ChapterSummary>
+
+<ChapterHeader number="5" title="Multiple spotlights: multi-head attention" time="12" />
+
+One attention "search" is already powerful — but a sentence has many *kinds* of relationships happening simultaneously. "Quick" describes "fox." "Fox" is the subject of "jumps." "Fox" and "dog" are quietly linked as the two animals in the scene. Asking one single Query/Key/Value setup to capture all of that at once is asking a lot from one spotlight.
+
+So transformers don't use one. They run several attention "heads" in parallel — each with its *own* learned Query, Key and Value matrices — so each head is free to specialise in a different kind of relationship, entirely on its own, during training.
+
+<MultiHeadDemo />
+
+Nobody tells Head 1 "you're in charge of adjectives" or Head 4 "you handle animal pairs." Those specialisations *emerge* from training, purely because splitting the work that way happens to make the model better at predicting language. Researchers going back into trained models afterward and finding heads that cleanly track syntax, or coreference, or position, is one of the genuinely delightful discoveries in this whole field — a bit like performing an autopsy and finding the patient had quietly organised their own internal departments.
+
+<Callout type="tip" title="How the heads get put back together">
+After running in parallel, every head's output gets concatenated (lined up side by side) and passed through one more small learned layer that blends them into a single result. GPT-3-scale models use 96 heads per layer, and there are dozens of layers — so a single word's final meaning is the product of thousands of these little specialised searches, combined.
+</Callout>
+
+<ChapterSummary>
+- One attention head can only really specialise in one kind of relationship at a time
+- Multi-head attention runs several heads in parallel, each with its own learned Q/K/V
+- Specialisation (syntax, coreference, position…) emerges from training — it's never hand-assigned
+- Heads' outputs get combined by one more small learned layer
+</ChapterSummary>
+
+<Checkpoint>
+1. Why might a single attention head struggle to capture both "which adjective describes which noun" and "which word is far away but still related"?
+2. What does it mean that head specialisation "emerges" rather than being programmed in?
+</Checkpoint>
+
+<ChapterHeader number="6" title="Teaching the model about order" time="12" />
+
+Here's a gap in everything we've built so far, and it's a genuinely important one: nothing about Query, Key, Value or softmax mentions *order*. Attention compares every word to every other word as an unordered set — as far as the maths in Chapter 3 is concerned, "the dog bit the man" and "the man bit the dog" contain exactly the same words attending to exactly the same words. Obviously those two sentences mean opposite things. Something has to tell the model which word came first.
+
+The fix, called <KeyTerm definition="A pattern of numbers added to each word's embedding before attention runs, giving the model a way to know each word's position — and how far apart any two positions are — without breaking attention's ability to compare any two words directly.">positional encoding</KeyTerm>, is one of the more elegant ideas in the whole architecture. Before attention ever runs, every position in the sentence gets its own unique numeric fingerprint, generated from waves — and it's added directly onto that word's embedding.
+
+<PositionalEncoding />
+
+The clock analogy is worth sitting with, because it explains *why* waves specifically. Picture a clock with several hands moving at very different speeds. The fastest hand distinguishes this second from the last one — perfect for telling neighbouring positions apart, useless for anything far away, since it loops back round constantly. The slowest hand barely moves at all over a short span — useless for nearby positions, perfect for telling position 3 apart from position 300. Positional encoding uses a whole family of these hands, each ticking at a different frequency, and together they give every single position in a sentence — however long — its own fingerprint that no other position shares, while also making nearby positions look naturally similar to each other. That second property matters: the model doesn't just learn "this is position 9." It learns "this position is close to position 8 and far from position 40," which turns out to be exactly the kind of information attention can put to good use.
+
+<Callout type="note" title="A simpler alternative worth knowing">
+Some newer models use *learned* positional embeddings instead — a lookup table the model trains directly, one row per position, rather than a fixed formula. It's simpler to implement and works well up to the lengths seen in training, but the wave-based version generalises more gracefully to sentence lengths the model has never seen before.
+</Callout>
+
+<ChapterSummary>
+- Attention alone has no concept of word order — it treats the sentence as an unordered set of comparisons
+- Positional encoding adds a unique numeric "fingerprint" to each position, before attention runs
+- Built from waves at many frequencies — fast ones distinguish neighbours, slow ones distinguish distant positions
+- Nearby positions end up with naturally similar fingerprints — a useful side effect, not an accident
+</ChapterSummary>
+
+<Checkpoint>
+1. Without positional encoding, why would "the dog bit the man" and "the man bit the dog" look identical to self-attention?
+2. Why use many different wave frequencies instead of just one?
+</Checkpoint>
+
+<ChapterHeader number="7" title="Putting it all together: one transformer block" time="14" />
+
+Time to assemble every piece into the actual architecture. A single transformer block is smaller than it sounds once you've built each part — it's multi-head attention, plus a couple of standard neural-network habits that make deep networks trainable at all.
+
+<Diagram title="One transformer block, start to finish" caption="This block gets stacked N times — GPT-3 stacks it 96 times — each layer refining the meaning built by the last.">
+{`
+  input embeddings
+        │
+        ▼
+  + positional encoding    (Chapter 6 — order gets added in)
+        │
+        ▼
+  ┌─────────────────────┐
+  │  Multi-Head          │   (Chapter 5 — several parallel
+  │  Self-Attention       │    Query/Key/Value searches)
+  └─────────────────────┘
+        │
+        ▼
+  Add & Normalise          ◄── residual connection: add the
+        │                       block's input back on, so
+        │                       information never has to pass
+        │                       cleanly through every layer
+        ▼
+  ┌─────────────────────┐
+  │  Feed-Forward         │   (a small, ordinary neural network,
+  │  Network               │    applied to each word separately —
+  └─────────────────────┘      where the model does extra
+        │                       "thinking" on what attention found)
+        ▼
+  Add & Normalise
+        │
+        ▼
+  output  →  fed into the next identical block
+`}
+</Diagram>
+
+Two pieces here weren't covered yet, and both exist purely to make very deep networks actually trainable:
+
+**The residual connection** ("Add") is simple and important: alongside the attention layer's output, the block also adds back the *original* input, unchanged. Think of it as a highway running straight through the block, with attention as an off-ramp that adds a correction rather than replacing the signal entirely. Without this, stacking 96 layers tends to make training unstable — small errors compound layer after layer until the signal is unrecognisable. The highway means even if one layer contributes almost nothing useful, information can still flow cleanly past it.
+
+**Layer normalisation** ("Normalise") rescales the numbers flowing through the network so they stay in a sane, consistent range at every layer — roughly, it keeps the "volume" from drifting too loud or too quiet as data passes through dozens of stacked blocks, which again keeps training stable.
+
+**The feed-forward network** is the one genuinely new piece: after attention has gathered context from other words, each word passes through its own small, ordinary neural network — the same one, reused for every word — giving the model extra capacity to process what attention just found, on a word-by-word basis, before passing everything to the next block.
+
+<Callout type="important" title="Why stack so many of these">
+One block gives a word one round of "look around, then think about it." Ninety-six blocks give ninety-six rounds — each one building on the richer understanding the last block produced. Early layers tend to pick up simple patterns (grammar, nearby word relationships); later layers build up to abstract ones (tone, intent, long-range meaning). Depth is what turns "notices patterns" into something that looks, from the outside, like understanding.
+</Callout>
+
+<ChapterSummary>
+- A transformer block: positional encoding → multi-head attention → add & normalise → feed-forward → add & normalise
+- Residual connections let information skip past a layer cleanly, keeping deep networks trainable
+- Layer normalisation keeps the numbers flowing through the network in a stable range
+- The feed-forward network gives each word extra "thinking" capacity after attention gathers context
+- Stacking many blocks lets understanding build in layers, simple patterns first, abstract ones later
+</ChapterSummary>
+
+<Checkpoint>
+1. What problem do residual connections solve, and why does it get worse with more layers?
+2. Put the five pieces of a transformer block in the correct order, from memory.
+</Checkpoint>
+
+<ChapterHeader number="8" title="Why this one idea won" time="10" />
+
+There were plenty of clever sequence-processing ideas before and around the transformer. Why did this one take over so completely? Because it hit a genuinely rare combination: it was **better at understanding** long-range meaning (any word can attend directly to any other, no matter the distance — the straw is gone entirely) *and*, separately, **cheaper to scale**.
+
+That second part is easy to undervalue, so it's worth spelling out. An RNN has to process word 1, then word 2, then word 3 — strictly in order, because each step needs the previous one's result. That's a hard ceiling on how much you can speed things up with more hardware. Attention has no such requirement: every word's Query, Key and Value can be computed *simultaneously*, and every attention score can be computed in parallel too. That maps almost perfectly onto how GPUs work — thousands of small calculations happening at once — which meant transformers could be trained on vastly more text, vastly faster, for a given amount of hardware.
+
+<Callout type="important" title="Why speed mattered this much">
+Because training got cheap enough to scale, researchers could throw enormous amounts of text and compute at these models — and, largely to everyone's genuine surprise, quality kept climbing, predictably, the more they did. That "just add scale" property, made possible by parallel training, is the direct reason today's large language models exist at the size they do. The architecture didn't just understand better. It scaled better, and those two things together are what actually won.
+</Callout>
+
+<ChapterSummary>
+- Transformers combine two advantages usually traded off against each other: better long-range understanding *and* cheaper, parallel training
+- RNNs are stuck processing one step at a time; attention computes everything at once
+- Parallel training is why transformers could scale to enormous datasets affordably
+- Scale, once affordable, turned out to reliably improve quality — which is the direct cause of today's large language models
+</ChapterSummary>
+
+<Checkpoint>
+1. Name the transformer's two advantages, and explain why having both together (not just one) mattered so much.
+2. Why couldn't RNNs simply be trained on more hardware in parallel the same way?
+</Checkpoint>
+
+<ChapterHeader number="9" title="Reading vs. writing: why ChatGPT writes one word at a time" time="12" />
+
+One more piece completes the picture, and it explains something that might otherwise seem strange: if attention lets every word see every other word at once, why does ChatGPT still visibly type its answer out one word at a time, left to right?
+
+The transformer architecture actually comes in three shapes, depending on the job:
+
+- An **encoder** reads an entire input and lets every word attend freely to every other word, including ones that come *after* it — good for understanding a full piece of text at once (translation input, classification, search).
+- A **decoder** generates text one step at a time, and uses <KeyTerm definition="A version of self-attention where each word is only allowed to attend to itself and the words before it — never words that come later — so the model can't 'cheat' by peeking at the answer it hasn't generated yet.">causal (masked) attention</KeyTerm>: when producing word 12, it's mathematically forbidden from attending to words 13 onward, because they don't exist yet. This is precisely why ChatGPT, Claude, and essentially every modern chat model write left to right — it isn't a UI choice, it's baked into how the model is allowed to attend.
+- An **encoder-decoder** pairs both: an encoder fully understands the input (say, a French sentence), and a decoder generates the output (the English translation) one word at a time, attending both to its own previous words *and*, separately, to the encoder's full understanding of the input — this second kind of attention, pointing at a different piece of text entirely, is called *cross-attention*.
+
+<Callout type="note" title="Why decoder-only models ended up dominating">
+The original 2017 transformer was an encoder-decoder, built for translation. Most of today's large language models — GPT, Claude, Gemini — are decoder-only: no separate encoder at all, just one long causally-masked sequence, trained to predict the next word given everything before it. It turns out that with enough scale, "predict the next word, one at a time, attending only backward" is flexible enough to handle translation, summarisation, coding, and conversation, all inside the same simple training objective — which is a large part of why the field consolidated around this one shape.
+</Callout>
+
+<ChapterSummary>
+- Encoders let every word see every other word — good for understanding a complete input
+- Decoders use causal (masked) attention — a word can only attend to itself and earlier words, forcing left-to-right generation
+- Encoder-decoders combine both, with cross-attention letting the decoder consult the encoder's understanding
+- Most modern LLMs are decoder-only — one flexible training objective (predict the next word) turned out to be enough
+</ChapterSummary>
+
+<Checkpoint>
+1. Why can't a decoder attend to words that come after the one it's currently generating?
+2. What's the difference between self-attention and cross-attention?
+</Checkpoint>
+
+<ChapterHeader number="10" title="One idea, everywhere" time="8" />
+
+The remarkable postscript to all of this: attention was invented for language, and it turned out not to care what kind of data it was looking at.
+
+<Steps>
+
+<Step number="1" title="Vision">
+Vision Transformers (ViT) slice an image into a grid of small patches, treat each patch the way a word gets treated, and run the exact same attention mechanism across them. A patch of a cat's ear can attend directly to a patch of its whisker on the other side of the image — no need to scan pixel by pixel the way older vision networks did.
+</Step>
+
+<Step number="2" title="Biology">
+DeepMind's AlphaFold, which cracked the fifty-year-old problem of predicting a protein's 3D shape from its amino-acid sequence, leans heavily on attention-style mechanisms to model which distant parts of a long protein chain influence each other — the exact same "any position can attend to any other position" idea, applied to biology instead of language.
+</Step>
+
+<Step number="3" title="Audio">
+OpenAI's Whisper transcribes speech using a transformer that treats a sound wave, chopped into short time-slices, the same way a text model treats words — attending across the whole clip to disambiguate what a mumbled or noisy moment probably said, using everything around it.
+</Step>
+
+</Steps>
+
+<Callout type="tip" title="The real takeaway">
+You didn't just learn one architecture. You learned the shared foundation underneath most of the AI you'll ever interact with — text, images, audio, and increasingly science itself. Learning attention properly, once, is one of the highest-leverage things you can do in this entire field.
+</Callout>
+
+<ChapterSummary>
+- Vision Transformers apply attention to image patches instead of words
+- AlphaFold uses attention-style mechanisms to model relationships across a protein chain
+- Whisper applies the same idea to chopped-up audio for speech recognition
+- One architecture, discovered for language, turned out to be a general tool for "which parts of this relate to which other parts" — which is most of intelligence
+</ChapterSummary>
+
+<Checkpoint>
+1. What do a sentence, an image, a protein, and an audio clip have in common that makes attention work on all of them?
+2. In your own words, explain to a friend what a Vision Transformer does differently from an older image-recognition network.
 </Checkpoint>
 
 <Callout type="tip" title="Where to go next">
-You now understand the engine. Next: **Large Language Models** — what happens when you train a giant transformer on a huge slice of human text.
+You now understand the engine, all the way down to the arithmetic. Next: **Large Language Models** — what happens when you train a giant, decoder-only transformer on a huge slice of human text, and why the result can hold a conversation.
 </Callout>

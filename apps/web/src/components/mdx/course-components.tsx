@@ -18,6 +18,10 @@ import { MemoryTaxonomy } from "./memory-taxonomy";
 import { MemoryToolCompare } from "./memory-tool-compare";
 import { MemoryIndustryMap } from "./memory-industry-map";
 import { EvolutionLadder } from "./evolution-ladder";
+import { AttentionHeatmap } from "./attention-heatmap";
+import { QKVExplainer } from "./qkv-explainer";
+import { PositionalEncoding } from "./positional-encoding";
+import { MultiHeadDemo } from "./multi-head-demo";
 import {
   Info,
   Lightbulb,
@@ -359,5 +363,9 @@ export const courseComponents = {
   MemoryToolCompare,
   MemoryIndustryMap,
   EvolutionLadder,
+  AttentionHeatmap,
+  QKVExplainer,
+  PositionalEncoding,
+  MultiHeadDemo,
   pre: CodeBlock,
 };
