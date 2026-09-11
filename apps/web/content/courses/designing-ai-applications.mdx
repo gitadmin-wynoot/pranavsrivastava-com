@@ -1,0 +1,273 @@
+---
+title: "Designing Your AI Application"
+slug: "designing-ai-applications"
+summary: "The capstone decision framework: given a real problem, what do you actually reach for — a raw model call, RAG, tools, MCP, an agent loop, memory, or a Skill — and why, with honest cost trade-offs at both enterprise and bootstrapped scale. Architect-level, hands-on, and built to stop you overbuilding."
+level: "Advanced"
+status: "published"
+order: 8
+track: "applied-ai"
+prereqs: ["react-loop", "mcp-for-builders", "giving-ai-a-memory"]
+tags: ["Architecture", "Cost", "Agents", "MCP", "Skills", "RAG", "Strategy"]
+lessonCount: 10
+updatedAt: "2026-09-11"
+---
+
+Every course before this one taught you a piece: a model call, retrieval, tools, MCP, agents, memory. Each, on its own, felt like the obvious next step. The actual skill this course teaches is different and, I'd argue, harder: **given a real problem, knowing which of those pieces you genuinely need — and, just as important, which ones you don't.** The single most common mistake I see in AI system design isn't picking the wrong tool. It's reaching for every tool at once, on a project that needed one of them.
+
+<Callout type="info" title="The thesis of this whole course">
+Every layer you add — RAG, tools, an agent loop, memory — buys real capability and costs real money, latency, and failure surface. The job of an architect here isn't knowing how each layer works. You already know that. It's knowing when to stop climbing.
+</Callout>
+
+<LearningObjectives>
+- See the full stack of choices as one ladder, and what each rung actually costs
+- Know when a raw model call is genuinely the right answer — and when it isn't
+- Compare API, self-hosted, and fine-tuned models honestly, on cost and control
+- Choose between RAG, long context, and fine-tuning for grounding a model in your data
+- Understand exactly what an agent loop costs beyond a single call, and how to bound it
+- Know the real difference between a Tool, an MCP server, and a Skill — and when to reach for each
+- Decide whether you need memory at all, and which kind
+- See two honest, different stacks for the same brief — bootstrapped and enterprise
+- Walk away with a working checklist for your next real build
+</LearningObjectives>
+
+<ChapterHeader number="1" title="The decision layers, as one ladder" time="12" />
+
+Before choosing anything, it helps to see the whole shape of what you're choosing between. Every AI application, however complex it looks from outside, is built from a small number of layers, added on top of each other only as far as the problem actually demands.
+
+<CapabilityLadder />
+
+Click through all seven rungs before reading on, because the shape matters more than any individual rung: capability goes up steadily, but so does cost — and not evenly. Notice which rung has the widest cost range in the whole ladder. It's the agent loop, by a wide margin, and that's not a coincidence — every additional step in a loop is another full model call, and loops can run for a surprising, expensive number of steps if nothing bounds them. Keep that one fact in your head for the rest of this course; it comes up again and again.
+
+<Callout type="important" title="The discipline, stated plainly">
+Start at the bottom rung. Climb one rung at a time, only when the layer below it has demonstrably failed to solve the problem. Almost nobody does this by default — the natural instinct, especially with so many powerful tools available, is to reach for the most capable stack from day one. Resisting that instinct is most of what this course actually teaches.
+</Callout>
+
+<ChapterSummary>
+- Every AI application is built from a small set of layers, stacked as needed
+- Capability and cost both rise with each rung — but not evenly; agent loops are the widest cost range by far
+- The discipline: climb one rung at a time, only when the rung below has genuinely failed
+</ChapterSummary>
+
+<Checkpoint>
+1. Which single rung on the ladder carries the widest cost range, and why specifically that one?
+2. In your own words, what does "climb only as far as the problem needs" actually mean in practice?
+</Checkpoint>
+
+<ChapterHeader number="2" title="Do you even need an LLM?" time="10" />
+
+The most common overbuild in this entire field happens before the first rung of the ladder is even reached: reaching for a language model when a much simpler, cheaper, more reliable piece of software would do the job.
+
+A few honest questions worth asking first, in order:
+
+<Steps>
+
+<Step number="1" title="Is the input-to-output mapping actually fixed and rule-based?">
+If "when X happens, do Y" fully describes the task, a plain if/else or a lookup table will be faster, cheaper, and more predictable than a model — and it will never hallucinate. Save the model for genuine ambiguity, not for tasks that only *look* complex.
+</Step>
+
+<Step number="2" title="Is this closer to a classification problem than a language problem?">
+Sorting support tickets into five fixed categories, or flagging spam, are things a small, traditional machine-learning classifier often does more cheaply and more predictably than an LLM call — [Machine Learning Fundamentals](/courses/machine-learning-fundamentals) covers exactly this territory.
+</Step>
+
+<Step number="3" title="Does the task genuinely require understanding open-ended human language, or producing it?">
+This is the real test. Summarising a messy email, answering a question phrased a hundred different ways, writing a first draft — these need a model, because no fixed rule set can anticipate every phrasing a real person will use.
+</Step>
+
+</Steps>
+
+<Callout type="warning" title="Why this matters more than it sounds">
+An LLM call is slower, more expensive, and less predictable than well-written traditional code, for anything traditional code can actually handle. Reaching for a model out of habit — because it's exciting, or because everyone else is — is the single easiest way to make a worse, pricier product than the boring one you could have shipped instead.
+</Callout>
+
+<ChapterSummary>
+- Not every problem is an LLM problem — fixed rules and traditional classifiers are often faster, cheaper, and more predictable
+- The real test: does the task require genuinely open-ended language understanding or generation?
+- Reaching for a model out of habit, not necessity, is the most common and easiest-to-avoid overbuild
+</ChapterSummary>
+
+<ChapterHeader number="3" title="Choosing your model — API, self-hosted, or fine-tuned" time="16" />
+
+Once you've confirmed you genuinely need a model, the next decision is *how* you get one into your product — and this decision has real, ongoing cost consequences, not just a one-time setup choice.
+
+<ModelCostCompare />
+
+<Callout type="tip" title="The rule of thumb I actually use">
+Start on a proprietary API, always — even for a project I expect to eventually self-host or fine-tune. It's the fastest way to validate whether the *idea* works before spending real engineering time on infrastructure. Self-hosting and fine-tuning are optimisations you earn once you have real usage data proving they're worth it, not decisions to make on day one based on a hunch about future scale.
+</Callout>
+
+<ChapterSummary>
+- Proprietary API: near-zero upfront cost, metered pricing, lowest control — the right default for almost everyone starting out
+- Self-hosted open-weight: real upfront and fixed ongoing cost, highest control — pays off at high, steady, predictable volume
+- Fine-tuned: meaningful upfront training cost, highest control over *behaviour* — worth it only once prompting alone is proven insufficient
+- Default to the API first; earn your way to the other two with real usage data
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does self-hosting tend to look worse financially at low or spiky usage, and better at high, steady usage?
+2. What would you want to see, concretely, before deciding a project needs a fine-tuned model rather than better prompting?
+</Checkpoint>
+
+<ChapterHeader number="4" title="Grounding it in your data — RAG, long context, or fine-tuning" time="14" />
+
+A model with the right general reasoning still doesn't know your private, current, or specific facts. Three genuinely different tools solve that, and they aren't interchangeable.
+
+**RAG** (see [Production RAG](/courses/production-rag) for the full depth) retrieves the relevant documents at request time and hands them to the model as part of the prompt. It's the right default for most knowledge-grounding needs: it stays current automatically as your documents change, and it can cite exactly what it drew from.
+
+**Long context** — simply pasting a large amount of material directly into the prompt every time, no retrieval step — works for a genuinely small, fixed set of documents that fit comfortably in the context window. It's simpler than RAG, but it doesn't scale past that window, and it re-sends (and re-pays for) the same material on every single request.
+
+**Fine-tuning** teaches the model a pattern or a style through training examples, not through facts handed to it at request time. It's the wrong tool for "know these specific facts" — facts baked in through fine-tuning still go stale, and updating them means retraining. It's the right tool for "always respond in this specific format" or "always apply this house style," where the pattern matters more than any single fact.
+
+<Callout type="note" title="A genuinely common mistake worth naming">
+Reaching for fine-tuning to "teach the model our company's information" almost always the wrong move — that's what RAG is for. Fine-tuning teaches *behaviour*, not *facts*, and conflating the two leads to an expensive training run that still needs RAG bolted on afterward anyway.
+</Callout>
+
+<ChapterSummary>
+- RAG: retrieve relevant facts at request time — the right default, stays current automatically
+- Long context: paste everything directly — simpler, but doesn't scale and re-costs every request
+- Fine-tuning: teaches behaviour and style through examples — not a substitute for giving the model facts
+- The common mistake: using fine-tuning to teach facts, when that's RAG's job
+</ChapterSummary>
+
+<Checkpoint>
+1. Why would fine-tuning be a poor way to keep a support bot's answers about your product's current pricing accurate?
+2. When might long context genuinely be simpler and sufficient, instead of a full RAG pipeline?
+</Checkpoint>
+
+<ChapterHeader number="5" title="When you need more than one call — agents, honestly" time="16" />
+
+An agent — see [The ReAct Loop](/courses/react-loop) — lets a model plan, act, observe, and repeat across multiple steps toward a goal, instead of answering in one shot. It's genuinely powerful, and it's also the layer most responsible for AI projects quietly running over budget.
+
+The reason is simple arithmetic that's easy to lose sight of while building: **every loop iteration is another full model call.** A task that takes five iterations to finish costs roughly five times a single call — and if something goes wrong and the loop doesn't recognise it's finished, that multiplier keeps climbing. This is precisely why [Loop Engineering](/courses/loop-engineering) — designing the loop so it reliably converges instead of spinning — is its own dedicated course in this track.
+
+<Callout type="important" title="The three guardrails I won't ship an agent without">
+A hard maximum step count, so a confused loop fails loudly instead of running (and costing) indefinitely. A clear, checkable definition of "done," so the loop actually recognises success instead of continuing out of habit. And cost logging per run, from day one, so a runaway loop shows up on a dashboard before it shows up on an invoice.
+</Callout>
+
+Before reaching for an agent loop at all, ask honestly: does this task reliably finish in one or two calls? Most tasks — genuinely most — do. An agent loop is the right tool for tasks whose shape you can't fully predict in advance (multi-step research, exploratory debugging), not a default upgrade for every feature.
+
+<ChapterSummary>
+- An agent loop's cost scales directly with the number of iterations it takes — the widest cost range on the whole ladder
+- Ship every agent with a hard step limit, a checkable definition of "done," and per-run cost logging
+- Most tasks finish reliably in one or two calls and don't need a loop at all
+- Reserve agent loops for tasks whose shape genuinely can't be predicted in advance
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does an agent loop's cost range so much wider than a single call, or even RAG?
+2. Name the three guardrails worth shipping with every agent, and what each one specifically prevents.
+</Checkpoint>
+
+<ChapterHeader number="6" title="Giving your AI hands — Tools, and MCP" time="14" />
+
+Once a model needs to actually *do* something — not just describe what should happen — it needs tools: defined actions it can call, with real effects on the outside world (checking a database, sending an email, updating a record).
+
+You can wire tools up two ways. **Hand-rolled function calling** means you write a custom integration for every tool, specific to your codebase — fine for one or two simple, stable tools. **MCP** (Model Context Protocol — see [MCP for Practical Builders](/courses/mcp-for-builders)) is a standard way to expose tools that any compatible model or agent can use, without a bespoke integration for each one.
+
+<Callout type="tip" title="When each one earns its keep">
+Hand-rolled function calling: a single tool, tightly coupled to your app, that you're confident will never need to be reused elsewhere. MCP: more than a couple of tools, tools you want to reuse across different projects or expose to more than one agent, or — increasingly common — a well-maintained public MCP server already exists for exactly what you need, and adopting it is faster than building anything yourself.
+</Callout>
+
+The cost story here is different from every other rung: MCP itself doesn't meaningfully change your per-request token cost. What it changes is *integration and maintenance effort* — the real cost it saves is engineering time, not inference spend.
+
+<ChapterSummary>
+- Tools let a model actually act, not just describe — a genuine, deliberate step beyond answering
+- Hand-rolled function calling: fine for one or two tools tightly coupled to your app
+- MCP: a standard, reusable way to expose tools — worth it once you have several, or once a public server already exists
+- MCP's cost saving is mostly engineering time, not token cost
+</ChapterSummary>
+
+<Checkpoint>
+1. What's the actual cost difference between hand-rolled function calling and MCP — where does the saving really come from?
+2. When would reaching for a public MCP server be the right call instead of building your own integration?
+</Checkpoint>
+
+<ChapterHeader number="7" title="Skills — packaged expertise, not just another tool" time="12" />
+
+There's a layer above a single tool call that's worth understanding on its own: a **Skill** — a packaged, reusable bundle of instructions, reference material, and sometimes scripts, that teaches a model *how to do* a specific, repeatable job well, rather than giving it one narrow action to call.
+
+<Diagram title="Tool vs. MCP server vs. Skill" caption="Each solves a different part of the same problem — access, standardisation, and expertise.">
+{`
+  A TOOL
+  one narrow action, wired in by hand
+  "check_inventory(sku) -> quantity"
+
+  AN MCP SERVER
+  a standard bundle of related tools, reusable across projects
+  "inventory-server" -> check_inventory, reserve_stock, get_pricing...
+
+  A SKILL
+  packaged EXPERTISE for a repeatable job — instructions + resources + scripts
+  "quarterly-report-skill" -> how to structure it, which numbers to
+                              pull, a template, a formatting script —
+                              the whole repeatable process, not one action
+`}
+</Diagram>
+
+The difference in practice: a tool answers "what can it do." A Skill answers "how should it do this particular kind of job, every time, the way an experienced person on your team would." Without a Skill, a model has to work out the right process from scratch, from your prompt alone, every single time you ask for something like a quarterly report. With one, the expertise for that specific, repeatable job is captured once and reused — closer to onboarding a new team member with a well-written playbook than to just handing them a tool.
+
+<Callout type="note" title="When a Skill is worth building">
+If you catch yourself writing a similar long, detailed prompt more than a few times for the same kind of task, that repeated prompt is very often a Skill waiting to be packaged properly — with the added benefit that a well-structured Skill can include actual reference files and scripts a prompt alone can't carry.
+</Callout>
+
+<ChapterSummary>
+- A Tool is one narrow action; an MCP server is a standard, reusable bundle of related tools
+- A Skill packages the *expertise* for a repeatable job — instructions, resources, and scripts together
+- Skills answer "how should this specific job be done," not just "what can be called"
+- A repeated, detailed prompt for the same kind of task is usually a sign a Skill should exist instead
+</ChapterSummary>
+
+<Checkpoint>
+1. What's the actual difference between a Tool and a Skill — not in mechanism, but in what each is trying to solve?
+2. Describe a repeatable task in your own work that might be a good candidate for a Skill.
+</Checkpoint>
+
+<ChapterHeader number="8" title="Memory — do you need it, and which kind" time="12" />
+
+[Giving AI a Memory](/courses/giving-ai-a-memory) covers this in full depth — the four kinds (working, episodic, semantic, procedural) and the actual tools (claude-mem, mem0, Letta, checkpointers). Here, the question is simpler and comes first: do you need any of it at all?
+
+A huge share of AI applications genuinely don't. If every session is independent — a one-off question, a single document summarised and done — adding a memory layer is pure cost and complexity with nothing to show for it. Memory earns its cost specifically when a user's *history* should change how the system behaves next time: a returning customer whose past issues matter, an agent whose plan should build on yesterday's partially-finished work.
+
+<Callout type="tip" title="The cheapest possible test">
+Before building a dedicated memory system, ask: would a plain database row — "this user prefers X" — actually solve it? If yes, that's often genuinely enough, and it's a fraction of the cost and complexity of a full semantic-memory pipeline. Reach for the fuller memory architectures once that simple version has proven insufficient.
+</Callout>
+
+<ChapterSummary>
+- Memory is worth its cost specifically when a user's history should change future behaviour — not by default
+- Many applications, with genuinely independent sessions, don't need it at all
+- Try the cheapest version first — a plain stored fact — before building a full memory pipeline
+</ChapterSummary>
+
+<ChapterHeader number="9" title="Two real builds: bootstrapped vs. enterprise" time="14" />
+
+Theory earns its keep once it meets a real brief. Here's the same product idea, taken seriously at two genuinely different scales — because "the right stack" isn't one answer, it's a function of budget, volume, and what's actually at stake if something goes wrong.
+
+<StackByScale />
+
+Notice what actually changes between the two columns: it's not that the enterprise version uses "better" technology throughout. Several choices — RAG over fine-tuning, a bounded agent loop — are identical in both. What genuinely changes is *how much risk gets engineered out*: access control, audit trails, step limits with real teeth, isolated memory per customer. The bootstrapped version isn't a worse stack. It's a stack correctly sized to what a small team can actually operate and afford, with the discipline to add more only once real usage demands it.
+
+<ChapterSummary>
+- The same product brief produces two genuinely different, both-correct stacks depending on scale
+- Many core choices stay the same across both — what changes most is how much risk gets engineered out
+- "Bootstrapped" isn't a lesser stack; it's a stack correctly sized to what can actually be operated and afforded
+</ChapterSummary>
+
+<ChapterHeader number="10" title="Your checklist" time="10" />
+
+Everything in this course compresses into one practical tool: answer honestly, and see what you actually need.
+
+<StackDecisionTool />
+
+<Callout type="important" title="The one habit worth keeping from this entire course">
+Before reaching for any layer — RAG, an agent, a Skill, a memory system — ask the honest question that layer answers, out loud, and check whether your actual problem needs it. Every layer this course covered is genuinely useful. None of them is free, and none of them is a default. That discipline, more than any specific technology choice, is what separates a system that's expensive and fragile from one that's lean, reliable, and actually shippable by a small team.
+</Callout>
+
+<ChapterSummary>
+- The five honest questions — facts, action, steps, memory, repetition — map directly onto the stack you actually need
+- Every layer in this course is genuinely useful and genuinely optional — the discipline is asking before adding
+- A correctly-sized stack, not the most capable one, is usually the better system
+</ChapterSummary>
+
+<Checkpoint>
+1. Run a real project idea of yours through the five questions. What's the minimal stack it actually needs?
+2. Which layer are you personally most tempted to over-reach for by default — and why do you think that is?
+</Checkpoint>

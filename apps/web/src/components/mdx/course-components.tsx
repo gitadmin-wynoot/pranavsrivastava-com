@@ -25,6 +25,10 @@ import { MultiHeadDemo } from "./multi-head-demo";
 import { TokenizerDemo } from "./tokenizer-demo";
 import { ApplicationJourney } from "./application-journey";
 import { ScaleLandscape } from "./scale-landscape";
+import { CapabilityLadder } from "./capability-ladder";
+import { ModelCostCompare } from "./model-cost-compare";
+import { StackByScale } from "./stack-by-scale";
+import { StackDecisionTool } from "./stack-decision-tool";
 import {
   Info,
   Lightbulb,
@@ -373,5 +377,9 @@ export const courseComponents = {
   TokenizerDemo,
   ApplicationJourney,
   ScaleLandscape,
+  CapabilityLadder,
+  ModelCostCompare,
+  StackByScale,
+  StackDecisionTool,
   pre: CodeBlock,
 };
