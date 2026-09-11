@@ -36,6 +36,9 @@ import { RandomnessTimeline } from "./randomness-timeline";
 import { RandomnessSpectrum } from "./randomness-spectrum";
 import { WillowBenchmark } from "./willow-benchmark";
 import { PSHECurve } from "./pshe-curve";
+import { EigenQuestionExplainer } from "./eigen-question-explainer";
+import { EigenQuestionGallery } from "./eigen-question-gallery";
+import { SimulationPractice } from "./simulation-practice";
 
 // Editorial SVG illustrations for the essays. Hand-drawn vectors, not arrow
 // flowcharts — minimal, conceptual, and dark-mode aware (colours come from
@@ -1177,4 +1180,7 @@ export const essayComponents = {
   RandomnessSpectrum,
   WillowBenchmark,
   PSHECurve,
+  EigenQuestionExplainer,
+  EigenQuestionGallery,
+  SimulationPractice,
 };
