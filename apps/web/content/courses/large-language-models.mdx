@@ -1,30 +1,35 @@
 ---
 title: "Large Language Models"
 slug: "large-language-models"
-summary: "What an LLM really is, how 'predict the next word' produces something that feels like reasoning, how these models are trained and made helpful, and where they quietly fail — in plain language."
+summary: "What an LLM really is, exactly how it grows out of the transformer architecture, the real unit it operates on (tokens), the three stages that turn a raw predictor into a helpful assistant, why it hallucinates — and how a raw LLM actually becomes a real application: search, RAG, and tools, with examples from healthcare, legal, support, code, and retail."
 level: "Intermediate"
 status: "published"
 order: 5
 track: "ai-foundations"
 prereqs: ["attention-and-transformers"]
-tags: ["LLMs", "Pretraining", "Fine-tuning", "Tokenization"]
-lessonCount: 5
+tags: ["LLMs", "Pretraining", "Fine-tuning", "Tokenization", "Embeddings", "RAG"]
+lessonCount: 8
+updatedAt: "2026-09-11"
 ---
 
-A large language model is the thing behind ChatGPT and Claude. It can write, summarise, translate, code, and reason about almost anything — yet at its core it does something almost laughably simple: it predicts the next word. This course explains how something so simple becomes something so capable, and where it still gets things wrong.
+A large language model is the thing behind ChatGPT and Claude. It can write, summarise, translate, code, and reason about almost anything — yet at its core it does something almost laughably simple: it predicts the next word. This course explains how something so simple becomes something so capable, exactly how it grows out of the transformer you just learned, and how a raw LLM turns into a real product people actually use.
 
 <Callout type="info" title="The whole secret, up front">
-An LLM is a giant transformer trained to guess the next word in a piece of text, over and over, on a huge slice of the internet and books. That is it. Everything impressive emerges from doing that one thing at enormous scale.
+An LLM is a giant, decoder-only transformer — the exact architecture from the last course, using causal attention — trained to guess the next token in a piece of text, over and over, on a huge slice of human writing. That is it. Everything impressive emerges from doing that one thing at enormous scale.
 </Callout>
 
 <LearningObjectives>
 - Understand how "predict the next word" leads to writing, translating, and reasoning
+- See exactly how an LLM is the transformer architecture, not a different thing built on top of it
+- Know what a token actually is, and why models sometimes fumble simple things like counting letters
 - Follow the three training stages that turn raw text into a helpful assistant
+- Get a feel for why models come in different sizes, and what that trades off
 - Know the key dials — context window, temperature — and what they do
 - Understand *why* LLMs hallucinate, so you can use them wisely
+- See how a raw LLM becomes a real application — search, RAG, tools — with real examples
 </LearningObjectives>
 
-<ChapterHeader number="1" title="Predicting the next word — the whole game" time="13" />
+<ChapterHeader number="1" title="Predicting the next word — the whole game" time="12" />
 
 Give an LLM the words "The capital of France is" and it predicts the most likely next word: "Paris." Give it "Once upon a" and it predicts "time." That is the entire core skill — guess what comes next.
 
@@ -34,15 +39,53 @@ Now here is the leap. To predict the next word *well* across all of human writin
 It sounds shallow, but consider: to correctly continue a maths solution, a code snippet, or a careful explanation, the model has to have learned the underlying pattern. Next-word prediction at scale is a back door into knowledge and reasoning.
 </Callout>
 
-Before predicting, the model chops text into pieces called <KeyTerm definition="The small chunks (words or word-parts) an LLM reads and predicts. 'Unbelievable' might be three tokens: un-believ-able.">tokens</KeyTerm> — usually whole words or word-parts. Everything an LLM does is really "predict the next token," one token at a time, feeding its own output back in to keep going.
-
 <ChapterSummary>
-- An LLM's one skill is predicting the next token (word or word-part)
+- An LLM's one skill is predicting the next token
 - Doing this well across all writing forces it to learn grammar, facts, and reasoning
-- It generates text one token at a time, feeding its output back in
+- It generates text one token at a time, feeding its own output back in to keep going
 </ChapterSummary>
 
-<ChapterHeader number="2" title="How an LLM is made: three stages" time="14" />
+<ChapterHeader number="2" title="This is the transformer, not a different thing" time="10" />
+
+Here's the connection worth making explicit, because it's easy to treat "LLM" and "transformer" as two separate topics when they aren't. An LLM *is* the architecture from [Attention & Transformers](/courses/attention-and-transformers) — specifically, the **decoder-only** shape: one long stack of transformer blocks (multi-head self-attention, add & normalise, feed-forward, add & normalise, repeated dozens of times), using **causal attention** so each position can only look backward at what's already been generated.
+
+That one architectural choice — causal, backward-only attention — is *why* an LLM writes one token at a time, left to right, and can't peek ahead at its own future answer. It isn't a product decision or a UI limitation. It's baked into the maths: when the model is generating token 50, tokens 51 onward simply don't exist yet for it to attend to.
+
+<Callout type="note" title="The one-sentence version">
+Pretraining a decoder-only transformer, at enormous scale, on next-token prediction — that entire sentence is what "large language model" means. Nothing else is added at the architecture level to get from "transformer" to "LLM." The rest of this course is about what happens once you do that at scale, and what gets built on top afterward.
+</Callout>
+
+<ChapterSummary>
+- An LLM is a decoder-only transformer — the same building blocks from the last course, stacked deep
+- Causal attention is why generation happens one token at a time, left to right
+- "Large language model" = decoder-only transformer + next-token prediction + enormous scale
+</ChapterSummary>
+
+<Checkpoint>
+1. Which specific architectural choice forces an LLM to generate text left to right, one token at a time?
+2. In one sentence, what turns "a transformer" into "a large language model"?
+</Checkpoint>
+
+<ChapterHeader number="3" title="Tokens — the real unit everything runs on" time="12" />
+
+Before any of this can happen, text has to be converted into something a model can actually compute with. That unit is the <KeyTerm definition="The small chunks — whole words, word-fragments, or single characters — that an LLM actually reads and predicts, learned from data rather than dictionary rules.">token</KeyTerm>, and understanding it explains a surprising number of an LLM's quirks.
+
+<TokenizerDemo />
+
+Notice what's happening: common words often get their own token, but rarer or longer words get chopped into fragments the model has seen thousands of times across *other* words too — which is efficient, but has a real consequence. The model never actually sees the individual letters s-t-r-a-w-b-e-r-r-y in order; it sees a handful of chunks. Asking it to count letters inside a word is asking it to reconstruct spelling from pieces that don't line up cleanly with letters — genuinely awkward for it, not a silly failure.
+
+<Callout type="tip" title="Why this matters practically">
+Tokens, not words or characters, are what you're actually paying for and what fills up the context window. A sentence in a less common language, or dense technical jargon, can quietly cost more tokens — and therefore more money and more context-window space — than the same idea expressed in plain, common English.
+</Callout>
+
+<ChapterSummary>
+- Text is split into tokens — chunks somewhere between characters and words, learned from data
+- Common words often get one token; rarer words split into smaller, reused fragments
+- The model works on tokens, not letters — which is why letter-counting inside words can trip it up
+- Tokens are the actual unit of cost and of the context window, not words
+</ChapterSummary>
+
+<ChapterHeader number="4" title="How an LLM is made: three stages" time="14" />
 
 A raw next-word predictor is knowledgeable but unruly — it will happily continue offensive text or ramble. Turning it into a helpful assistant takes three stages:
 
@@ -77,11 +120,25 @@ Pre-training gives the model its *knowledge*. Fine-tuning gives it *manners*. Hu
 2. What does each of the three training stages contribute — in one phrase each?
 </Checkpoint>
 
-<ChapterHeader number="3" title="The dials: context window and temperature" time="12" />
+<ChapterHeader number="5" title="Not all LLMs are the same size" time="10" />
+
+"Large" is doing real work in the name — but "large" isn't one fixed size. Models are built at very different scales for very different jobs, and the size you reach for changes what you're trading off.
+
+<ScaleLandscape />
+
+The pattern to internalise: bigger generally means better reasoning and broader knowledge, but also higher cost and slower answers — all three move together, not independently. A huge share of real production systems deliberately reach for a smaller model for routine requests and only call up to a bigger one for the requests that genuinely need the extra reasoning — a pattern you'll see again, more formally, later in this track.
+
+<ChapterSummary>
+- LLMs span a real range of sizes, from phone-sized to data-centre-sized
+- Bigger tends to mean smarter, slower, and pricier — together, not separately
+- Many real systems mix sizes: cheap and fast for routine work, big and slow only when needed
+</ChapterSummary>
+
+<ChapterHeader number="6" title="The dials: context window and temperature" time="12" />
 
 Two settings shape how an LLM behaves, and knowing them makes you far more effective.
 
-**The context window** is how much text the model can "hold in mind" at once — your prompt plus its answer, measured in tokens. Think of it as the model's short-term memory or its desk space. Everything outside the window is invisible to it. If a conversation gets very long, the earliest parts may fall off the desk. This is why feeding the model the *right* information matters — a whole course later in this track (*Context Engineering*) is about exactly that.
+**The context window** is how much text the model can "hold in mind" at once — your prompt plus its answer, measured in tokens (Chapter 3). Think of it as the model's desk space. Everything outside the window is invisible to it. If a conversation gets very long, the earliest parts may fall off the desk. This is why feeding the model the *right* information matters — a whole course later in this track (*Context Engineering*) is about exactly that.
 
 **Temperature** controls creativity versus reliability. Low temperature makes the model pick the most likely next word every time — focused, predictable, repeatable (good for facts and code). High temperature lets it take chances — more varied and creative, but riskier (good for brainstorming, bad for a tax calculation).
 
@@ -90,27 +147,25 @@ Need a correct, consistent answer? Low temperature. Need fresh ideas or varied p
 </Callout>
 
 <ChapterSummary>
-- The context window is the model's working memory — only what fits is "seen"
+- The context window is the model's working memory, measured in tokens — only what fits is "seen"
 - Long conversations can push early content out of the window
 - Temperature trades reliability (low) for creativity (high)
 </ChapterSummary>
 
-<ChapterHeader number="4" title="Why LLMs hallucinate — and what to do" time="13" />
+<ChapterHeader number="7" title="Why LLMs hallucinate — and what to do" time="12" />
 
 LLMs sometimes state false things with total confidence. This is called <KeyTerm definition="When an LLM generates fluent, confident text that is simply not true.">hallucination</KeyTerm>, and understanding *why* it happens is the key to using these tools safely.
 
-Remember: the model predicts *plausible* next words, not *true* ones. It has no separate "fact-checker" inside. If a fluent, confident-sounding sentence is the most likely continuation, it produces it — whether or not it is correct. It is built to sound right, and usually that overlaps with being right, but not always.
+Remember: the model predicts *plausible* next tokens, not *true* ones. It has no separate "fact-checker" inside. If a fluent, confident-sounding sentence is the most likely continuation, it produces it — whether or not it is correct. It is built to sound right, and usually that overlaps with being right, but not always.
 
 <Callout type="warning" title="The mental model that keeps you safe">
 An LLM is a brilliant, well-read improviser, not a database. It is wonderful at language and reasoning, and unreliable on specific facts, names, numbers, and citations. Trust it for *shape and reasoning*; verify the *facts*.
 </Callout>
 
-The practical fix is to *give the model the facts* instead of relying on its memory — connect it to real documents and tools so it answers from sources, not from vibes. That is precisely the next course, **RAG & Tool Use**.
-
 <ChapterSummary>
 - LLMs predict plausible text, not verified truth — there is no built-in fact-checker
 - They are reliable for language and reasoning, unreliable for specific facts
-- The fix is to supply real facts and tools (the next course), not trust memory
+- The fix is to supply real facts, not trust memory alone — which is exactly the subject of the next chapter
 </ChapterSummary>
 
 <Checkpoint>
@@ -118,6 +173,33 @@ The practical fix is to *give the model the facts* instead of relying on its mem
 2. For a factual question, would you use low or high temperature — and would you trust the model's memory or give it sources?
 </Checkpoint>
 
+<ChapterHeader number="8" title="From a raw LLM to a real application" time="16" />
+
+Everything so far describes one LLM call in isolation. Almost nothing you actually use is that simple. Here's how a raw LLM becomes a real product, across a spread of genuinely different domains.
+
+<ApplicationJourney />
+
+Notice the pattern repeating with small variations: **embeddings** (turning text into meaning-coordinates so "similar meaning" can be found by maths — see [Embeddings in Depth](/courses/embeddings-in-depth)) power **semantic search**, which finds the *right* facts from a huge pile of documents by meaning rather than exact keyword match. **RAG** — Retrieval-Augmented Generation — is the pattern of handing those retrieved facts to the LLM as part of its prompt, so the answer is *grounded* in real, checkable sources instead of the model's possibly-stale memory (directly fixing the hallucination problem from the last chapter). And **tools** let the model go beyond describing an action to actually *taking* one — issuing a refund, running a test, checking real-time stock.
+
+<Callout type="important" title="The shape worth remembering">
+LLM alone → knows language and general reasoning, but nothing private or current. Add embeddings + search → can *find* the right specific facts. Add RAG → can *answer grounded in* those facts, with less hallucination. Add tools → can *act*, not just describe. Almost every real AI product is some subset of this ladder, chosen deliberately rather than reaching for all of it by default.
+</Callout>
+
+This is exactly where the rest of this track, and the Applied AI track alongside it, picks up in real depth — RAG, tool use, agents, and memory each get their own dedicated course from here.
+
+<ChapterSummary>
+- A raw LLM call is rarely the whole product — most real applications stack layers on top
+- Embeddings + semantic search: find the right facts by meaning, not exact keywords
+- RAG: ground the model's answer in those real facts instead of its own memory
+- Tools: let the model actually do something, not just describe what should happen
+- Different domains reach for different subsets of this ladder — rarely all of it at once
+</ChapterSummary>
+
+<Checkpoint>
+1. For the customer-support example, why is RAG alone not enough — what else does it need, and why?
+2. Pick a domain not covered above and sketch which layers its main AI use case would realistically need.
+</Checkpoint>
+
 <Callout type="tip" title="Where to go next">
-Next: **RAG & Tool Use** — connecting the model to real knowledge and real actions so it answers from facts and can actually *do* things.
+Next: **RAG & Tool Use** — connecting the model to real knowledge and real actions, in depth. And if you want the full decision framework for choosing between all of these layers — including cost, at both enterprise and bootstrapped scale — that's covered in the Applied AI track.
 </Callout>

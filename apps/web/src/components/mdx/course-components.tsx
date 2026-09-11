@@ -22,6 +22,9 @@ import { AttentionHeatmap } from "./attention-heatmap";
 import { QKVExplainer } from "./qkv-explainer";
 import { PositionalEncoding } from "./positional-encoding";
 import { MultiHeadDemo } from "./multi-head-demo";
+import { TokenizerDemo } from "./tokenizer-demo";
+import { ApplicationJourney } from "./application-journey";
+import { ScaleLandscape } from "./scale-landscape";
 import {
   Info,
   Lightbulb,
@@ -367,5 +370,8 @@ export const courseComponents = {
   QKVExplainer,
   PositionalEncoding,
   MultiHeadDemo,
+  TokenizerDemo,
+  ApplicationJourney,
+  ScaleLandscape,
   pre: CodeBlock,
 };
