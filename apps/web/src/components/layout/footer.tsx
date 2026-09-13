@@ -40,7 +40,7 @@ export function Footer() {
                 { label: "Learn", href: "/learn" },
                 { label: "Writing", href: "/blog" },
                 { label: "Essays", href: "/essays" },
-                { label: "Projects", href: "/ai-lab" },
+                { label: "Projects", href: "/projects" },
                 { label: "About", href: "/about" },
                 { label: "Contact", href: "/contact" },
               ].map((link) => (

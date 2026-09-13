@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, ArrowUp } from "lucide-react";
 
 interface Msg {
@@ -21,6 +22,7 @@ const SUGGESTIONS = [
 ];
 
 export function SiteChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([INTRO]);
   const [input, setInput] = useState("");
@@ -71,6 +73,9 @@ export function SiteChat() {
       setSending(false);
     }
   }
+
+  // The game's board and controls need the full touch surface on small screens.
+  if (pathname === "/projects/signal" || pathname.startsWith("/projects/signal/")) return null;
 
   return (
     <>

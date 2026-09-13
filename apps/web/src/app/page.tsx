@@ -130,7 +130,7 @@ export default async function HomePage() {
               icon: <FolderCode className="w-5 h-5" />,
               label: "Projects",
               desc: "What I have built — live, and in the oven",
-              href: "/ai-lab",
+              href: "/projects",
               color: "text-purple-500",
             },
           ].map((card) => (
@@ -201,7 +201,7 @@ export default async function HomePage() {
               Currently Building
             </h2>
             <Link
-              href="/ai-lab"
+              href="/projects"
               className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
             >
               All projects →
@@ -211,7 +211,7 @@ export default async function HomePage() {
             {featuredProjects.map((project) => (
               <Link
                 key={project.slug}
-                href={`/ai-lab#${project.slug}`}
+                href={project.liveUrl?.startsWith("/") ? project.liveUrl : `/projects#${project.slug}`}
                 className="group p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:border-blue-500/30 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
