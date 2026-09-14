@@ -79,8 +79,12 @@ export function toolErrorBuzz() { tone(180, 0.18, { type: "sawtooth", gain: 0.05
 export function waitingTone() { tone(700, 0.05, { type: "square", gain: 0.025 }); }
 /** An incident just started. */
 export function alertTone() { tone(520, 0.22, { type: "triangle", gain: 0.06, slideTo: 720 }); tone(520, 0.22, { type: "triangle", gain: 0.06, slideTo: 720, delay: 0.28 }); }
-/** A badge was earned, or the summit was reached. */
+/** A badge was earned. */
 export function successChime() { [660, 880, 1320].forEach((freq, i) => tone(freq, 0.22, { gain: 0.045, delay: i * 0.09 })); }
+/** The expedition reached a winning resolution. */
+export function fanfare() { [523, 659, 784, 1046].forEach((freq, i) => tone(freq, 0.28, { gain: 0.05, delay: i * 0.11 })); }
+/** The expedition ended in failure. */
+export function missionFailedTone() { tone(300, 0.3, { type: "sawtooth", gain: 0.06, slideTo: 140 }); tone(220, 0.35, { type: "sawtooth", gain: 0.05, slideTo: 90, delay: 0.32 }); }
 /** A discrete architecture decision was made (a button press, not a slider drag). */
 export function decisionClick() { tone(700, 0.045, { type: "square", gain: 0.025 }); }
 /** Reached a new camp while auto-climbing. */
