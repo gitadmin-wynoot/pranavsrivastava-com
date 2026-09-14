@@ -511,6 +511,9 @@ export default function MountainScene(props: MountainSceneProps) {
     let previousStage: number | null = null;
     let previousReset = propsRef.current.resetKey;
     let previousCutaway = false;
+    // CatmullRomCurve3.getPoint(t) throws if t lands exactly at (or floating-point-rounds to) 1 —
+    // easy to hit from `% 1` motion math. Every dynamic curve lookup below goes through this.
+    const curveT = (t: number) => Math.min(0.999999, Math.max(0, t));
     const dummy = new THREE.Object3D();
     const temporary = new THREE.Vector3();
     const projected = new THREE.Vector3();
@@ -749,10 +752,10 @@ export default function MountainScene(props: MountainSceneProps) {
         const cached = current.architecture.cacheEnabled && (i * 37 % 100) < current.metrics.cacheHitRate;
         const failed = Boolean(current.incident) && (i * 43 % 100) >= current.metrics.reliability;
         if (failed && !current.architecture.fallbackEnabled) progress = Math.min(progress, 0.63);
-        if (cached && progress > 0.37 && progress < 0.67) cachedCurve.getPoint((progress - 0.37) / 0.3, temporary);
-        else if (failed && current.architecture.fallbackEnabled && progress > 0.55 && progress < 0.85) fallbackCurve.getPoint((progress - 0.55) / 0.3, temporary);
-        else if (failed && retryRoute.visible && progress > 0.5 && progress < 0.7) retryCurve.getPoint((elapsed * 0.15 * current.architecture.retries + i * 0.17) % 1, temporary);
-        else mainCurve.getPoint(progress, temporary);
+        if (cached && progress > 0.37 && progress < 0.67) cachedCurve.getPoint(curveT((progress - 0.37) / 0.3), temporary);
+        else if (failed && current.architecture.fallbackEnabled && progress > 0.55 && progress < 0.85) fallbackCurve.getPoint(curveT((progress - 0.55) / 0.3), temporary);
+        else if (failed && retryRoute.visible && progress > 0.5 && progress < 0.7) retryCurve.getPoint(curveT((elapsed * 0.15 * current.architecture.retries + i * 0.17) % 1), temporary);
+        else mainCurve.getPoint(curveT(progress), temporary);
         const scale = failed ? 1.4 : 1;
         const tone = failed ? RED : cached ? 0xc8b6ff : MINT;
         dummy.position.copy(temporary).add(new THREE.Vector3(0, 0.045, 0));
@@ -787,7 +790,7 @@ export default function MountainScene(props: MountainSceneProps) {
         const activeBatch = Math.floor(elapsed / 2) % Math.ceil(4 / parallelCalls);
         const progress = (elapsed * 0.20 + i * 0.25) % 1;
         const held = Math.floor(serviceIndex / parallelCalls) !== activeBatch || (serviceIndex === 0 && breaker.visible);
-        serviceCurves[serviceIndex].getPoint(held ? 0 : progress < 0.5 ? progress * 2 : (1 - progress) * 2, temporary);
+        serviceCurves[serviceIndex].getPoint(held ? 0 : curveT(progress < 0.5 ? progress * 2 : (1 - progress) * 2), temporary);
         dummy.position.copy(temporary);
         dummy.scale.setScalar(held ? 0 : 1);
         dummy.updateMatrix();
@@ -803,7 +806,7 @@ export default function MountainScene(props: MountainSceneProps) {
       agents.forEach((agent, i) => {
         agent.visible = i < current.architecture.agentCount;
         const progress = (0.13 + i * 0.075 + elapsed * 0.009 * speed) % 0.94;
-        mainCurve.getPoint(progress, temporary);
+        mainCurve.getPoint(curveT(progress), temporary);
         agent.position.copy(temporary).add(new THREE.Vector3(0.16, 0.035, 0));
         agent.rotation.y = i * 0.9;
         const packScale = THREE.MathUtils.clamp(current.architecture.contextTokens / 8000, 0.6, 3.2);
