@@ -83,6 +83,7 @@ export function EverestSimulator() {
     const restored = readSession();
     setSession(restored); setReady(true);
     initAudio(); setMutedState(isMuted());
+    try { if (!localStorage.getItem("everest-orientation-seen")) setTutorial(true); } catch { setTutorial(true); }
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(media.matches);
     const update = () => setReducedMotion(media.matches);
@@ -251,7 +252,10 @@ export function EverestSimulator() {
             <li>How to read latency, cost, quality, and safety as one trade-off, not four</li>
           </ul>
           <div className={s.modeCards}>{MODES.map((m,i)=><button key={m.id} className={i===0?s.primaryMode:s.modeCard} onClick={()=>enterMode(m.id)}><m.icon size={19}/><span><strong>{m.label}</strong><small>{i===0?"Recommended · 10–15 minutes":m.text}</small></span><ArrowRight size={17}/></button>)}</div>
-          <button className={s.tourButton} onClick={()=>setDrawer("about")}><Info size={14}/> What is this, exactly? <span>60-second tour</span></button>
+          <div className={s.entryLinks}>
+            <button className={s.tourButton} onClick={()=>setTutorial(true)}><Compass size={14}/> How to play <span>the goal, the controls, how you win</span></button>
+            <button className={s.tourButton} onClick={()=>setDrawer("about")}><Info size={14}/> What is this, exactly? <span>60-second tour</span></button>
+          </div>
           <p className={s.entryNote}>A software engineering simulation. No login or API key needed.</p>
         </section>
         <div className={s.entryCaption}><span>8,849 M</span><strong>THE SUMMIT IS A SYSTEM THAT WORKS.</strong><small>Drag to rotate · Scroll / pinch to zoom · Click a camp</small></div>
@@ -296,9 +300,9 @@ export function EverestSimulator() {
         <div className={s.bottomTools}><button onClick={()=>setDrawer("tools")}><Radio size={15}/><span>MCP inspector</span></button><button onClick={()=>setDrawer("telemetry")}><Activity size={15}/><span>Control room</span></button><button onClick={()=>setDrawer("report")}><FileText size={15}/><span>Debrief</span></button><button onClick={replay}><RotateCcw size={15}/><span>Replay same conditions</span></button><span className={s.simulationLabel}>SIMULATED / SEED {seed}</span></div>
         {incident&&<div className={s.incidentFlag}><TriangleAlert size={15}/><span>{metrics.degraded?"Degraded operation":metrics.circuitOpen?"Circuit open":`Incident: ${incident.title}`}</span><button onClick={()=>{setSession(v=>({...v,incidentId:null})); setPaused(false); logEvent("External incident cleared. Compare recovered metrics with the incident run.");}}>Clear incident</button></div>}
         {mode==="live"&&<LiveHud stageIndex={stageIndex} elapsedAt={history.at(-1)?.at ?? 0} paused={paused} incidentTitle={incident?.title} />}
-        {tutorial&&<MissionBriefing mode={mode} onDone={dismissTutorial} />}
         {mode&&session.outcome!=="playing"&&!dismissedResolution&&<ResolutionScreen tier={session.outcome==="lost"?"lost":metrics.slo.passed?"won":"partial"} reason={session.outcome==="lost"?session.outcomeReason:metrics.slo.passed?"Every target in the expedition contract was met — latency, success, cost, quality and safety all held.":"The climb succeeded, but the expedition contract wasn't fully met. Open the debrief to see exactly what to fix next run."} slo={metrics.slo} onPlayAgain={()=>enterMode(mode)} onViewDebrief={()=>{setDismissedResolution(true); setDrawer("report");}} />}
       </>}
+      {tutorial&&<MissionBriefing mode={mode} onDone={dismissTutorial} />}
       {notice&&mode&&<div className={s.toast} role="status"><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Dismiss update"><X size={14}/></button></div>}
     </div>
     {mode&&<MetricBar metrics={metrics} onInspect={()=>setDrawer("telemetry")}/>}
