@@ -433,7 +433,14 @@ export default function MountainScene(props: MountainSceneProps) {
     climberHead.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     addInteractive(climberBody, "request", "A climber on the route · one active request, click to inspect its trace");
     addInteractive(climberHead, "request", "A climber on the route · one active request, click to inspect its trace");
-    flowGroup.add(climberBody, climberHead);
+    // A small ice axe, baked pre-tilted into the geometry so it can share the body's own matrix.
+    const climberAxeGeometry = new THREE.CylinderGeometry(0.004, 0.004, 0.1, 4);
+    climberAxeGeometry.translate(0, 0.05, 0);
+    climberAxeGeometry.rotateZ(0.55);
+    climberAxeGeometry.translate(0.028, -0.01, 0.018);
+    const climberAxe = new THREE.InstancedMesh(climberAxeGeometry, new THREE.MeshStandardMaterial({ color: 0x9fb3c2, metalness: 0.4, roughness: 0.5 }), 64);
+    climberAxe.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    flowGroup.add(climberBody, climberHead, climberAxe);
     const queue = new THREE.InstancedMesh(new THREE.BoxGeometry(0.065, 0.065, 0.065), new THREE.MeshBasicMaterial({ color: AMBER }), 48);
     queue.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     addInteractive(queue, "queue", "Waiting requests · bottleneck queue");
@@ -443,23 +450,35 @@ export default function MountainScene(props: MountainSceneProps) {
     addInteractive(callParticles, "tool-call", "MCP tool call · request and response");
     toolGroup.add(callParticles);
 
+    // Agents (Sherpas) must read as the small cast of named, clickable units against the
+    // anonymous climber crowd: noticeably larger, a warm colour no climber state uses, and a
+    // glowing beacon overhead — the same "this is an important, interactive thing" language
+    // already used for camp markers, so the convention is consistent across the whole scene.
     const agents: THREE.Group[] = [];
     const backpacks: THREE.Mesh[] = [];
-    const bodyGeometry = new THREE.CylinderGeometry(0.045, 0.068, 0.17, 5);
-    const headGeometry = new THREE.SphereGeometry(0.055, 6, 4);
-    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xefb578, roughness: 0.8 });
-    const headMaterial = new THREE.MeshStandardMaterial({ color: 0xdce4df });
+    const bodyGeometry = new THREE.CylinderGeometry(0.061, 0.092, 0.23, 5);
+    const headGeometry = new THREE.SphereGeometry(0.074, 8, 5);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xd9793a, roughness: 0.75 });
+    const headMaterial = new THREE.MeshStandardMaterial({ color: 0xf1e4cf });
     const packMaterial = new THREE.MeshStandardMaterial({ color: 0x79bdaa });
+    const beaconGeometry = new THREE.OctahedronGeometry(0.032, 0);
+    const beaconMaterial = new THREE.MeshBasicMaterial({ color: MINT });
+    const axeMaterial = new THREE.MeshStandardMaterial({ color: 0x9fb3c2, metalness: 0.4, roughness: 0.5 });
     for (let i = 0; i < 12; i++) {
       const agent = new THREE.Group();
       const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-      body.position.y = 0.11;
+      body.position.y = 0.15;
       const head = new THREE.Mesh(headGeometry, headMaterial);
-      head.position.y = 0.24;
-      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.15, 0.09), packMaterial);
-      pack.position.set(0, 0.13, -0.055);
+      head.position.y = 0.32;
+      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.135, 0.20, 0.12), packMaterial);
+      pack.position.set(0, 0.175, -0.075);
       backpacks.push(pack);
-      agent.add(body, head, pack);
+      const beacon = new THREE.Mesh(beaconGeometry, beaconMaterial);
+      beacon.position.y = 0.46;
+      const axe = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.34, 4), axeMaterial);
+      axe.position.set(0.075, 0.14, 0.03);
+      axe.rotation.z = 0.3;
+      agent.add(body, head, pack, beacon, axe);
       addInteractive(body, "agent", `Sherpa ${i + 1} · AI agent`);
       addInteractive(pack, "context", `Sherpa ${i + 1} context backpack`);
       agentGroup.add(agent);
@@ -723,7 +742,7 @@ export default function MountainScene(props: MountainSceneProps) {
       });
 
       const particleCount = reducedEffects ? 24 : 48;
-      climberBody.count = particleCount; climberHead.count = particleCount;
+      climberBody.count = particleCount; climberHead.count = particleCount; climberAxe.count = particleCount;
       const speed = THREE.MathUtils.clamp(1800 / Math.max(600, current.metrics.p95), 0.18, 1.4);
       for (let i = 0; i < particleCount; i++) {
         let progress = (i / particleCount + elapsed * 0.023 * speed) % 1;
@@ -742,12 +761,13 @@ export default function MountainScene(props: MountainSceneProps) {
         dummy.updateMatrix();
         climberBody.setMatrixAt(i, dummy.matrix);
         climberBody.setColorAt(i, color.set(tone));
+        climberAxe.setMatrixAt(i, dummy.matrix);
         dummy.position.y += 0.05 * scale;
         dummy.updateMatrix();
         climberHead.setMatrixAt(i, dummy.matrix);
         climberHead.setColorAt(i, color.set(failed ? RED : 0xf0e2c8));
       }
-      climberBody.instanceMatrix.needsUpdate = true; climberHead.instanceMatrix.needsUpdate = true;
+      climberBody.instanceMatrix.needsUpdate = true; climberHead.instanceMatrix.needsUpdate = true; climberAxe.instanceMatrix.needsUpdate = true;
       if (climberBody.instanceColor) climberBody.instanceColor.needsUpdate = true;
       if (climberHead.instanceColor) climberHead.instanceColor.needsUpdate = true;
 
@@ -788,6 +808,9 @@ export default function MountainScene(props: MountainSceneProps) {
         agent.rotation.y = i * 0.9;
         const packScale = THREE.MathUtils.clamp(current.architecture.contextTokens / 8000, 0.6, 3.2);
         backpacks[i].scale.set(1, packScale, Math.sqrt(packScale));
+        const beacon = agent.children[3];
+        beacon.rotation.y = elapsed * 1.4 + i;
+        beacon.position.y = 0.46 + Math.sin(elapsed * 2 + i) * 0.02;
       });
 
       if (now - lastLabels > 40) {
