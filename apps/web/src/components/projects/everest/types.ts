@@ -1,0 +1,73 @@
+export type Difficulty = "beginner" | "engineer" | "architect";
+export type Mode = "guided" | "incidents" | "lab" | "explore" | "live";
+export type StageId = "training" | "base" | "icefall" | "camp1" | "camp2" | "camp3" | "lhotse" | "camp4" | "hillary" | "summit";
+export type Architecture = {
+  modelTier: "small" | "medium" | "large";
+  routingEnabled: boolean;
+  agentCount: number;
+  concurrency: number;
+  parallelism: number;
+  requestsPerSecond: number;
+  contextTokens: number;
+  retrievalTopK: number;
+  cacheEnabled: boolean;
+  semanticCacheEnabled: boolean;
+  promptCacheEnabled: boolean;
+  cacheTtlSeconds: number;
+  freshnessValidation: boolean;
+  toolTimeoutMs: number;
+  modelTimeoutMs: number;
+  retries: number;
+  retryStrategy: "immediate" | "backoff";
+  circuitBreakerEnabled: boolean;
+  queueSize: number;
+  rateLimit: number;
+  fallbackEnabled: boolean;
+  mcpRedundancy: boolean;
+  toolPermissions: "read-only" | "least-privilege" | "unrestricted";
+  humanApproval: boolean;
+  validateToolOutputs: boolean;
+  idempotencyEnabled: boolean;
+  maxAgentSteps: number;
+  loopDetection: boolean;
+  tokenBudget: number;
+  costBudget: number;
+  rolloutPercent: number;
+  adaptation: "foundation" | "lora" | "full-finetune";
+};
+export type Choice = { id: string; label: string; explanation: string; patch: Partial<Architecture>; recommended?: boolean };
+export type LearningStage = {
+  id: StageId; name: string; altitude: string; concept: string;
+  situation: string; explanation: string; why: string; analogy: string;
+  example: string; failure: string; pattern: string; architect: string;
+  takeaway: string; glossaryTerms: string[]; choices: Choice[];
+};
+export type Scenario = {
+  id: string; title: string; stageId: StageId; difficulty: Difficulty;
+  mountain: string; system: string; symptoms: string[]; misleadingSignal: string;
+  rootCause: string; prevention: string; lesson: string; concepts: string[];
+  choices: Choice[];
+};
+export type GlossaryEntry = { term: string; meaning: string; analogy: string; stageId: StageId };
+export type TraceSpan = { id: string; name: string; stageId: StageId; start: number; duration: number; status: "ok" | "slow" | "error" | "blocked" | "cached"; detail: string };
+export type Slo = { latency: boolean; reliability: boolean; cost: boolean; quality: boolean; safety: boolean; passed: boolean };
+export type Metrics = {
+  p50: number; p95: number; throughput: number; reliability: number; costPerRequest: number;
+  quality: number; safety: number; queueDepth: number; tokens: number; cacheHitRate: number;
+  toolFailureRate: number; errorRate: number; attempted: number; completed: number;
+  rejected: number; requestsPerSecond: number; steps: number; totalCost: number;
+  bottleneck: string; circuitOpen: boolean; degraded: boolean; budgetExhausted: boolean;
+  explanations: string[]; traces: TraceSpan[]; slo: Slo;
+};
+export type DecisionRecord = {
+  id: string; stageId: StageId; label: string; explanation: string;
+  at: number; incidentId?: string | null; before: Metrics; after: Metrics;
+};
+export type HistoryEvent = { at: number; message: string; incidentId?: string | null };
+export type ReportInput = {
+  architecture: Architecture; metrics: Metrics; decisions: DecisionRecord[];
+  history: HistoryEvent[]; seed: number; mode: Mode; difficulty: Difficulty;
+  incidentId?: string | null;
+};
+export type ReportSection = { title: string; body: string };
+export type ExpeditionReport = { title: string; summary: string; sections: ReportSection[]; markdown: string };

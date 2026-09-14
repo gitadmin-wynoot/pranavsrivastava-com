@@ -75,7 +75,7 @@ export function SiteChat() {
   }
 
   // The game's board and controls need the full touch surface on small screens.
-  if (pathname === "/projects/signal" || pathname.startsWith("/projects/signal/")) return null;
+  if (pathname === "/projects/signal" || pathname.startsWith("/projects/signal/") || pathname.startsWith("/projects/everest-ai-production")) return null;
 
   return (
     <>

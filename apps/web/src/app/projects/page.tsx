@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FlaskConical, ArrowRight, Gamepad2, Radio } from "lucide-react";
+import { FlaskConical, ArrowRight, Gamepad2, Radio, Mountain } from "lucide-react";
 import { getProjects } from "@/lib/content";
 import { Badge, statusVariant } from "@/components/ui/badge";
 import { makeBoard } from "@/components/projects/signal/search-engine";
@@ -41,7 +41,28 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
-          {projects.map((project) => project.slug === "signal" ? (
+          {projects.map((project) => project.slug === "everest-ai-production" ? (
+            <Link key={project.slug} id={project.slug} href="/projects/everest-ai-production" className="group sm:col-span-2 relative grid md:grid-cols-[1.2fr_1fr] gap-6 items-center overflow-hidden p-7 sm:p-9 rounded-2xl bg-[#0d1c2b] border border-[#30485a] text-[#f0eee7] scroll-mt-20 hover:border-[#a3e3cf] transition-colors">
+              <div className="relative z-10">
+                <p className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#a3e3cf] mb-5"><Mountain className="w-4 h-4" /> Interactive 3D expedition · AI systems</p>
+                <h2 className="text-4xl sm:text-5xl font-medium tracking-tight mb-1">EVEREST</h2>
+                <p className="text-xs font-mono tracking-[0.23em] text-[#a3e3cf] mb-5">// AI IN PRODUCTION</p>
+                <p className="text-sm leading-relaxed text-[#acbdcc] max-w-md">Climb the mountain. Operate the system. Design agent workflows, inspect MCP tools, and find out how your architecture holds up under pressure.</p>
+                <span className="inline-flex items-center gap-2 mt-6 px-4 py-2.5 rounded-md bg-[#a3e3cf] text-[#122a29] text-xs font-semibold group-hover:bg-[#c2f3e3]">Begin the expedition <ArrowRight className="w-4 h-4" /></span>
+                <p className="text-[10px] text-[#acbdcc] mt-4">4 modes · 3D system map · Production incident lab</p>
+              </div>
+              <svg viewBox="0 0 400 350" className="hidden md:block w-full drop-shadow-2xl group-hover:-translate-y-1 transition-transform" aria-hidden="true">
+                <path d="M8 296 125 132 171 191 249 30 390 296Z" fill="#293f53" />
+                <path d="M249 30 215 130 266 111 317 173Z" fill="#d6e5e3" />
+                <path d="M249 30 266 111 317 173 390 296 274 247Z" fill="#7d99aa" />
+                <path d="M8 296 125 132 112 234 172 294Z" fill="#415d70" />
+                <path d="M125 132 92 179 113 176 132 193 152 171Z" fill="#b0c9d1" />
+                <path d="M78 298 130 266 177 258 158 226 204 196 215 158 246 131 240 100 250 63" fill="none" stroke="#a3e3cf" strokeWidth="2" strokeDasharray="5 5" />
+                {[ [78,298], [177,258], [204,196], [246,131], [250,63] ].map(([x,y],i) => <circle key={i} cx={x} cy={y} r="4" fill="#a3e3cf" />)}
+                <path d="M236 40V17L261 24 236 30" stroke="#d2a076" fill="#d2a076" strokeWidth="2" />
+              </svg>
+            </Link>
+          ) : project.slug === "signal" ? (
             <Link key={project.slug} id="signal" href="/projects/signal" className="group sm:col-span-2 grid md:grid-cols-[1.2fr_1fr] gap-8 items-center overflow-hidden p-7 sm:p-9 rounded-2xl bg-[#152b27] border border-[#3a5141] text-[#e7efdf] scroll-mt-20 hover:border-[#a7c773] transition-colors">
               <div>
                 <p className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-[#d7f58f] mb-5"><Gamepad2 className="w-4 h-4" /> Playable experiment · Human + AI</p>

@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:signal": "node --test tests/signal-engine.test.mjs tests/signal-belief.test.mjs"
+    "test:signal": "node --test tests/signal-engine.test.mjs tests/signal-belief.test.mjs",
+    "test:everest": "node --test tests/everest-engine.test.mjs tests/everest-mcp.test.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "gray-matter": "^4.0.3",
@@ -22,13 +24,15 @@
     "react-dom": "19.2.4",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
