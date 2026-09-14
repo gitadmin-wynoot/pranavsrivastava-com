@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ArrowRight, Check, Clock3, Code2, Database, Radio, RefreshCw, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { MCP_SERVERS, MCP_TOOLS, MCP_FAILURES, createFixtureLedger, inputErrors, runFixture, simulateMcp, validateDemoRequest, type DemoRequest, type DemoResponse, type DemoRole, type FailureMode, type McpServerId } from "@/lib/everest-mcp";
+import { radioClick, successChime, toolErrorBuzz, toolSuccessBeep, waitingTone } from "./audio";
 import styles from "./tool-inspector.module.css";
 
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
@@ -49,6 +50,7 @@ export default function ToolInspector({ onEvent, initialTool }: { onEvent?: (mes
 
   async function dispatch(request: DemoRequest) {
     setBusy(true); setError("");
+    radioClick();
     const operation = ++latestOperation.current;
     let next: DemoResponse;
     try {
@@ -75,7 +77,13 @@ export default function ToolInspector({ onEvent, initialTool }: { onEvent?: (mes
     }
     if (!mounted.current || operation !== latestOperation.current) return;
     setResponse(next); setTransport(next.mode); setBusy(false);
-    if (request.action === "call") { setLastRequest(request); setCallView("response"); }
+    if (request.action === "call") {
+      setLastRequest(request); setCallView("response");
+      const status = next.result?.status;
+      if (status === "success" || status === "degraded") toolSuccessBeep();
+      else if (status === "blocked" || status === "error") toolErrorBuzz();
+      else if (status === "approval-required") waitingTone();
+    } else toolSuccessBeep();
     onEvent?.(request.action === "discover" ? `${server.name}: discovered ${next.tools.length} tools via ${next.mode === "live-mcp" ? "MCP" : "simulation"}.` : `${request.tool}: ${next.result?.code ?? "complete"}.`);
   }
 
@@ -164,8 +172,8 @@ export default function ToolInspector({ onEvent, initialTool }: { onEvent?: (mes
                 <h4>{lastRequest.tool}</h4><p>Requested by {server.agent}. Reason: {String(lastRequest.arguments.reason)}.</p>
                 <details><summary>Inspect evidence</summary><pre>{pretty(result.output)}</pre></details>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.primary} disabled={busy} onClick={() => void dispatch({ ...lastRequest, approval: "approved" })}><Check size={14} aria-hidden="true" /> Approve fictional action</button>
-                  <button type="button" className={styles.secondary} disabled={busy} onClick={() => void dispatch({ ...lastRequest, approval: "rejected" })}><X size={14} aria-hidden="true" /> Reject</button>
+                  <button type="button" className={styles.primary} disabled={busy} onClick={() => { successChime(); void dispatch({ ...lastRequest, approval: "approved" }); }}><Check size={14} aria-hidden="true" /> Approve fictional action</button>
+                  <button type="button" className={styles.secondary} disabled={busy} onClick={() => { toolErrorBuzz(); void dispatch({ ...lastRequest, approval: "rejected" }); }}><X size={14} aria-hidden="true" /> Reject</button>
                 </div>
               </div>}
               <div className={styles.views} aria-label="Inspect call details">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Check, Copy, Download, Printer, X } from "lucide-react";
+import { ArrowRight, Bot, Check, Compass, Copy, Download, Flame, Mountain, Printer, Radio, SlidersHorizontal, TriangleAlert, X } from "lucide-react";
 import { GLOSSARY, STAGES } from "./content";
-import type { Architecture, ExpeditionReport, HistoryEvent, Metrics, StageId } from "./types";
+import type { Architecture, ExpeditionReport, HistoryEvent, Metrics, Mode, StageId } from "./types";
 import s from "./everest-simulator.module.css";
 
 export function Modal({ title, children, onClose, report = false }: { title: string; children: ReactNode; onClose: () => void; report?: boolean }) {
@@ -89,4 +89,34 @@ export function TrainingStation({ architecture, onChange, onEvent }: { architect
 export function EvaluationStation({ architecture, onChange }: { architecture: Architecture; onChange: (patch: Partial<Architecture>, reason: string) => void }) {
   const [decision, setDecision] = useState("");
   return <div className={s.station}><span className={s.eyebrow}>Release gate / a fixed evaluation set</span><h3>Better answers. Worse tool calls.</h3><p>A candidate prompt improves accuracy but regresses on tool correctness. Compare the same evaluation tasks before changing traffic.</p><table className={s.evalTable}><thead><tr><th>Eval</th><th>Previous</th><th>Candidate</th></tr></thead><tbody>{[["Accuracy",91,95],["System safety",98,97],["Tool correctness",94,82],["Latency (s)",2.1,2.4]].map(([label,old,next]) => <tr key={label}><td>{label}</td><td>{old}</td><td>{next}{label === "Tool correctness" ? " △" : ""}</td></tr>)}</tbody></table><div className={s.choiceList}><button onClick={() => {setDecision("Release held. Fix the tool schema regression and repeat the evaluation before widening traffic."); onChange({ rolloutPercent: 5, validateToolOutputs: true }, "Held release after tool correctness fell from 94 to 82. Kept a 5% isolated canary and schema validation.");}}><Check size={15} /> Hold release and repair the regression</button><button onClick={() => {setDecision("The rollout exposes more requests to the known regression. Compare cohort errors and roll back."); onChange({ rolloutPercent: 100 }, "Rolled candidate to 100% despite a known tool correctness regression.");}}>Roll out the candidate to everyone</button></div><p role="status">{decision}</p><label className={s.selectField}>Canary traffic<select value={architecture.rolloutPercent} onChange={e => onChange({ rolloutPercent: Number(e.target.value) }, `Changed canary traffic to ${e.target.value}%; compare regression exposure before widening.`)}>{[5,20,50,100].map(n => <option key={n} value={n}>{n}% of requests</option>)}</select></label><p>{architecture.rolloutPercent > 5 ? "△ Candidate errors are rising. More requests are exposed to the tool correctness regression." : "5% canary confines the candidate to a small cohort. The main route remains on the previous version."}</p><button className={s.secondaryButton} onClick={() => {onChange({ rolloutPercent: 5 }, "Rolled back the broad release to the isolated 5% canary after regression detection."); setDecision("Broad rollout rolled back. Keep the small canary isolated while repairing the candidate.");}}>Roll back broad release</button></div>;
+}
+
+const MODE_TOUR: { id: Mode; label: string; icon: typeof Compass; text: string }[] = [
+  { id: "guided", label: "Guided Expedition", icon: Compass, text: "A 10-stop curriculum from model training to the summit. Start here first." },
+  { id: "live", label: "Live Expedition", icon: Flame, text: "Real time and random. The climb runs on its own -- you react to whatever breaks." },
+  { id: "incidents", label: "Incident Drills", icon: TriangleAlert, text: "Pick one specific failure and practice diagnosing and fixing exactly that." },
+  { id: "lab", label: "Architecture Lab", icon: SlidersHorizontal, text: "A sandbox -- change real settings and watch the trade-offs happen." },
+  { id: "explore", label: "Explore Mountain", icon: Mountain, text: "No script. Rotate the mountain and click anything that looks interesting." },
+];
+
+export function AboutPanel({ onStart }: { onStart: (mode: Mode) => void }) {
+  return <div className={s.dialogBody}>
+    <p>Everest turns a mountain into a working diagram of a production AI system. Requests are climbers. AI agents are Sherpas. The radio network connecting them to weather, route and supply stations is <b>MCP</b>, the Model Context Protocol -- the standard way an AI agent discovers and calls a tool. Every camp, storm and rescue maps to something real: a bottleneck, a slow dependency, a permission boundary, a recovery plan.</p>
+    <h3>What you will actually learn</h3>
+    <div className={s.helpGrid}>
+      <div>
+        <p><Bot size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />How an AI agent decides what to do, and how it reaches out to tools and data through MCP instead of guessing.</p>
+        <p><Radio size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />Why a slow dependency, not the model, is usually the real bottleneck, and how to actually see that in a trace.</p>
+      </div>
+      <div>
+        <p><TriangleAlert size={14} style={{ verticalAlign: "-2px", marginRight: 6 }} />Why more retries, a bigger model, or extra agents can each make a bad situation worse, not better.</p>
+        <p>How production systems stay safe and recover: timeouts, circuit breakers, fallbacks, and knowing when a human has to approve something.</p>
+      </div>
+    </div>
+    <h3>Pick where to start</h3>
+    <div className={s.choiceList}>
+      {MODE_TOUR.map((m) => <div key={m.id}><button onClick={() => onStart(m.id)}><span style={{ display: "flex", alignItems: "center", gap: 9 }}><m.icon size={16} />{m.label} -- {m.text}</span><ArrowRight size={14} /></button></div>)}
+    </div>
+    <p className={s.safetyNote}>This is a software engineering simulation using a simplified Everest expedition as a metaphor. It is not mountaineering, medical, survival, or expedition safety guidance.</p>
+  </div>;
 }

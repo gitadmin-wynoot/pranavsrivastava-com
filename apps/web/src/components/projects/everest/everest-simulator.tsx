@@ -3,16 +3,17 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Compass, Eye, FileText, Flame, HelpCircle, Layers, Mountain, Pause, Play, Radio, RotateCcw, Settings2, Shield, SlidersHorizontal, TriangleAlert, X } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Compass, Eye, FileText, Flame, HelpCircle, Info, Layers, Mountain, Pause, Play, Radio, RotateCcw, Settings2, Shield, SlidersHorizontal, TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
 import { STAGES, SCENARIOS } from "./content";
 import { DEFAULT_ARCHITECTURE, createRandom, normalizeArchitecture, simulate } from "./engine";
 import { arrivalLine, chatterLine, incidentChance, pickNextIncident } from "./live-run";
 import { ACHIEVEMENTS, qualifiedAchievements } from "./achievements";
+import { alertTone, arrivalChime, decisionClick, initAudio, isMuted, radioClick, setMuted, setWindIntensity, startWind, stopWind, successChime } from "./audio";
 import { generateIncidentReport, generateReport } from "./reports";
 import type { Architecture, Choice, DecisionRecord, Difficulty, HistoryEvent, Metrics, Mode, StageId } from "./types";
 import { ArchitectureControls } from "./architecture-controls";
 import { LiveHud, LiveSidePanel } from "./live-hud";
-import { EvaluationStation, HelpPanel, MetricBar, Modal, Observability, ReportPanel, TrainingStation } from "./simulator-panels";
+import { AboutPanel, EvaluationStation, HelpPanel, MetricBar, Modal, Observability, ReportPanel, TrainingStation } from "./simulator-panels";
 import s from "./everest-simulator.module.css";
 
 const MountainScene = dynamic(() => import("./mountain-scene"), { ssr: false, loading: () => <div className={s.preparing}><Mountain size={36} /><strong>Preparing expedition…</strong><span>Loading terrain · Establishing camps · Connecting tools</span></div> });
@@ -26,7 +27,7 @@ const MODES: { id: Mode; label: string; short: string; text: string; icon: typeo
   { id: "explore", label: "Explore Mountain", short: "Explore mountain", text: "A free-roaming atlas of production AI.", icon: Mountain },
 ];
 const LAYERS = [["route", "Expedition route"], ["flow", "AI request flow"], ["agents", "Agents / Sherpas"], ["tools", "MCP / tools"], ["latency", "Latency heatmap"], ["failures", "Failures"], ["telemetry", "Telemetry"], ["trust", "Trust boundaries"], ["dependencies", "Dependencies"]];
-type Drawer = "help" | "tools" | "telemetry" | "report" | null;
+type Drawer = "help" | "tools" | "telemetry" | "report" | "about" | null;
 type Session = { mode: Mode | null; stage: number; architecture: Architecture; seed: number; difficulty: Difficulty; incidentId: string | null; decisions: DecisionRecord[]; history: HistoryEvent[]; visited: StageId[]; liveUsed: string[]; liveFeed: string[]; earned: string[] };
 const initialSession: Session = { mode: null, stage: 0, architecture: DEFAULT_ARCHITECTURE, seed: 42, difficulty: "beginner", incidentId: null, decisions: [], history: [{at: 0, message: "Expedition prepared. A seeded cohort of 1,000 requests is ready."}], visited: [], liveUsed: [], liveFeed: [], earned: [] };
 
@@ -63,6 +64,7 @@ export function EverestSimulator() {
   const [selectedIncident, setSelectedIncident] = useState("mcp-timeout");
   const [diagnosis, setDiagnosis] = useState("");
   const [diagnosisResult, setDiagnosisResult] = useState("");
+  const [muted, setMutedState] = useState(true);
   const { mode, stage: stageIndex, architecture, seed, difficulty, incidentId, decisions, history, visited } = session;
   const stage = STAGES[stageIndex];
   const incident = SCENARIOS.find(i => i.id === incidentId);
@@ -76,12 +78,20 @@ export function EverestSimulator() {
     // Restore only after hydration. Invalid or blocked browser storage is nonfatal.
     const restored = readSession();
     setSession(restored); setReady(true);
+    initAudio(); setMutedState(isMuted());
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReducedMotion(media.matches);
     const update = () => setReducedMotion(media.matches);
     media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
+    return () => { media.removeEventListener("change", update); stopWind(); };
   }, []);
+  function toggleMute() { const next = !muted; setMuted(next); setMutedState(next); }
+  useEffect(() => {
+    if (mode === "live" && !muted && !paused) {
+      startWind();
+      setWindIntensity(Math.min(1, Math.max(0, (100 - metrics.reliability) / 40)));
+    } else stopWind();
+  }, [mode, muted, paused, metrics.reliability]);
   useEffect(() => {
     if (!ready) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, session })); } catch { /* The simulator remains usable with storage disabled. */ }
@@ -102,7 +112,7 @@ export function EverestSimulator() {
     const at = (history.at(-1)?.at ?? 0) + 5;
     const record: DecisionRecord = { id: choice?.id ?? `change-${at}`, stageId: stage.id, label: choice?.label ?? reason.split(".")[0], explanation: reason, at, incidentId, before: metrics, after };
     setSession(v => ({ ...v, architecture: next, decisions: [...v.decisions, record].slice(-100), history: [...v.history, { at, message: record.label, incidentId }].slice(-200), visited: choice ? Array.from(new Set([...v.visited, stage.id])) : v.visited }));
-    if (choice) setNotice(`${choice.explanation} p95 ${(metrics.p95/1000).toFixed(2)} → ${(after.p95/1000).toFixed(2)} s.`);
+    if (choice) { decisionClick(); setNotice(`${choice.explanation} p95 ${(metrics.p95/1000).toFixed(2)} → ${(after.p95/1000).toFixed(2)} s.`); }
   }
   function dismissTutorial() { setTutorial(false); try { localStorage.setItem("everest-orientation-seen", "1"); } catch { /* optional preference */ } }
   function enterMode(nextMode: Mode) {
@@ -119,6 +129,7 @@ export function EverestSimulator() {
     if (!selected) return;
     setSession(v => ({ ...v, incidentId: id, stage: STAGES.findIndex(t => t.id === selected.stageId), history: [...v.history, { at: (v.history.at(-1)?.at ?? 0) + 5, message: `Incident triggered: ${selected.title}`, incidentId: id }].slice(-200) }));
     setFocused(false); setXray(true); setPanelOpen(true); setDiagnosis(""); setDiagnosisResult(""); setLayers(v => Array.from(new Set([...v, "failures", "latency", "tools"])));
+    alertTone();
     setNotice(selected.mountain);
   }
   function nextStage() {
@@ -154,7 +165,7 @@ export function EverestSimulator() {
       if (v.mode !== "live" || pausedRef.current || v.incidentId) return;
       const at = (v.history.at(-1)?.at ?? 0) + 16;
       const rng = createRandom((v.seed + at * 2654435761) >>> 0);
-      if (rng() < 0.7) logEvent(chatterLine(v.stage, rng));
+      if (rng() < 0.7) { radioClick(); logEvent(chatterLine(v.stage, rng)); }
       const candidate = rng() < incidentChance(v.stage) ? pickNextIncident(v.stage, v.liveUsed, rng) : null;
       if (candidate) {
         setSession(s => ({ ...s, liveUsed: [...s.liveUsed, candidate.id] }));
@@ -165,6 +176,7 @@ export function EverestSimulator() {
       if (v.stage < STAGES.length - 1 && rng() < 0.62) {
         const nextIndex = v.stage + 1;
         selectStage(nextIndex);
+        arrivalChime();
         logEvent(arrivalLine(nextIndex, rng));
         if (nextIndex === STAGES.length - 1) setPaused(true);
       }
@@ -184,6 +196,7 @@ export function EverestSimulator() {
     if (!fresh.length) return;
     const unlocked = fresh.map((id) => ACHIEVEMENTS.find((a) => a.id === id)!);
     setSession((v) => ({ ...v, earned: Array.from(new Set([...v.earned, ...fresh])) }));
+    successChime();
     setNotice(`New badge${unlocked.length > 1 ? "s" : ""}: ${unlocked.map((a) => `${a.icon} ${a.label}`).join(" · ")}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decisions.length, stageIndex, metrics.slo.cost, architecture.retries, architecture.retryStrategy, architecture.fallbackEnabled, architecture.toolPermissions]);
@@ -192,7 +205,7 @@ export function EverestSimulator() {
     <div className={s.topbar}>
       <Link href="/projects" className={s.backLink}><ArrowLeft size={15}/><span>Projects</span></Link>
       <button className={s.brand} onClick={() => {setSession(v=>({...v,mode:null})); overview();}} aria-label="Everest entry screen"><Mountain size={23}/><span>EVEREST <small>// AI IN PRODUCTION</small></span></button>
-      <div className={s.headerActions}>{mode && <label className={s.modeSelect}><span className={s.srOnly}>Experience mode</span><select value={mode} onChange={e=>enterMode(e.target.value as Mode)}>{MODES.map(m=><option key={m.id} value={m.id}>{m.short}</option>)}</select><ChevronDown size={13}/></label>}<button className={s.iconButton} onClick={()=>setDrawer("help")} aria-label="Help and glossary"><HelpCircle size={19}/></button></div>
+      <div className={s.headerActions}>{mode && <label className={s.modeSelect}><span className={s.srOnly}>Experience mode</span><select value={mode} onChange={e=>enterMode(e.target.value as Mode)}>{MODES.map(m=><option key={m.id} value={m.id}>{m.short}</option>)}</select><ChevronDown size={13}/></label>}<button className={s.iconButton} onClick={toggleMute} aria-label={muted?"Unmute sound effects":"Mute sound effects"} aria-pressed={!muted}>{muted?<VolumeX size={19}/>:<Volume2 size={19}/>}</button><button className={s.iconButton} onClick={()=>setDrawer("about")} aria-label="What is this project?"><Info size={19}/></button><button className={s.iconButton} onClick={()=>setDrawer("help")} aria-label="Help and glossary"><HelpCircle size={19}/></button></div>
     </div>
     <div className={s.world}>
       <MountainScene selectedStage={mode && focused ? stageIndex : null} onSelectStage={selectStage} xray={xray} cutaway={cutaway} layers={layers} metrics={metrics} architecture={architecture} incident={incidentId} paused={paused || !mode} reducedMotion={reducedMotion} resetKey={resetKey} onInspect={inspectObject}/>
@@ -203,7 +216,14 @@ export function EverestSimulator() {
           <h1>EVEREST<span>// AI IN PRODUCTION</span></h1>
           <p className={s.entryTagline}>Climb the mountain.<br/>Operate the system.<br/><span>Survive production.</span></p>
           <p className={s.entryIntro}>Deploy a team of AI Sherpas. Guide workloads from Base Camp to the summit. Learn what it takes to make AI work in the real world.</p>
+          <ul className={s.learnList} aria-label="What you'll learn">
+            <li>How an AI agent actually connects to tools and data through MCP</li>
+            <li>Why a bigger model, more agents, or more retries can make things worse</li>
+            <li>How real production systems detect, survive, and recover from failure</li>
+            <li>How to read latency, cost, quality, and safety as one trade-off, not four</li>
+          </ul>
           <div className={s.modeCards}>{MODES.map((m,i)=><button key={m.id} className={i===0?s.primaryMode:s.modeCard} onClick={()=>enterMode(m.id)}><m.icon size={19}/><span><strong>{m.label}</strong><small>{i===0?"Recommended · 10–15 minutes":m.text}</small></span><ArrowRight size={17}/></button>)}</div>
+          <button className={s.tourButton} onClick={()=>setDrawer("about")}><Info size={14}/> What is this, exactly? <span>60-second tour</span></button>
           <p className={s.entryNote}>A software engineering simulation. No login or API key needed.</p>
         </section>
         <div className={s.entryCaption}><span>8,849 M</span><strong>THE SUMMIT IS A SYSTEM THAT WORKS.</strong><small>Drag to rotate · Scroll / pinch to zoom · Click a camp</small></div>
@@ -253,7 +273,8 @@ export function EverestSimulator() {
       {notice&&mode&&<div className={s.toast} role="status"><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Dismiss update"><X size={14}/></button></div>}
     </div>
     {mode&&<MetricBar metrics={metrics} onInspect={()=>setDrawer("telemetry")}/>}
-    {drawer&&<Modal title={drawer==="help"?"Help, legend & glossary":drawer==="tools"?"The MCP radio tent":drawer==="telemetry"?"Expedition control room":report.title} onClose={()=>setDrawer(null)} report={drawer==="report"}>
+    {drawer&&<Modal title={drawer==="help"?"Help, legend & glossary":drawer==="tools"?"The MCP radio tent":drawer==="telemetry"?"Expedition control room":drawer==="about"?"What is Everest // AI in Production?":report.title} onClose={()=>setDrawer(null)} report={drawer==="report"}>
+      {drawer==="about"&&<AboutPanel onStart={(m)=>{setDrawer(null);enterMode(m);}}/>}
       {drawer==="help"&&<><HelpPanel onStage={selectStageId} showTutorial={()=>{setDrawer(null);if(!mode)enterMode("explore");setTutorial(true);}}/><div className={s.dialogBody}><label className={s.toggleField}><span><strong>Reduce motion</strong><small>Keep the map interactive with fewer animated effects.</small></span><input type="checkbox" checked={reducedMotion} onChange={e=>setReducedMotion(e.target.checked)}/></label><button className={s.secondaryButton} onClick={()=>{setSession(initialSession);setDrawer(null);overview();setBaseline(null);setNotice("");try{localStorage.removeItem(STORAGE_KEY);}catch{ /* optional storage */ }}}>Reset this expedition</button></div></>}
       {drawer==="tools"&&<ToolInspector onEvent={logEvent}/>}
       {drawer==="telemetry"&&<Observability metrics={metrics} history={history} onStage={selectStageId}/>}
