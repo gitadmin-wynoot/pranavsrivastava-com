@@ -185,7 +185,11 @@ export default function MountainScene(props: MountainSceneProps) {
     host.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x091923, 0.008);
+    const calmFog = new THREE.Color(0x091923);
+    const stormFog = new THREE.Color(0x1c2430);
+    const alarmFog = new THREE.Color(0x241417);
+    const fog = new THREE.FogExp2(calmFog.getHex(), 0.008);
+    scene.fog = fog;
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 150);
     const overviewTarget = new THREE.Vector3(-0.35, 3.5, 0.1);
     const overviewPosition = new THREE.Vector3(15.0, 13.5, 24.0);
@@ -419,11 +423,17 @@ export default function MountainScene(props: MountainSceneProps) {
     addInteractive(breaker, "circuit-breaker", "Circuit breaker open · repeated calls stopped");
     failureGroup.add(breaker);
 
-    const particleGeometry = new THREE.IcosahedronGeometry(0.038, 0);
-    const particles = new THREE.InstancedMesh(particleGeometry, new THREE.MeshBasicMaterial({ color: 0xffffff }), 64);
-    particles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    addInteractive(particles, "request", "Active request · inspect its execution trace");
-    flowGroup.add(particles);
+    // Each request is drawn as a tiny climber (a body + a paler head), not an abstract
+    // dot — the point of the metaphor only lands if a "climber on the route" reads as a person.
+    const climberBodyGeometry = new THREE.CapsuleGeometry(0.022, 0.05, 2, 5);
+    const climberHeadGeometry = new THREE.SphereGeometry(0.024, 6, 4);
+    const climberBody = new THREE.InstancedMesh(climberBodyGeometry, new THREE.MeshBasicMaterial({ color: 0xffffff }), 64);
+    const climberHead = new THREE.InstancedMesh(climberHeadGeometry, new THREE.MeshBasicMaterial({ color: 0xf0e2c8 }), 64);
+    climberBody.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    climberHead.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    addInteractive(climberBody, "request", "A climber on the route · one active request, click to inspect its trace");
+    addInteractive(climberHead, "request", "A climber on the route · one active request, click to inspect its trace");
+    flowGroup.add(climberBody, climberHead);
     const queue = new THREE.InstancedMesh(new THREE.BoxGeometry(0.065, 0.065, 0.065), new THREE.MeshBasicMaterial({ color: AMBER }), 48);
     queue.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     addInteractive(queue, "queue", "Waiting requests · bottleneck queue");
@@ -676,10 +686,27 @@ export default function MountainScene(props: MountainSceneProps) {
       fallbackRoute.visible = current.architecture.fallbackEnabled && (dependencyFailure || providerFailure);
       retryRoute.visible = dependencyFailure && current.architecture.retries > 0 && !current.architecture.circuitBreakerEnabled;
       breaker.visible = current.architecture.circuitBreakerEnabled && dependencyFailure;
-      weather.visible = Boolean(current.incident) && !reducedEffects;
+      // Weather is honest about what it means: a real storm only for dependency/weather-flavoured
+      // incidents (the metaphor's own weather station), a quieter red-tinted haze for any other
+      // active incident (something's wrong, but it isn't a storm), and clear skies otherwise.
+      const storm = dependencyFailure && !reducedEffects;
+      const alarm = Boolean(current.incident) && !dependencyFailure;
+      const severity = THREE.MathUtils.clamp((100 - current.metrics.reliability) / 40, 0, 1);
+      weather.visible = storm;
+      weather.rotation.y = elapsed * 0.015;
+      (weather.material as THREE.PointsMaterial).opacity = THREE.MathUtils.lerp(0.3, 0.85, severity);
+      if (storm && !current.reducedMotion) {
+        const fall = 0.035 + severity * 0.06;
+        for (let i = 0; i < snowPositions.length; i += 3) {
+          snowPositions[i + 1] -= fall;
+          if (snowPositions[i + 1] < 0) snowPositions[i + 1] += 12;
+        }
+        snowGeometry.attributes.position.needsUpdate = true;
+      }
+      fog.color.lerp(storm ? stormFog : alarm ? alarmFog : calmFog, current.reducedMotion ? 1 : 0.045);
+      fog.density = THREE.MathUtils.lerp(fog.density, storm ? 0.008 + severity * 0.016 : alarm ? 0.011 : 0.008, current.reducedMotion ? 1 : 0.045);
       failureMarker.position.copy(positions[failureStage]).add(new THREE.Vector3(0, 0.65, 0));
       failureMarker.rotation.y = elapsed * 0.5;
-      weather.rotation.y = elapsed * 0.015;
       failureMarker.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.13);
 
       tents.forEach((tent, i) => {
@@ -696,7 +723,7 @@ export default function MountainScene(props: MountainSceneProps) {
       });
 
       const particleCount = reducedEffects ? 24 : 48;
-      particles.count = particleCount;
+      climberBody.count = particleCount; climberHead.count = particleCount;
       const speed = THREE.MathUtils.clamp(1800 / Math.max(600, current.metrics.p95), 0.18, 1.4);
       for (let i = 0; i < particleCount; i++) {
         let progress = (i / particleCount + elapsed * 0.023 * speed) % 1;
@@ -707,15 +734,22 @@ export default function MountainScene(props: MountainSceneProps) {
         else if (failed && current.architecture.fallbackEnabled && progress > 0.55 && progress < 0.85) fallbackCurve.getPoint((progress - 0.55) / 0.3, temporary);
         else if (failed && retryRoute.visible && progress > 0.5 && progress < 0.7) retryCurve.getPoint((elapsed * 0.15 * current.architecture.retries + i * 0.17) % 1, temporary);
         else mainCurve.getPoint(progress, temporary);
-        dummy.position.copy(temporary).add(new THREE.Vector3(0, 0.065, 0));
-        dummy.scale.setScalar(failed ? 1.55 : 1);
-        dummy.rotation.set(0, elapsed, 0);
+        const scale = failed ? 1.4 : 1;
+        const tone = failed ? RED : cached ? 0xc8b6ff : MINT;
+        dummy.position.copy(temporary).add(new THREE.Vector3(0, 0.045, 0));
+        dummy.scale.setScalar(scale);
+        dummy.rotation.set(0, elapsed * 0.4 + i, 0);
         dummy.updateMatrix();
-        particles.setMatrixAt(i, dummy.matrix);
-        particles.setColorAt(i, color.set(failed ? RED : cached ? 0xc8b6ff : MINT));
+        climberBody.setMatrixAt(i, dummy.matrix);
+        climberBody.setColorAt(i, color.set(tone));
+        dummy.position.y += 0.05 * scale;
+        dummy.updateMatrix();
+        climberHead.setMatrixAt(i, dummy.matrix);
+        climberHead.setColorAt(i, color.set(failed ? RED : 0xf0e2c8));
       }
-      particles.instanceMatrix.needsUpdate = true;
-      if (particles.instanceColor) particles.instanceColor.needsUpdate = true;
+      climberBody.instanceMatrix.needsUpdate = true; climberHead.instanceMatrix.needsUpdate = true;
+      if (climberBody.instanceColor) climberBody.instanceColor.needsUpdate = true;
+      if (climberHead.instanceColor) climberHead.instanceColor.needsUpdate = true;
 
       queue.count = Math.min(48, Math.max(0, Math.ceil(current.metrics.queueDepth / 2)));
       for (let i = 0; i < queue.count; i++) {

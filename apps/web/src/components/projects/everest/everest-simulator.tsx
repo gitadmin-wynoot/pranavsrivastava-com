@@ -7,6 +7,7 @@ import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Compass,
 import { STAGES, SCENARIOS } from "./content";
 import { DEFAULT_ARCHITECTURE, createRandom, normalizeArchitecture, simulate } from "./engine";
 import { arrivalLine, chatterLine, incidentChance, pickNextIncident } from "./live-run";
+import { ACHIEVEMENTS, qualifiedAchievements } from "./achievements";
 import { generateIncidentReport, generateReport } from "./reports";
 import type { Architecture, Choice, DecisionRecord, Difficulty, HistoryEvent, Metrics, Mode, StageId } from "./types";
 import { ArchitectureControls } from "./architecture-controls";
@@ -26,8 +27,8 @@ const MODES: { id: Mode; label: string; short: string; text: string; icon: typeo
 ];
 const LAYERS = [["route", "Expedition route"], ["flow", "AI request flow"], ["agents", "Agents / Sherpas"], ["tools", "MCP / tools"], ["latency", "Latency heatmap"], ["failures", "Failures"], ["telemetry", "Telemetry"], ["trust", "Trust boundaries"], ["dependencies", "Dependencies"]];
 type Drawer = "help" | "tools" | "telemetry" | "report" | null;
-type Session = { mode: Mode | null; stage: number; architecture: Architecture; seed: number; difficulty: Difficulty; incidentId: string | null; decisions: DecisionRecord[]; history: HistoryEvent[]; visited: StageId[]; liveUsed: string[]; liveFeed: string[] };
-const initialSession: Session = { mode: null, stage: 0, architecture: DEFAULT_ARCHITECTURE, seed: 42, difficulty: "beginner", incidentId: null, decisions: [], history: [{at: 0, message: "Expedition prepared. A seeded cohort of 1,000 requests is ready."}], visited: [], liveUsed: [], liveFeed: [] };
+type Session = { mode: Mode | null; stage: number; architecture: Architecture; seed: number; difficulty: Difficulty; incidentId: string | null; decisions: DecisionRecord[]; history: HistoryEvent[]; visited: StageId[]; liveUsed: string[]; liveFeed: string[]; earned: string[] };
+const initialSession: Session = { mode: null, stage: 0, architecture: DEFAULT_ARCHITECTURE, seed: 42, difficulty: "beginner", incidentId: null, decisions: [], history: [{at: 0, message: "Expedition prepared. A seeded cohort of 1,000 requests is ready."}], visited: [], liveUsed: [], liveFeed: [], earned: [] };
 
 function readSession(): Session {
   try {
@@ -39,7 +40,7 @@ function readSession(): Session {
     const validMetrics = (m: unknown) => !!m && typeof m === "object" && ["p95", "p50", "quality", "safety", "reliability", "costPerRequest", "totalCost", "completed"].every(k => typeof (m as Record<string,unknown>)[k] === "number" && Number.isFinite((m as Record<string,unknown>)[k]));
     const decisions = Array.isArray(v.decisions) ? v.decisions.filter((d: DecisionRecord) => d && typeof d.id === "string" && typeof d.label === "string" && typeof d.explanation === "string" && Number.isFinite(d.at) && STAGES.some(t => t.id === d.stageId) && validMetrics(d.before) && validMetrics(d.after)).slice(-100) : [];
     const history = Array.isArray(v.history) ? v.history.filter((h: HistoryEvent) => h && Number.isFinite(h.at) && typeof h.message === "string").slice(-200) : initialSession.history;
-    return { ...initialSession, mode: MODES.some(m => m.id === v.mode) ? v.mode : null, stage: Number.isInteger(v.stage) ? Math.min(9, Math.max(0, v.stage)) : 0, architecture: normalizeArchitecture(v.architecture && typeof v.architecture === "object" ? v.architecture : {}), seed: Number.isFinite(v.seed) ? v.seed >>> 0 : 42, difficulty: ["beginner", "engineer", "architect"].includes(v.difficulty) ? v.difficulty : "beginner", incidentId: SCENARIOS.some(i => i.id === v.incidentId) ? v.incidentId : null, decisions, history, visited: Array.isArray(v.visited) ? v.visited.filter((id:StageId) => STAGES.some(t => t.id === id)) : [], liveUsed: Array.isArray(v.liveUsed) ? v.liveUsed.filter((id: string) => typeof id === "string").slice(-30) : [], liveFeed: Array.isArray(v.liveFeed) ? v.liveFeed.filter((m: string) => typeof m === "string").slice(-6) : [] };
+    return { ...initialSession, mode: MODES.some(m => m.id === v.mode) ? v.mode : null, stage: Number.isInteger(v.stage) ? Math.min(9, Math.max(0, v.stage)) : 0, architecture: normalizeArchitecture(v.architecture && typeof v.architecture === "object" ? v.architecture : {}), seed: Number.isFinite(v.seed) ? v.seed >>> 0 : 42, difficulty: ["beginner", "engineer", "architect"].includes(v.difficulty) ? v.difficulty : "beginner", incidentId: SCENARIOS.some(i => i.id === v.incidentId) ? v.incidentId : null, decisions, history, visited: Array.isArray(v.visited) ? v.visited.filter((id:StageId) => STAGES.some(t => t.id === id)) : [], liveUsed: Array.isArray(v.liveUsed) ? v.liveUsed.filter((id: string) => typeof id === "string").slice(-30) : [], liveFeed: Array.isArray(v.liveFeed) ? v.liveFeed.filter((m: string) => typeof m === "string").slice(-6) : [], earned: Array.isArray(v.earned) ? v.earned.filter((id: string) => ACHIEVEMENTS.some((a) => a.id === id)) : [] };
   } catch { return initialSession; }
 }
 
@@ -174,6 +175,19 @@ export function EverestSimulator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
+  // A small, honest reward loop: check after every relevant change whether a real, checkable
+  // architecture fact now qualifies for a badge, and award only what's newly true.
+  useEffect(() => {
+    const have = new Set(session.earned);
+    const qualifying = qualifiedAchievements({ architecture, metrics, decisions, stageIndex });
+    const fresh = qualifying.filter((id) => !have.has(id));
+    if (!fresh.length) return;
+    const unlocked = fresh.map((id) => ACHIEVEMENTS.find((a) => a.id === id)!);
+    setSession((v) => ({ ...v, earned: Array.from(new Set([...v.earned, ...fresh])) }));
+    setNotice(`New badge${unlocked.length > 1 ? "s" : ""}: ${unlocked.map((a) => `${a.icon} ${a.label}`).join(" · ")}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisions.length, stageIndex, metrics.slo.cost, architecture.retries, architecture.retryStrategy, architecture.fallbackEnabled, architecture.toolPermissions]);
+
   return <div className={s.shell} data-mode={mode ?? "entry"}>
     <div className={s.topbar}>
       <Link href="/projects" className={s.backLink}><ArrowLeft size={15}/><span>Projects</span></Link>
@@ -232,7 +246,7 @@ export function EverestSimulator() {
         </aside>}
         <div className={s.bottomTools}><button onClick={()=>setDrawer("tools")}><Radio size={15}/><span>MCP inspector</span></button><button onClick={()=>setDrawer("telemetry")}><Activity size={15}/><span>Control room</span></button><button onClick={()=>setDrawer("report")}><FileText size={15}/><span>Debrief</span></button><button onClick={replay}><RotateCcw size={15}/><span>Replay same conditions</span></button><span className={s.simulationLabel}>SIMULATED / SEED {seed}</span></div>
         {incident&&<div className={s.incidentFlag}><TriangleAlert size={15}/><span>{metrics.degraded?"Degraded operation":metrics.circuitOpen?"Circuit open":`Incident: ${incident.title}`}</span><button onClick={()=>{setSession(v=>({...v,incidentId:null})); setPaused(false); logEvent("External incident cleared. Compare recovered metrics with the incident run.");}}>Clear incident</button></div>}
-        {mode==="live"&&<LiveHud stageIndex={stageIndex} elapsedAt={history.at(-1)?.at ?? 0} paused={paused} incidentTitle={incident?.title} feed={session.liveFeed} />}
+        {mode==="live"&&<LiveHud stageIndex={stageIndex} elapsedAt={history.at(-1)?.at ?? 0} paused={paused} incidentTitle={incident?.title} feed={session.liveFeed} earned={session.earned} agentCount={architecture.agentCount} />}
         {tutorial&&<div className={s.tutorial}><div><Compass size={22}/><span className={s.eyebrow}>A 20-SECOND ORIENTATION</span><button className={s.iconButton} onClick={dismissTutorial} aria-label="Skip orientation"><X size={16}/></button></div><p>{mode==="live"?"The climb runs on its own — watch the strip at the top. Random, real incidents will surface as you go; when one does, the climb pauses so you can pick a fix. Pause anytime with the button above the map.":"Drag to rotate. Scroll or pinch to zoom. Click a glowing camp, or use the stage list. Switch on X-ray to see the system inside."}</p><strong>{mode==="live"?"Every random failure here is a real production failure mode, playing out live.":"Every mountain problem maps to a production problem."}</strong><button className={s.textButton} onClick={dismissTutorial}>Start exploring <ArrowRight size={14}/></button></div>}
       </>}
       {notice&&mode&&<div className={s.toast} role="status"><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Dismiss update"><X size={14}/></button></div>}

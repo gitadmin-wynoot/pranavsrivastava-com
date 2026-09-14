@@ -9,6 +9,19 @@
 .state[data-tone="paused"] strong{color:#9aafbf}
 .state[data-tone="summit"] strong{color:#a3e3cf}
 .clock{flex-shrink:0;font:12px var(--font-geist-mono),monospace;color:#a3e3cf;background:rgba(163,227,207,.08);border:1px solid rgba(163,227,207,.25);border-radius:5px;padding:5px 9px}
+.pipeline{pointer-events:auto;background:rgba(13,28,43,.94);border:1px solid rgba(158,191,210,.22);border-radius:8px;padding:10px 12px 11px;backdrop-filter:blur(14px)}
+.pipeStep{display:inline-flex;flex-direction:column;align-items:center;gap:4px;width:23%;color:#7f96a6;position:relative}
+.pipeStep span{font:9px var(--font-geist-mono),monospace;letter-spacing:.03em;text-align:center}
+.pipeStep:not(:last-child)::after{content:"";position:absolute;top:9px;left:100%;width:calc(100% / 4 - 2px);height:1px;background:rgba(158,191,210,.25)}
+.pipeStep[data-active="true"]{color:#a3e3cf}
+.pipeStep[data-active="true"] svg{filter:drop-shadow(0 0 6px #a3e3cf99)}
+.pipeStep[data-trouble="true"]{color:#f5b66e}
+.pipeStep[data-trouble="true"] svg{filter:drop-shadow(0 0 6px #f5b66e99)}
+.pipeCaption{margin:9px 0 0;font-size:10.5px;line-height:1.6;color:#c3d6de}
+.pipeCaption em{color:#9aafbf;font-style:normal}
+.badges{pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px}
+.badgeHint{font:10px var(--font-geist-mono),monospace;color:#9aafbf;background:rgba(13,28,43,.8);border:1px dashed rgba(158,191,210,.3);border-radius:20px;padding:5px 10px}
+.badgePill{font-size:10.5px;color:#0d1f16;background:linear-gradient(135deg,#a3e3cf,#7fd4b8);border-radius:20px;padding:4px 10px;font-weight:600;box-shadow:0 3px 10px #a3e3cf40}
 .progress{pointer-events:auto;display:flex;align-items:center;gap:3px;background:rgba(13,28,43,.9);border:1px solid rgba(158,191,210,.18);border-radius:7px;padding:8px 12px}
 .dot{flex:1;height:5px;border-radius:3px;background:rgba(158,191,210,.22);position:relative}
 .dot[data-state="done"]{background:#4f8f79}
