@@ -3,7 +3,9 @@
 import { Bot, CheckCircle2, Flame, Radio, User } from "lucide-react";
 import { STAGES } from "./content";
 import { ACHIEVEMENTS } from "./achievements";
+import type { Metrics } from "./types";
 import s from "./live-hud.module.css";
+import shared from "./everest-simulator.module.css";
 
 const clock = (n: number) => {
   const seconds = Math.max(0, Math.floor(n));
@@ -37,7 +39,7 @@ export function LiveHud({ stageIndex, elapsedAt, paused, incidentTitle }: LiveSt
 }
 
 /** Everything else — the detail a curious player wants, kept in the side panel, not on the view. */
-export function LiveSidePanel({ stageIndex, elapsedAt, paused, incidentTitle, feed, earned, agentCount }: LiveState & { feed: string[]; earned: string[]; agentCount: number }) {
+export function LiveSidePanel({ stageIndex, elapsedAt, paused, incidentTitle, feed, earned, agentCount, metrics }: LiveState & { feed: string[]; earned: string[]; agentCount: number; metrics: Metrics }) {
   const pipelineIndex = incidentTitle ? 2 : paused ? -1 : Math.floor(elapsedAt / 4) % PIPELINE.length;
   const pipelineCaption = incidentTitle ? "The agent is stuck talking to a server — that's the problem!" : paused ? "Everything is paused. Nothing is moving right now." : PIPELINE[pipelineIndex]?.caption ?? PIPELINE[0].caption;
 
@@ -54,6 +56,20 @@ export function LiveSidePanel({ stageIndex, elapsedAt, paused, incidentTitle, fe
           ))}
         </div>
         <p className={s.pipeCaption}>{pipelineCaption} <em>{agentCount} AI agent{agentCount === 1 ? "" : "s"} on this climb.</em></p>
+      </div>
+
+      <div aria-label="Live system parameters">
+        <span className={s.eyebrowSmall}>Live parameters</span>
+        <div className={shared.statsGrid}>
+          {([
+            ["p50 latency", `${(metrics.p50 / 1000).toFixed(2)} s`],
+            ["Throughput", `${metrics.throughput.toFixed(1)} /s`],
+            ["Queue", `${metrics.queueDepth} waiting`],
+            ["Tool failures", `${metrics.toolFailureRate.toFixed(1)}%`],
+            ["Cache hit rate", `${metrics.cacheHitRate}%`],
+            ["Tokens / request", metrics.tokens.toLocaleString()],
+          ] as const).map(([label, value]) => <div key={label}><small>{label}</small><strong>{value}</strong></div>)}
+        </div>
       </div>
 
       <div className={s.progress} aria-label={`Progress: camp ${stageIndex + 1} of ${STAGES.length}`}>
