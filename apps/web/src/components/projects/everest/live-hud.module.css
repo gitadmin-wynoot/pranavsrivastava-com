@@ -1,38 +1,43 @@
-.hud{position:absolute;top:68px;left:50%;transform:translateX(-50%);z-index:7;width:min(560px,calc(100% - 40px));display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.strip{pointer-events:auto;display:flex;align-items:center;gap:12px;background:rgba(13,28,43,.94);border:1px solid rgba(158,191,210,.22);border-radius:8px;padding:10px 14px;backdrop-filter:blur(14px);box-shadow:0 14px 40px #0004}
-.badge{display:flex;align-items:center;gap:6px;flex-shrink:0;font:9px var(--font-geist-mono),monospace;letter-spacing:.1em;color:#f0b979}
+/* Floating strip — the only thing allowed over the mountain. One line, small, unobtrusive. */
+.hud{position:absolute;top:68px;left:50%;transform:translateX(-50%);z-index:7;width:min(420px,calc(100% - 40px));pointer-events:none}
+.strip{pointer-events:auto;display:flex;align-items:center;gap:10px;background:rgba(13,28,43,.85);border:1px solid rgba(158,191,210,.2);border-radius:20px;padding:7px 8px 7px 12px;backdrop-filter:blur(10px);box-shadow:0 10px 30px #0003}
+.badge{display:flex;align-items:center;gap:5px;flex-shrink:0;font:9px var(--font-geist-mono),monospace;letter-spacing:.1em;color:#f0b979}
 .badge svg{color:#f0b979}
-.state{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.state strong{font-size:12px;font-weight:600;color:#ecf1ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.state small{font-size:9px;color:#9aafbf}
-.state[data-tone="incident"] strong{color:#f5b66e}
-.state[data-tone="paused"] strong{color:#9aafbf}
-.state[data-tone="summit"] strong{color:#a3e3cf}
-.clock{flex-shrink:0;font:12px var(--font-geist-mono),monospace;color:#a3e3cf;background:rgba(163,227,207,.08);border:1px solid rgba(163,227,207,.25);border-radius:5px;padding:5px 9px}
-.pipeline{pointer-events:auto;background:rgba(13,28,43,.94);border:1px solid rgba(158,191,210,.22);border-radius:8px;padding:10px 12px 11px;backdrop-filter:blur(14px)}
-.pipeStep{display:inline-flex;flex-direction:column;align-items:center;gap:4px;width:23%;color:#7f96a6;position:relative}
-.pipeStep span{font:9px var(--font-geist-mono),monospace;letter-spacing:.03em;text-align:center}
-.pipeStep:not(:last-child)::after{content:"";position:absolute;top:9px;left:100%;width:calc(100% / 4 - 2px);height:1px;background:rgba(158,191,210,.25)}
+.badge span{display:inline}
+.stripHeadline{flex:1;min-width:0;font-size:11.5px;font-weight:600;color:#ecf1ed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stripHeadline[data-tone="incident"]{color:#f5b66e}
+.stripHeadline[data-tone="paused"]{color:#9aafbf}
+.stripHeadline[data-tone="summit"]{color:#a3e3cf}
+.clock{flex-shrink:0;font:10.5px var(--font-geist-mono),monospace;color:#a3e3cf;background:rgba(163,227,207,.1);border-radius:12px;padding:4px 9px}
+@media(max-width:760px){.hud{top:80px}.badge span{display:none}}
+
+/* Side-panel detail — lives inside the existing field-notes panel, not on the view. */
+.sidePanel{display:flex;flex-direction:column;gap:14px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(158,191,210,.18)}
+.eyebrowSmall{display:block;font:9px var(--font-geist-mono),monospace;letter-spacing:.12em;text-transform:uppercase;color:#7f96a6;margin-bottom:7px}
+.pipeline{}
+.pipeRow{display:flex;align-items:flex-start}
+.pipeStep{display:inline-flex;flex-direction:column;align-items:center;gap:4px;width:25%;color:#7f96a6;position:relative}
+.pipeStep span{font:8.5px var(--font-geist-mono),monospace;letter-spacing:.02em;text-align:center}
+.pipeStep:not(:last-child)::after{content:"";position:absolute;top:9px;left:100%;width:calc(100% - 4px);height:1px;background:rgba(158,191,210,.25)}
 .pipeStep[data-active="true"]{color:#a3e3cf}
 .pipeStep[data-active="true"] svg{filter:drop-shadow(0 0 6px #a3e3cf99)}
 .pipeStep[data-trouble="true"]{color:#f5b66e}
 .pipeStep[data-trouble="true"] svg{filter:drop-shadow(0 0 6px #f5b66e99)}
-.pipeCaption{margin:9px 0 0;font-size:10.5px;line-height:1.6;color:#c3d6de}
+.pipeCaption{margin:9px 0 0;font-size:11px;line-height:1.65;color:#c3d6de}
 .pipeCaption em{color:#9aafbf;font-style:normal}
-.badges{pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px}
-.badgeHint{font:10px var(--font-geist-mono),monospace;color:#9aafbf;background:rgba(13,28,43,.8);border:1px dashed rgba(158,191,210,.3);border-radius:20px;padding:5px 10px}
-.badgePill{font-size:10.5px;color:#0d1f16;background:linear-gradient(135deg,#a3e3cf,#7fd4b8);border-radius:20px;padding:4px 10px;font-weight:600;box-shadow:0 3px 10px #a3e3cf40}
-.progress{pointer-events:auto;display:flex;align-items:center;gap:3px;background:rgba(13,28,43,.9);border:1px solid rgba(158,191,210,.18);border-radius:7px;padding:8px 12px}
+.progress{display:flex;align-items:center;gap:3px}
 .dot{flex:1;height:5px;border-radius:3px;background:rgba(158,191,210,.22);position:relative}
 .dot[data-state="done"]{background:#4f8f79}
 .dot[data-state="current"]{background:#a3e3cf}
 .dot[data-state="current"]::after{content:"";position:absolute;inset:-3px -1px;border-radius:5px;border:1px solid #a3e3cf88;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
-.feed{pointer-events:none;display:flex;flex-direction:column;gap:4px;padding:0 4px}
-.feedLine{font:10px/1.5 var(--font-geist-mono),monospace;color:#c3d6de;background:rgba(13,28,43,.72);border-left:2px solid #4f8f79;padding:4px 9px;border-radius:0 4px 4px 0;opacity:.45;animation:rise .35s ease-out;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed{display:flex;flex-direction:column;gap:4px}
+.feedLine{font:10px/1.5 var(--font-geist-mono),monospace;color:#c3d6de;background:rgba(163,191,210,.06);border-left:2px solid #4f8f79;padding:4px 8px;border-radius:0 4px 4px 0;opacity:.5;animation:rise .35s ease-out;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .feedLine:nth-last-child(1){opacity:1}
-.feedLine:nth-last-child(2){opacity:.7}
+.feedLine:nth-last-child(2){opacity:.75}
 .feedLine:nth-last-child(n+4){display:none}
 @keyframes rise{from{transform:translateY(4px)}to{transform:translateY(0)}}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badgeHint{font:10px var(--font-geist-mono),monospace;color:#9aafbf;background:rgba(158,191,210,.08);border:1px dashed rgba(158,191,210,.3);border-radius:20px;padding:5px 10px}
+.badgePill{font-size:10.5px;color:#0d1f16;background:linear-gradient(135deg,#a3e3cf,#7fd4b8);border-radius:20px;padding:4px 10px;font-weight:600}
 @media(prefers-reduced-motion:reduce){.dot[data-state="current"]::after{animation:none}.feedLine{animation:none}}
-@media(max-width:760px){.hud{top:80px;width:calc(100% - 24px)}.state small{display:none}.badge span{display:none}.feedLine:nth-last-child(n+3){display:none}}

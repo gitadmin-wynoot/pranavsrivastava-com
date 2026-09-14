@@ -17,35 +17,42 @@ const PIPELINE = [
   { label: "Answer", icon: CheckCircle2, caption: "The agent puts it together and answers." },
 ];
 
-export function LiveHud({ stageIndex, elapsedAt, paused, incidentTitle, feed, earned, agentCount }: {
-  stageIndex: number; elapsedAt: number; paused: boolean; incidentTitle?: string | null; feed: string[]; earned: string[]; agentCount: number;
-}) {
+type LiveState = { stageIndex: number; elapsedAt: number; paused: boolean; incidentTitle?: string | null };
+
+/** A single, minimal, floating line over the mountain — the mountain stays the view. */
+export function LiveHud({ stageIndex, elapsedAt, paused, incidentTitle }: LiveState) {
   const summited = stageIndex === STAGES.length - 1 && !incidentTitle;
   const tone = incidentTitle ? "incident" : summited ? "summit" : paused ? "paused" : "climbing";
   const headline = incidentTitle ? `Uh oh: ${incidentTitle}` : summited ? "You reached the top! 🎉" : paused ? "Climb paused." : `Climbing toward ${STAGES[Math.min(stageIndex + 1, STAGES.length - 1)].name}.`;
-  const sub = incidentTitle ? "Something broke. Pick a fix on the right — or clear it and see what happens." : summited ? "Open the debrief to see the whole story." : paused ? "Press the button below to keep going." : `Right now: ${STAGES[stageIndex].name}, ${STAGES[stageIndex].altitude}.`;
-
-  const pipelineIndex = incidentTitle ? 2 : paused ? -1 : Math.floor(elapsedAt / 4) % PIPELINE.length;
-  const pipelineCaption = incidentTitle ? "The agent is stuck talking to a server — that's the problem!" : paused ? "Everything is paused. Nothing is moving right now." : PIPELINE[pipelineIndex]?.caption ?? PIPELINE[0].caption;
 
   return (
     <div className={s.hud} aria-live="polite">
       <div className={s.strip}>
         <span className={s.badge}><Flame size={13} aria-hidden="true" /><span>LIVE</span></span>
-        <div className={s.state} data-tone={tone}>
-          <strong>{headline}</strong>
-          <small>{sub}</small>
-        </div>
+        <strong className={s.stripHeadline} data-tone={tone}>{headline}</strong>
         <span className={s.clock}>{clock(elapsedAt)}</span>
       </div>
+    </div>
+  );
+}
 
+/** Everything else — the detail a curious player wants, kept in the side panel, not on the view. */
+export function LiveSidePanel({ stageIndex, elapsedAt, paused, incidentTitle, feed, earned, agentCount }: LiveState & { feed: string[]; earned: string[]; agentCount: number }) {
+  const pipelineIndex = incidentTitle ? 2 : paused ? -1 : Math.floor(elapsedAt / 4) % PIPELINE.length;
+  const pipelineCaption = incidentTitle ? "The agent is stuck talking to a server — that's the problem!" : paused ? "Everything is paused. Nothing is moving right now." : PIPELINE[pipelineIndex]?.caption ?? PIPELINE[0].caption;
+
+  return (
+    <div className={s.sidePanel}>
       <div className={s.pipeline} aria-label="What is happening right now">
-        {PIPELINE.map((step, i) => (
-          <div key={step.label} className={s.pipeStep} data-active={i === pipelineIndex} data-trouble={i === pipelineIndex && Boolean(incidentTitle)}>
-            <step.icon size={15} aria-hidden="true" />
-            <span>{step.label}</span>
-          </div>
-        ))}
+        <span className={s.eyebrowSmall}>Right now</span>
+        <div className={s.pipeRow}>
+          {PIPELINE.map((step, i) => (
+            <div key={step.label} className={s.pipeStep} data-active={i === pipelineIndex} data-trouble={i === pipelineIndex && Boolean(incidentTitle)}>
+              <step.icon size={15} aria-hidden="true" />
+              <span>{step.label}</span>
+            </div>
+          ))}
+        </div>
         <p className={s.pipeCaption}>{pipelineCaption} <em>{agentCount} AI agent{agentCount === 1 ? "" : "s"} on this climb.</em></p>
       </div>
 
@@ -57,6 +64,7 @@ export function LiveHud({ stageIndex, elapsedAt, paused, incidentTitle, feed, ea
 
       {feed.length > 0 && (
         <div className={s.feed}>
+          <span className={s.eyebrowSmall}>Radio chatter</span>
           {feed.map((line, i) => (
             <span key={`${i}-${line}`} className={s.feedLine}><Radio size={9} aria-hidden="true" style={{ marginRight: 5, verticalAlign: "-1px" }} />{line}</span>
           ))}
