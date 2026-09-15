@@ -27,6 +27,11 @@ export interface MountainSceneProps {
   reducedMotion: boolean;
   resetKey: number;
   onInspect: (kind: string, label: string) => void;
+  /** The expedition's real progress, independent of the camp being inspected. */
+  expeditionStage?: number;
+  completedStages?: number[];
+  celebrating?: boolean;
+  liveMode?: boolean;
 }
 
 const STAGES = [
@@ -53,6 +58,10 @@ const MINT = 0x8af4cc;
 const AMBER = 0xf5b66e;
 const BLUE = 0x89bffa;
 const RED = 0xfa786f;
+
+function validStage(stage: number | undefined): number {
+  return Number.isFinite(stage) ? THREE.MathUtils.clamp(Math.round(stage!), 0, STAGES.length - 1) : 0;
+}
 
 // Deliberately angular peaks and a broken, asymmetric ridge: a terrain surface,
 // rather than a cone with objects floating around it. The route samples this
@@ -157,12 +166,15 @@ export default function MountainScene(props: MountainSceneProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const labelsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const serviceLabelsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const teamLabelRef = useRef<HTMLButtonElement>(null);
   const propsRef = useRef(props);
   propsRef.current = props;
   const commandRef = useRef<((command: CameraCommand) => void) | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "fallback">("loading");
   const [hover, setHover] = useState<{ label: string; x: number; y: number } | null>(null);
   const [lightweight, setLightweight] = useState(false);
+  const [teamMoving, setTeamMoving] = useState(false);
+  const expeditionStage = validStage(props.expeditionStage);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -485,6 +497,107 @@ export default function MountainScene(props: MountainSceneProps) {
       agents.push(agent);
     }
 
+    // The live expedition is a small, recognisable cast. It belongs to game
+    // progress, never to selectedStage (which is only the learner's inspection).
+    const expeditionTeam = new THREE.Group();
+    const teamMembers: THREE.Group[] = [];
+    const teamHitTargets: THREE.Object3D[] = [];
+    const teamFootGeometry = new THREE.CapsuleGeometry(0.065, 0.055, 2, 6);
+    const teamBodyGeometry = new THREE.CapsuleGeometry(0.14, 0.19, 3, 8);
+    const teamHoodGeometry = new THREE.SphereGeometry(0.17, 10, 7);
+    const teamFaceGeometry = new THREE.SphereGeometry(0.125, 9, 6);
+    const teamGloveGeometry = new THREE.SphereGeometry(0.062, 7, 5);
+    const teamPackGeometry = new THREE.BoxGeometry(0.22, 0.27, 0.15);
+    const teamShoeMaterial = new THREE.MeshStandardMaterial({ color: 0x233744, roughness: 0.8 });
+    const teamSkinMaterial = new THREE.MeshStandardMaterial({ color: 0xf1c69b, roughness: 0.85 });
+    const teamGoggleMaterial = new THREE.MeshStandardMaterial({ color: 0x253c4d, metalness: 0.3, roughness: 0.2 });
+    const teamScarfMaterial = new THREE.MeshStandardMaterial({ color: MINT, roughness: 0.7 });
+    const teamParcelMaterial = new THREE.MeshStandardMaterial({ color: 0xf2c583, roughness: 0.8 });
+    const teamJackets = [0xf0a458, 0x7bb9ce, 0x95c8a2];
+    const teamOffsets = [[0, 0], [-0.38, 0.35], [0.36, 0.43]];
+    teamOffsets.forEach(([x, z], index) => {
+      const member = new THREE.Group();
+      member.position.set(x, 0, z);
+      member.scale.setScalar(index === 0 ? 1 : 0.72);
+      const jacketMaterial = new THREE.MeshStandardMaterial({ color: teamJackets[index], roughness: 0.8 });
+      const body = new THREE.Mesh(teamBodyGeometry, jacketMaterial);
+      body.position.y = 0.33;
+      const hood = new THREE.Mesh(teamHoodGeometry, jacketMaterial);
+      hood.position.y = 0.65;
+      const face = new THREE.Mesh(teamFaceGeometry, teamSkinMaterial);
+      face.position.set(0, 0.65, 0.08);
+      face.scale.set(0.92, 0.83, 0.7);
+      const goggles = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.065, 0.05), teamGoggleMaterial);
+      goggles.position.set(0, 0.675, 0.16);
+      const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.032, 5, 12), teamScarfMaterial);
+      scarf.rotation.x = Math.PI / 2;
+      scarf.position.y = 0.49;
+      const scarfTail = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.15, 0.025), teamScarfMaterial);
+      scarfTail.position.set(-0.07, 0.40, 0.145);
+      const backpack = new THREE.Mesh(teamPackGeometry, packMaterial);
+      backpack.position.set(0, 0.35, -0.17);
+      const backpackStrap = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.28, 0.17), teamScarfMaterial);
+      backpackStrap.position.copy(backpack.position);
+      member.add(body, hood, face, goggles, scarf, scarfTail, backpack, backpackStrap);
+      for (const side of [-1, 1]) {
+        const boot = new THREE.Mesh(teamFootGeometry, teamShoeMaterial);
+        boot.position.set(side * 0.09, 0.065, 0.035);
+        boot.rotation.x = Math.PI / 2;
+        const hand = new THREE.Mesh(teamGloveGeometry, teamScarfMaterial);
+        hand.position.set(side * 0.175, 0.29, 0.025);
+        member.add(boot, hand);
+      }
+      // The guide carries the request as a wrapped parcel; the learner can
+      // inspect the same request through either the parcel or the team badge.
+      if (index === 0) {
+        const parcel = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.16, 0.15), teamParcelMaterial);
+        parcel.position.set(0.20, 0.28, 0.10);
+        const ribbon = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.165, 0.155), teamScarfMaterial);
+        ribbon.position.copy(parcel.position);
+        addInteractive(parcel, "request", "Your delivery · the AI request your team is carrying");
+        member.add(parcel, ribbon);
+      }
+      addInteractive(body, "expedition", "Your expedition team", validStage(propsRef.current.expeditionStage));
+      addInteractive(hood, "expedition", "Your expedition team", validStage(propsRef.current.expeditionStage));
+      addInteractive(backpack, "context", "Your guide's backpack · the context your AI carries");
+      teamHitTargets.push(body, hood);
+      expeditionTeam.add(member);
+      teamMembers.push(member);
+    });
+    const teamHalo = new THREE.Mesh(new THREE.RingGeometry(0.53, 0.56, 32), new THREE.MeshBasicMaterial({ color: MINT, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }));
+    teamHalo.rotation.x = -Math.PI / 2;
+    teamHalo.position.y = 0.025;
+    expeditionTeam.add(teamHalo);
+    scene.add(expeditionTeam);
+
+    const deliveryParcels = new THREE.InstancedMesh(new THREE.BoxGeometry(0.045, 0.04, 0.038), teamParcelMaterial, 64);
+    deliveryParcels.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    addInteractive(deliveryParcels, "request", "A delivery parcel · one AI request on its way");
+    flowGroup.add(deliveryParcels);
+
+    const reachedFlags = new THREE.Group();
+    const flagPoleGeometry = new THREE.CylinderGeometry(0.011, 0.011, 0.65, 5);
+    const pennantGeometry = new THREE.BufferGeometry();
+    pennantGeometry.setAttribute("position", new THREE.Float32BufferAttribute([0, 0.26, 0, 0.30, 0.18, 0, 0, 0.10, 0], 3));
+    pennantGeometry.computeVertexNormals();
+    const reachedFlagMaterial = new THREE.MeshBasicMaterial({ color: MINT, side: THREE.DoubleSide });
+    positions.forEach((position, index) => {
+      const flag = new THREE.Group();
+      flag.position.set(position.x - 0.47, terrainHeight(position.x - 0.47, position.z - 0.1) + 0.36, position.z - 0.1);
+      const pole = new THREE.Mesh(flagPoleGeometry, headMaterial);
+      const pennant = new THREE.Mesh(pennantGeometry, reachedFlagMaterial);
+      pennant.rotation.y = 0.65;
+      addInteractive(pennant, "camp", `${STAGES[index].name} · reached`, index);
+      flag.add(pole, pennant);
+      reachedFlags.add(flag);
+    });
+    scene.add(reachedFlags);
+
+    const summitSparkles = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.035), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false }), 18);
+    summitSparkles.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    for (let i = 0; i < 18; i++) summitSparkles.setColorAt(i, new THREE.Color(i % 3 === 0 ? AMBER : i % 3 === 1 ? MINT : 0xe6f3ec));
+    scene.add(summitSparkles);
+
     const snowGeometry = new THREE.BufferGeometry();
     const snowPositions = new Float32Array(90 * 3);
     for (let i = 0; i < 90; i++) {
@@ -511,6 +624,15 @@ export default function MountainScene(props: MountainSceneProps) {
     let previousStage: number | null = null;
     let previousReset = propsRef.current.resetKey;
     let previousCutaway = false;
+    let actualExpeditionStage = validStage(propsRef.current.expeditionStage);
+    let teamProgress = actualExpeditionStage / (STAGES.length - 1);
+    let teamTravelFrom = teamProgress;
+    let teamTravelTo = teamProgress;
+    let teamTravelElapsed = 2.3;
+    let isTeamTravelling = false;
+    let wasLive = Boolean(propsRef.current.liveMode);
+    let wasCelebrating = false;
+    let celebrationStarted = 0;
     // CatmullRomCurve3.getPoint(t) throws if t lands exactly at (or floating-point-rounds to) 1 —
     // easy to hit from `% 1` motion math. Every dynamic curve lookup below goes through this.
     const curveT = (t: number) => Math.min(0.999999, Math.max(0, t));
@@ -669,6 +791,64 @@ export default function MountainScene(props: MountainSceneProps) {
         setLightweight(true);
       }
 
+      const live = Boolean(current.liveMode);
+      const nextExpeditionStage = validStage(current.expeditionStage);
+      if (nextExpeditionStage !== actualExpeditionStage || live !== wasLive) {
+        const walkToNextCamp = live && wasLive && nextExpeditionStage > actualExpeditionStage && nextExpeditionStage - actualExpeditionStage <= 2 && !current.reducedMotion;
+        teamTravelFrom = teamProgress;
+        teamTravelTo = nextExpeditionStage / (STAGES.length - 1);
+        teamTravelElapsed = walkToNextCamp ? 0 : 2.3;
+        isTeamTravelling = walkToNextCamp;
+        setTeamMoving(walkToNextCamp);
+        actualExpeditionStage = nextExpeditionStage;
+        wasLive = live;
+        teamHitTargets.forEach((object) => {
+          object.userData.stage = actualExpeditionStage;
+          object.userData.label = `Your team · ${STAGES[actualExpeditionStage].name}`;
+        });
+      }
+      if (!current.paused) teamTravelElapsed = Math.min(2.3, teamTravelElapsed + delta);
+      if (current.reducedMotion) teamTravelElapsed = 2.3;
+      const travelFraction = Math.min(1, teamTravelElapsed / 2.3);
+      const easedTravel = travelFraction * travelFraction * (3 - 2 * travelFraction);
+      teamProgress = THREE.MathUtils.lerp(teamTravelFrom, teamTravelTo, easedTravel);
+      if (isTeamTravelling && travelFraction === 1) { isTeamTravelling = false; setTeamMoving(false); }
+      mainCurve.getPoint(curveT(teamProgress), temporary);
+      expeditionTeam.position.set(temporary.x + 0.43, terrainHeight(temporary.x + 0.43, temporary.z + 0.25) + 0.045, temporary.z + 0.25);
+      expeditionTeam.visible = live;
+      const walking = isTeamTravelling && !current.paused && !current.reducedMotion;
+      if (walking) {
+        const tangent = mainCurve.getTangent(curveT(teamProgress));
+        expeditionTeam.rotation.y = Math.atan2(tangent.x, tangent.z);
+      } else expeditionTeam.rotation.y = 0.55;
+      const teamAngle = expeditionTeam.rotation.y;
+      teamMembers.forEach((member, index) => {
+        const offsetX = member.position.x * Math.cos(teamAngle) + member.position.z * Math.sin(teamAngle);
+        const offsetZ = -member.position.x * Math.sin(teamAngle) + member.position.z * Math.cos(teamAngle);
+        const ground = terrainHeight(expeditionTeam.position.x + offsetX, expeditionTeam.position.z + offsetZ);
+        member.position.y = ground - expeditionTeam.position.y + 0.045 + (walking ? Math.abs(Math.sin(teamTravelElapsed * 15 + index)) * 0.055 : 0);
+        member.rotation.z = walking ? Math.sin(teamTravelElapsed * 10 + index) * 0.07 : 0;
+      });
+      teamHalo.scale.setScalar(1 + (walking ? 0 : Math.sin(elapsed * 1.7) * 0.04));
+      reachedFlags.visible = live;
+      reachedFlags.children.forEach((flag, index) => { flag.visible = current.completedStages?.includes(index) ?? false; });
+      if (current.celebrating && !wasCelebrating) celebrationStarted = elapsed;
+      wasCelebrating = Boolean(current.celebrating);
+      const celebrationAge = elapsed - celebrationStarted;
+      summitSparkles.visible = live && Boolean(current.celebrating) && !current.reducedMotion && !reducedEffects && celebrationAge < 4.5;
+      if (summitSparkles.visible) {
+        for (let i = 0; i < 18; i++) {
+          const angle = i * 2.39996;
+          const drift = celebrationAge * 0.24;
+          dummy.position.copy(positions[9]).add(new THREE.Vector3(Math.cos(angle) * (0.25 + drift), 0.55 + (i % 5) * 0.11 + Math.sin(celebrationAge * 0.8) * 0.8, Math.sin(angle) * (0.25 + drift)));
+          dummy.scale.setScalar(Math.max(0, 1 - celebrationAge / 4.5) * (0.9 + i % 3 * 0.2));
+          dummy.rotation.set(celebrationAge + i, celebrationAge * 0.5, 0);
+          dummy.updateMatrix();
+          summitSparkles.setMatrixAt(i, dummy.matrix);
+        }
+        summitSparkles.instanceMatrix.needsUpdate = true;
+      }
+
       if (current.resetKey !== previousReset) { previousReset = current.resetKey; resetCamera(); }
       if (current.selectedStage !== previousStage) {
         previousStage = current.selectedStage;
@@ -717,8 +897,8 @@ export default function MountainScene(props: MountainSceneProps) {
       weather.visible = storm;
       weather.rotation.y = elapsed * 0.015;
       (weather.material as THREE.PointsMaterial).opacity = THREE.MathUtils.lerp(0.3, 0.85, severity);
-      if (storm && !current.reducedMotion) {
-        const fall = 0.035 + severity * 0.06;
+      if (storm && !current.reducedMotion && !current.paused) {
+        const fall = (0.035 + severity * 0.06) * delta * 60;
         for (let i = 0; i < snowPositions.length; i += 3) {
           snowPositions[i + 1] -= fall;
           if (snowPositions[i + 1] < 0) snowPositions[i + 1] += 12;
@@ -744,8 +924,10 @@ export default function MountainScene(props: MountainSceneProps) {
         heat.material.color.set(stressed && current.metrics.p95 > 5000 ? RED : stressed ? AMBER : MINT);
       });
 
-      const particleCount = reducedEffects ? 24 : 48;
+      const particleCount = live ? (reducedEffects ? 8 : 14) : reducedEffects ? 24 : 48;
       climberBody.count = particleCount; climberHead.count = particleCount; climberAxe.count = particleCount;
+      deliveryParcels.visible = live;
+      deliveryParcels.count = particleCount;
       const speed = THREE.MathUtils.clamp(1800 / Math.max(600, current.metrics.p95), 0.18, 1.4);
       for (let i = 0; i < particleCount; i++) {
         let progress = (i / particleCount + elapsed * 0.023 * speed) % 1;
@@ -769,10 +951,17 @@ export default function MountainScene(props: MountainSceneProps) {
         dummy.updateMatrix();
         climberHead.setMatrixAt(i, dummy.matrix);
         climberHead.setColorAt(i, color.set(failed ? RED : 0xf0e2c8));
+        if (live) {
+          dummy.position.x += 0.045;
+          dummy.position.y -= 0.05 * scale;
+          dummy.updateMatrix();
+          deliveryParcels.setMatrixAt(i, dummy.matrix);
+        }
       }
       climberBody.instanceMatrix.needsUpdate = true; climberHead.instanceMatrix.needsUpdate = true; climberAxe.instanceMatrix.needsUpdate = true;
       if (climberBody.instanceColor) climberBody.instanceColor.needsUpdate = true;
       if (climberHead.instanceColor) climberHead.instanceColor.needsUpdate = true;
+      if (live) deliveryParcels.instanceMatrix.needsUpdate = true;
 
       queue.count = Math.min(48, Math.max(0, Math.ceil(current.metrics.queueDepth / 2)));
       for (let i = 0; i < queue.count; i++) {
@@ -826,8 +1015,9 @@ export default function MountainScene(props: MountainSceneProps) {
           // equivalent DOM navigator, including behind the mountain.
           const nearFocus = overview || position.distanceTo(controls.target) < 3.5 || selected;
           const showMinor = width > 900 || i === 0 || i === 1 || i === 5 || i === 9 || selected;
-          placeLabel(labelsRef.current[i], labelPosition, nearFocus && showMinor, i === 6 ? 8 : i === 8 ? -8 : 0, i === 2 || i === 6);
+          placeLabel(labelsRef.current[i], labelPosition, nearFocus && showMinor && !(live && i === actualExpeditionStage), i === 6 ? 8 : i === 8 ? -8 : 0, i === 2 || i === 6);
         });
+        placeLabel(teamLabelRef.current, temporary.copy(expeditionTeam.position).add(new THREE.Vector3(0, 1.2, 0)), live, -10);
         SERVICES.forEach((service, i) => {
           placeLabel(serviceLabelsRef.current[i], temporary.set(service.x, service.y + 0.48, service.z), toolGroup.visible);
         });
@@ -876,13 +1066,13 @@ export default function MountainScene(props: MountainSceneProps) {
               <button
                 key={stage.name}
                 ref={(element) => { labelsRef.current[index] = element; }}
-                className={`${styles.campLabel} ${index === props.selectedStage ? styles.selected : ""} ${index === 9 ? styles.summit : ""} ${index === 0 || index === 1 ? styles.base : ""} ${index === 2 || index === 6 ? styles.leftLabel : ""}`}
+                className={`${styles.campLabel} ${index === props.selectedStage ? styles.selected : ""} ${index === 9 ? styles.summit : ""} ${index === 0 || index === 1 ? styles.base : ""} ${index === 2 || index === 6 ? styles.leftLabel : ""} ${props.liveMode && props.completedStages?.includes(index) ? styles.reached : ""}`}
                 onClick={() => props.onSelectStage(index)}
-                aria-label={`Explore ${stage.name}, ${stage.altitude}`}
+                aria-label={`${props.liveMode && props.completedStages?.includes(index) ? "Reached. " : ""}Explore ${stage.name}, ${stage.altitude}`}
                 aria-pressed={index === props.selectedStage}
                 style={{ opacity: 0 }}
               >
-                <span className={styles.labelDot} />
+                <span className={styles.labelDot} aria-hidden="true">{props.liveMode && props.completedStages?.includes(index) ? "✓" : ""}</span>
                 <span className={styles.labelContent}><strong>{stage.name}</strong><small>{stage.altitude}</small></span>
               </button>
             ))}
@@ -895,6 +1085,14 @@ export default function MountainScene(props: MountainSceneProps) {
                 style={{ opacity: 0 }}
               ><span>◇</span>{service.label}</button>
             ))}
+            {props.liveMode && <button
+              ref={teamLabelRef}
+              type="button"
+              className={styles.teamLabel}
+              onClick={() => props.onSelectStage(expeditionStage)}
+              aria-label={`Your team is ${teamMoving ? "travelling to" : "at"} ${STAGES[expeditionStage].name}. Inspect this camp.`}
+              style={{ opacity: 0 }}
+            ><span className={styles.teamIcon} aria-hidden="true">⚑</span><span><strong>{teamMoving ? "On our way!" : props.celebrating ? "Delivery complete!" : "Your team is here"}</strong><small>{STAGES[expeditionStage].name}</small></span></button>}
           </div>
           <div className={styles.cameraControls} role="group" aria-label="Camera controls">
             <button type="button" onClick={() => commandRef.current?.("left")} title="Rotate left" aria-label="Rotate mountain left"><ChevronLeft size={16} /></button>
@@ -917,10 +1115,12 @@ export default function MountainScene(props: MountainSceneProps) {
           <span className={styles.fallbackEyebrow}>EVEREST / EXPEDITION MAP</span>
           <h2>Your route to production</h2>
           <p>3D is unavailable on this device. Every stage, scenario and architecture control is still available.</p>
-          <ol>{STAGES.map((stage, index) => <li key={stage.name}><button onClick={() => props.onSelectStage(index)} aria-pressed={props.selectedStage === index}><span>{String(index + 1).padStart(2, "0")}</span>{stage.name}<small>{stage.altitude}</small></button></li>)}</ol>
+          {props.liveMode && <p role="status">Your team is at <strong>{STAGES[expeditionStage].name}</strong>. {props.completedStages?.length ?? 0} camps reached.</p>}
+          <ol>{STAGES.map((stage, index) => <li key={stage.name}><button onClick={() => props.onSelectStage(index)} aria-pressed={props.selectedStage === index}><span>{props.liveMode && props.completedStages?.includes(index) ? "✓" : String(index + 1).padStart(2, "0")}</span>{stage.name}<small>{props.liveMode && expeditionStage === index ? "YOUR TEAM" : stage.altitude}</small></button></li>)}</ol>
         </div>
       )}
       <p className={styles.screenReader}>Keyboard map controls: left and right arrows rotate, up and down arrows tilt, plus and minus zoom, shift and arrow keys pan, and Home returns to the overview. {props.incident ? `Incident active: ${props.incident}. ` : ""}{props.metrics.queueDepth} requests queued. {props.xray ? "System X-ray is on." : "Expedition terrain view."}</p>
+      {props.liveMode && <p className={styles.screenReader} role="status">{teamMoving ? `Your team is walking to ${STAGES[expeditionStage].name}.` : `Your team is at ${STAGES[expeditionStage].name}.`} {props.celebrating ? "Delivery complete. You reached the summit!" : "Inspecting another camp does not move your team."}</p>}
     </div>
   );
 }

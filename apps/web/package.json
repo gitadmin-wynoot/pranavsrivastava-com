@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:signal": "node --test tests/signal-engine.test.mjs tests/signal-belief.test.mjs",
-    "test:everest": "node --test tests/everest-engine.test.mjs tests/everest-mcp.test.mjs"
+    "test:everest": "node --test tests/everest-engine.test.mjs tests/everest-mcp.test.mjs tests/everest-learning.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

@@ -22,6 +22,16 @@
 .summit small{color:#c2cdbf;font-size:9px;letter-spacing:.16em}
 .base strong{font-size:11px}
 .selected .labelDot{background:#8af4cc}
+.reached .labelDot{display:flex;align-items:center;justify-content:center;width:11px;height:11px;border:0;background:#8af4cc;color:#14382c;font-size:8px;font-weight:800;box-shadow:none}
+.reached .labelContent strong{color:#a7d9c3}
+.teamLabel{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;margin-left:-65px;padding:7px 11px 7px 7px;border:1px solid #96e2bf95;border-radius:10px;background:#122b25ee;box-shadow:0 5px 20px #07110f70,0 0 18px #8af4cc0b;color:#e0f8eb;cursor:pointer;pointer-events:auto;text-align:left;z-index:7;will-change:transform;backdrop-filter:blur(7px);white-space:nowrap;font-family:inherit}
+.teamLabel:after{content:"";position:absolute;top:100%;left:63px;width:1px;height:17px;background:linear-gradient(#9be8c4aa,#9be8c411);pointer-events:none}
+.teamLabel:hover{background:#1d4033;border-color:#b5f1d1}
+.teamLabel:focus-visible{outline:2px solid #c6ffe5;outline-offset:4px}
+.teamLabel>span:last-child{display:flex;flex-direction:column;gap:3px}
+.teamLabel strong{font-size:11px;font-weight:650;line-height:1.2}
+.teamLabel small{font-size:9px;font-weight:400;color:#9dc8b7;line-height:1.2}
+.teamIcon{display:flex;align-items:center;justify-content:center;width:25px;height:27px;border-radius:7px;background:#edb06e;color:#473218;font-size:20px;line-height:1}
 .serviceLabel{position:absolute;left:0;top:0;display:flex;align-items:center;gap:5px;border:1px solid #6593c947;background:#0c2032cf;border-radius:4px;padding:5px 8px;color:#b6d5f7;font-family:var(--font-geist-mono),monospace;font-size:9px;white-space:nowrap;cursor:pointer;will-change:transform;backdrop-filter:blur(5px)}
 .serviceLabel span{font-size:13px;color:#89bffa}
 .cameraControls{position:absolute;right:380px;bottom:94px;z-index:5;display:flex;align-items:center;gap:1px;padding:5px;background:#0c1b24dd;border:1px solid #7891a224;border-radius:8px;backdrop-filter:blur(10px)}
@@ -54,4 +64,5 @@
 @media(min-width:1700px){.cameraControls{right:calc(50% - 320px)}}
 @media(max-width:1100px){.cameraControls{right:340px;bottom:100px}.labelContent strong{font-size:9px}.labelContent small{font-size:6px}.navigationHint{font-size:7px}}
 @media(max-width:800px){.cameraControls{right:18px;bottom:95px}.navigationHint{bottom:75px;font-size:6px;letter-spacing:.06em}.campLabel{padding:5px 6px}.campLabel small{display:none}.summit small{display:block}.cutawayHint{top:86px}.lightweight{left:18px;bottom:135px}.fallback{margin-top:110px;width:min(370px,calc(100% - 34px))}.serviceLabel{font-size:8px}}
+@media(max-width:800px){.teamLabel{padding:6px 8px 6px 6px;gap:6px}.teamLabel strong{font-size:10px}.teamLabel small{font-size:8px}.teamIcon{width:22px;height:24px;font-size:18px}}
 @media(prefers-reduced-motion:reduce){.loading>span{animation:none}.campLabel{transition:none}}
