@@ -1,5 +1,5 @@
 export type Difficulty = "beginner" | "engineer" | "architect";
-export type Mode = "guided" | "incidents" | "lab" | "explore" | "live";
+export type Mode = "guided" | "incidents" | "lab" | "explore" | "live" | "climb";
 export type StageId = "training" | "base" | "icefall" | "camp1" | "camp2" | "camp3" | "lhotse" | "camp4" | "hillary" | "summit";
 export type Architecture = {
   modelTier: "small" | "medium" | "large";

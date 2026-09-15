@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { ArrowRight, Bot, Check, Compass, Copy, Download, Flame, Mountain, Printer, Radio, SlidersHorizontal, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, Bot, Check, Compass, Copy, Download, Flame, Mountain, Printer, Radio, SlidersHorizontal, TriangleAlert, X, Zap } from "lucide-react";
 import { GLOSSARY, STAGES } from "./content";
 import type { Architecture, ExpeditionReport, HistoryEvent, Metrics, Mode, StageId } from "./types";
 import s from "./everest-simulator.module.css";
@@ -93,7 +93,8 @@ export function EvaluationStation({ architecture, onChange }: { architecture: Ar
 
 const MODE_TOUR: { id: Mode; label: string; icon: typeof Compass; text: string }[] = [
   { id: "guided", label: "Guided Expedition", icon: Compass, text: "A 10-stop curriculum from model training to the summit. Start here first." },
-  { id: "live", label: "Live Expedition", icon: Flame, text: "Real time and random. The climb runs on its own -- you react to whatever breaks." },
+  { id: "live", label: "Live Expedition", icon: Flame, text: "Predict, experiment, explain. A guided quest through each idea, with a passport that tracks what you've learned." },
+  { id: "climb", label: "Live Climb", icon: Zap, text: "Real time and random. The climb runs on its own -- you react to whatever breaks, badges and all." },
   { id: "incidents", label: "Incident Drills", icon: TriangleAlert, text: "Pick one specific failure and practice diagnosing and fixing exactly that." },
   { id: "lab", label: "Architecture Lab", icon: SlidersHorizontal, text: "A sandbox -- change real settings and watch the trade-offs happen." },
   { id: "explore", label: "Explore Mountain", icon: Mountain, text: "No script. Rotate the mountain and click anything that looks interesting." },

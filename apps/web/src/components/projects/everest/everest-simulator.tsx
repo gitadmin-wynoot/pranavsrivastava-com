@@ -2,15 +2,17 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Compass, Eye, FileText, Flame, HelpCircle, Info, Layers, Lightbulb, Mountain, Pause, Play, Radio, RotateCcw, Settings2, Shield, SlidersHorizontal, TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Activity, ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Compass, Eye, FileText, Flame, HelpCircle, Info, Layers, Lightbulb, Mountain, Pause, Play, Radio, RotateCcw, Settings2, Shield, SlidersHorizontal, TriangleAlert, Volume2, VolumeX, X, Zap } from "lucide-react";
 import { STAGES, SCENARIOS } from "./content";
-import { DEFAULT_ARCHITECTURE, normalizeArchitecture, simulate } from "./engine";
+import { DEFAULT_ARCHITECTURE, createRandom, normalizeArchitecture, simulate } from "./engine";
+import { arrivalLine, chatterLine, incidentChance, pickNextIncident } from "./live-run";
 import { ACHIEVEMENTS, qualifiedAchievements } from "./achievements";
 import { alertTone, arrivalChime, decisionClick, fanfare, initAudio, isMuted, missionFailedTone, radioClick, setMuted, setWindIntensity, startWind, stopWind, successChime } from "./audio";
 import { generateIncidentReport, generateReport } from "./reports";
 import type { Architecture, Choice, DecisionRecord, Difficulty, HistoryEvent, Metrics, Mode, StageId } from "./types";
 import { ArchitectureControls } from "./architecture-controls";
+import { LiveHud, LiveSidePanel } from "./live-hud";
 import { MissionBriefing } from "./mission-briefing";
 import { ResolutionScreen } from "./resolution-screen";
 import { AboutPanel, EvaluationStation, HelpPanel, MetricBar, Modal, Observability, ReportPanel, TrainingStation } from "./simulator-panels";
@@ -23,6 +25,7 @@ const STORAGE_KEY = "everest-expedition-v1";
 const MODES: { id: Mode; label: string; short: string; text: string; icon: typeof Compass }[] = [
   { id: "guided", label: "Start Guided Expedition", short: "Guided expedition", text: "Your first ascent. Learn by making decisions.", icon: Compass },
   { id: "live", label: "Start Live Expedition", short: "Live expedition", text: "Try ideas, solve team missions, and collect what you learn.", icon: Flame },
+  { id: "climb", label: "Start Live Climb", short: "Live climb", text: "Real time and random. The climb runs on its own — you react to whatever breaks.", icon: Zap },
   { id: "incidents", label: "Incident Drills", short: "Incident drills", text: "Find the failure. Recover the system.", icon: TriangleAlert },
   { id: "lab", label: "Architecture Lab", short: "Architecture lab", text: "Change the design. Test the trade-offs.", icon: SlidersHorizontal },
   { id: "explore", label: "Explore Mountain", short: "Explore mountain", text: "A free-roaming atlas of production AI.", icon: Mountain },
@@ -98,7 +101,7 @@ export function EverestSimulator() {
   }, []);
   function toggleMute() { const next = !muted; setMuted(next); setMutedState(next); }
   useEffect(() => {
-    if (mode === "live" && !muted && !paused) {
+    if (mode === "climb" && !muted && !paused) {
       startWind();
       setWindIntensity(Math.min(1, Math.max(0, (100 - metrics.reliability) / 40)));
     } else stopWind();
@@ -127,7 +130,7 @@ export function EverestSimulator() {
   }
   function dismissTutorial() { setTutorial(false); try { localStorage.setItem("everest-orientation-seen", "1"); } catch { /* optional preference */ } }
   function enterMode(nextMode: Mode) {
-    setSession(v => ({...v, mode: nextMode, incidentId: null, stage: nextMode === "guided" || nextMode === "live" ? 0 : v.stage, outcome: "playing", outcomeReason: "", ...(nextMode === "live" ? { seed: (Date.now() >>> 0), liveUsed: [], liveFeed: [] } : {}) }));
+    setSession(v => ({...v, mode: nextMode, incidentId: null, stage: nextMode === "guided" || nextMode === "climb" ? 0 : v.stage, outcome: "playing", outcomeReason: "", ...(nextMode === "climb" ? { seed: (Date.now() >>> 0), liveUsed: [], liveFeed: [] } : {}) }));
     setCutaway(false); setFocused(false); setPanelOpen(true); setDiagnosis(""); setDiagnosisResult(""); setDiagnosisHint(false); setPaused(false); setDismissedResolution(false);
     if (nextMode === "lab") { setXray(true); setLayers(v => Array.from(new Set([...v,"latency","dependencies"]))); }
     try { if (!localStorage.getItem("everest-orientation-seen")) setTutorial(true); } catch { setTutorial(true); }
@@ -152,9 +155,9 @@ export function EverestSimulator() {
     else setSession(v => ({...v, incidentId: null}));
   }
   function replay() {
-    const restarts = mode === "guided" || mode === "live";
-    setSession(v => ({...v, decisions: [], history: [{ at:0, message:"Replayed the same seed, architecture and incident conditions.", incidentId:v.incidentId }], visited: restarts ? [] : v.visited, stage: restarts ? 0 : v.stage, incidentId: restarts ? null : v.incidentId, liveUsed: mode === "live" ? [] : v.liveUsed, liveFeed: mode === "live" ? [] : v.liveFeed}));
-    setResetKey(n=>n+1); if (mode === "live") setPaused(false); setNotice(`Same conditions replayed / seed ${seed}. Pin a baseline before changing the architecture to compare results.`);
+    const restarts = mode === "guided" || mode === "climb";
+    setSession(v => ({...v, decisions: [], history: [{ at:0, message:"Replayed the same seed, architecture and incident conditions.", incidentId:v.incidentId }], visited: restarts ? [] : v.visited, stage: restarts ? 0 : v.stage, incidentId: restarts ? null : v.incidentId, liveUsed: mode === "climb" ? [] : v.liveUsed, liveFeed: mode === "climb" ? [] : v.liveFeed}));
+    setResetKey(n=>n+1); if (mode === "climb") setPaused(false); setNotice(`Same conditions replayed / seed ${seed}. Pin a baseline before changing the architecture to compare results.`);
   }
   const inspectObject = useCallback((kind: string, label: string) => {
     setNotice(`${label} / ${kind}`);
@@ -183,12 +186,59 @@ export function EverestSimulator() {
   // Explore stay sandboxes on purpose — there is nothing to win or lose while practicing.
   useEffect(() => {
     if (session.outcome !== "playing") return;
-    if (mode === "guided" && stageIndex === STAGES.length - 1 && !incidentId) {
+    if ((mode === "guided" || mode === "climb") && stageIndex === STAGES.length - 1 && !incidentId) {
       setSession(v => v.outcome === "playing" ? { ...v, outcome: "won" } : v);
       fanfare();
     }
   }, [mode, stageIndex, incidentId, session.outcome]);
   useEffect(() => { if (session.outcome !== "playing") setDismissedResolution(false); }, [session.outcome]);
+
+  // Live Climb: an unattended clock that chatters, climbs and occasionally rolls a random,
+  // reachable incident. Reads and writes go through refs so the interval survives re-renders
+  // without restarting, while every branch still calls the same handlers a manual click would.
+  const sessionRef = useRef(session); useEffect(() => { sessionRef.current = session; }, [session]);
+  const pausedRef = useRef(paused); useEffect(() => { pausedRef.current = paused; }, [paused]);
+  const metricsRef = useRef(metrics); useEffect(() => { metricsRef.current = metrics; }, [metrics]);
+  useEffect(() => {
+    if (mode !== "climb") return;
+    const timer = setInterval(() => {
+      const v = sessionRef.current;
+      if (v.mode !== "climb" || pausedRef.current || v.incidentId) return;
+      if (v.outcome === "playing") {
+        const m = metricsRef.current;
+        if (m.safety < 40 || m.reliability < 25) {
+          const reason = m.safety < 40
+            ? "A safety boundary failed — an unauthorized action went through unchecked, and the damage was real enough that the expedition can't safely continue."
+            : "The system stopped completing requests — too many failures with no working fallback in place. The expedition can't continue like this.";
+          setSession(s => s.outcome === "playing" ? { ...s, outcome: "lost", outcomeReason: reason } : s);
+          missionFailedTone();
+          setPaused(true);
+          return;
+        }
+      }
+      const at = (v.history.at(-1)?.at ?? 0) + 16;
+      const rng = createRandom((v.seed + at * 2654435761) >>> 0);
+      if (rng() < 0.7) { radioClick(); logEvent(chatterLine(v.stage, rng)); }
+      const candidate = rng() < incidentChance(v.stage) ? pickNextIncident(v.stage, v.liveUsed, rng) : null;
+      if (candidate) {
+        setSession(s => ({ ...s, liveUsed: [...s.liveUsed, candidate.id] }));
+        triggerIncident(candidate.id);
+        setPaused(true);
+        return;
+      }
+      if (v.stage < STAGES.length - 1 && rng() < 0.62) {
+        const nextIndex = v.stage + 1;
+        selectStage(nextIndex);
+        arrivalChime();
+        logEvent(arrivalLine(nextIndex, rng));
+        if (nextIndex === STAGES.length - 1) setPaused(true);
+      }
+    }, 2600);
+    return () => clearInterval(timer);
+    // triggerIncident/logEvent/selectStage close only over stable setState functions and module
+    // constants, so calling the versions captured when the interval was created is intentional.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   if (mode === "live") return <LiveAdventure onExit={() => { setSession(v => ({ ...v, mode: null })); setTutorial(false); }} />;
 
@@ -223,7 +273,7 @@ export function EverestSimulator() {
         <div className={s.entryCaption}><span>8,849 M</span><strong>THE SUMMIT IS A SYSTEM THAT WORKS.</strong><small>Drag to rotate · Scroll / pinch to zoom · Click a camp</small></div>
         <p className={s.disclaimer}>This experience uses a simplified Everest expedition as a metaphor for production AI systems. It is not mountaineering, medical, survival, or expedition safety guidance.</p>
       </> : <>
-        <div className={s.mapToolbar}>{mode==="guided"&&<button className={s.toolbarButton} onClick={()=>setDrawer("telemetry")} title="How many of the 5 expedition targets are currently on target"><span aria-hidden="true">🎯</span><span>Goal: reach the summit · {[metrics.slo.latency,metrics.slo.reliability,metrics.slo.cost,metrics.slo.quality,metrics.slo.safety].filter(Boolean).length}/5 on target</span></button>}<button className={`${s.xrayButton} ${xray?s.active:""}`} aria-pressed={xray} onClick={()=>setXray(v=>!v)}><Eye size={16}/> X-RAY SYSTEM <span>{xray?"ON":"OFF"}</span></button><button className={s.toolbarButton} onClick={()=>setLayerMenu(v=>!v)} aria-expanded={layerMenu}><Layers size={16}/><span>Layers</span></button><button className={s.toolbarButton} onClick={overview}><RotateCcw size={15}/><span>Overview</span></button><button className={s.toolbarButton} onClick={()=>setPaused(v=>!v)} aria-label={paused?"Resume request flow":"Pause request flow"}>{paused?<Play size={15}/>:<Pause size={15}/>}</button></div>
+        <div className={s.mapToolbar}>{(mode==="guided"||mode==="climb")&&<button className={s.toolbarButton} onClick={()=>setDrawer("telemetry")} title="How many of the 5 expedition targets are currently on target"><span aria-hidden="true">🎯</span><span>Goal: reach the summit · {[metrics.slo.latency,metrics.slo.reliability,metrics.slo.cost,metrics.slo.quality,metrics.slo.safety].filter(Boolean).length}/5 on target</span></button>}<button className={`${s.xrayButton} ${xray?s.active:""}`} aria-pressed={xray} onClick={()=>setXray(v=>!v)}><Eye size={16}/> X-RAY SYSTEM <span>{xray?"ON":"OFF"}</span></button><button className={s.toolbarButton} onClick={()=>setLayerMenu(v=>!v)} aria-expanded={layerMenu}><Layers size={16}/><span>Layers</span></button><button className={s.toolbarButton} onClick={overview}><RotateCcw size={15}/><span>Overview</span></button><button className={s.toolbarButton} onClick={()=>setPaused(v=>!v)} aria-label={paused?"Resume request flow":"Pause request flow"}>{paused?<Play size={15}/>:<Pause size={15}/>}</button></div>
         {layerMenu && <div className={s.layerMenu}><span className={s.eyebrow}>MAP LAYERS</span>{LAYERS.map(([id,label])=><label key={id}><input type="checkbox" checked={layers.includes(id)} onChange={()=>setLayers(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id])}/>{label}</label>)}</div>}
         <aside className={s.navigator} aria-label="Expedition stages">
           <span className={s.eyebrow}>{mode==="guided"?"YOUR EXPEDITION":"MOUNTAIN ATLAS"}</span>
@@ -237,6 +287,7 @@ export function EverestSimulator() {
           <div className={s.panelHeader}><span className={s.eyebrow}>{mode==="lab"?"DESIGN YOUR SYSTEM":incident?"INCIDENT IN PROGRESS":"EXPEDITION FIELD NOTES"}</span><button className={s.iconButton} onClick={()=>setPanelOpen(false)} aria-label="Collapse field notes"><X size={16}/></button></div>
           <div className={s.audience}><span>Detail</span>{(["beginner","engineer","architect"] as const).map(d=><button key={d} aria-pressed={difficulty===d} onClick={()=>{setSession(v=>({...v,difficulty:d})); if(d==="architect"){setXray(true);setLayers(v=>Array.from(new Set([...v,"trust","dependencies","tools"])));}}}>{d==="beginner"?"Simple":d[0].toUpperCase()+d.slice(1)}</button>)}</div>
           <div className={s.panelScroll}>
+            {mode==="climb" && <LiveSidePanel stageIndex={stageIndex} elapsedAt={history.at(-1)?.at ?? 0} paused={paused} incidentTitle={incident?.title} feed={session.liveFeed} earned={session.earned} agentCount={architecture.agentCount} metrics={metrics} simple={difficulty==="beginner"} />}
             {mode==="lab" ? <><h2>Architecture Lab</h2><div className={s.seedRow}><label>Seed<input type="number" min="0" max="4294967295" value={seed} onChange={e=>setSession(v=>({...v,seed:Number(e.target.value)>>>0}))}/></label><button className={s.textButton} onClick={()=>{setBaseline(metrics);setNotice("Baseline pinned. Every change now compares the same workload against this snapshot.");}}>Pin baseline</button></div>{baseline&&<div className={s.comparison}><strong>Compared with pinned run</strong><span>p95 {((metrics.p95-baseline.p95)/1000).toFixed(2)} s · Quality {(metrics.quality-baseline.quality).toFixed(1)} · Cost ${(metrics.costPerRequest-baseline.costPerRequest).toFixed(4)}</span></div>}<ArchitectureControls architecture={architecture} onChange={updateArchitecture}/><div className={s.callout}><strong>Challenge: 1,000 requests</strong><p>Success ≥99%, p95 &lt;3 seconds, quality ≥90, cost &lt;$0.01 per request, no policy violations.</p><strong>{metrics.slo.passed?"✓ Contract met":"△ Keep testing the trade-offs"}</strong></div></> : <>
               {mode==="incidents"&&<div className={s.incidentPicker}><label className={s.selectField}>Choose a production incident<select value={selectedIncident} onChange={e=>setSelectedIncident(e.target.value)}>{SCENARIOS.map(i=><option key={i.id} value={i.id}>{i.title}</option>)}</select></label><div className={s.buttonRow}><button className={s.secondaryButton} onClick={()=>triggerIncident(selectedIncident)}><TriangleAlert size={14}/> Trigger incident</button><button className={s.textButton} onClick={()=>{const next=(seed+1)>>>0;setSession(v=>({...v,seed:next})); const id=SCENARIOS[next%SCENARIOS.length].id;setSelectedIncident(id);triggerIncident(id);}}>Random drill</button></div></div>}
               <div className={s.stageTitle}><span>{stage.altitude} / STOP {String(stageIndex).padStart(2,"0")}</span><h2>{incident?incident.title:stage.name}</h2><p>{stage.concept}</p></div>
@@ -264,10 +315,11 @@ export function EverestSimulator() {
               <button className={s.textButton} onClick={()=>{setCutaway(v=>!v);setFocused(true);}}><Eye size={15}/>{cutaway?"Exit camp cutaway":"Explore camp interior"}</button>
             </>}
           </div>
-          <div className={s.panelFooter}>{mode==="guided"?<button className={s.primaryButton} disabled={!visited.includes(stage.id)} onClick={nextStage}>{stageIndex===9?"View Expedition Debrief":stageIndex===0?"Continue to Base Camp":stageIndex===1?"Deploy Expedition":"Continue the ascent"}<ArrowRight size={16}/></button>:<button className={s.primaryButton} onClick={()=>setDrawer("report")}><FileText size={16}/>{mode==="incidents"?"View Incident Postmortem":"View Production Debrief"}</button>}{mode==="guided"&&!visited.includes(stage.id)&&<small>Try a decision to see its effect, then continue.</small>}</div>
+          <div className={s.panelFooter}>{mode==="guided"?<button className={s.primaryButton} disabled={!visited.includes(stage.id)} onClick={nextStage}>{stageIndex===9?"View Expedition Debrief":stageIndex===0?"Continue to Base Camp":stageIndex===1?"Deploy Expedition":"Continue the ascent"}<ArrowRight size={16}/></button>:mode==="climb"?(incident?<button className={s.primaryButton} disabled={!latestDecision} onClick={()=>{setSession(v=>({...v,incidentId:null})); setPaused(false);}}>Resume the climb<ArrowRight size={16}/></button>:stageIndex===9?<button className={s.primaryButton} onClick={()=>setDrawer("report")}><FileText size={16}/>View Expedition Debrief</button>:<button className={s.primaryButton} onClick={()=>setPaused(v=>!v)}>{paused?<Play size={16}/>:<Pause size={16}/>}{paused?"Resume the climb":"Pause the climb"}</button>):<button className={s.primaryButton} onClick={()=>setDrawer("report")}><FileText size={16}/>{mode==="incidents"?"View Incident Postmortem":"View Production Debrief"}</button>}{mode==="guided"&&!visited.includes(stage.id)&&<small>Try a decision to see its effect, then continue.</small>}{mode==="climb"&&incident&&!latestDecision&&<small>Choose a mitigation to be able to resume the climb.</small>}</div>
         </aside>}
         <div className={s.bottomTools}><button onClick={()=>setDrawer("tools")}><Radio size={15}/><span>MCP inspector</span></button><button onClick={()=>setDrawer("telemetry")}><Activity size={15}/><span>Control room</span></button><button onClick={()=>setDrawer("report")}><FileText size={15}/><span>Debrief</span></button><button onClick={replay}><RotateCcw size={15}/><span>Replay same conditions</span></button><span className={s.simulationLabel}>SIMULATED / SEED {seed}</span></div>
         {incident&&<div className={s.incidentFlag}><TriangleAlert size={15}/><span>{metrics.degraded?"Degraded operation":metrics.circuitOpen?"Circuit open":`Incident: ${incident.title}`}</span><button onClick={()=>{setSession(v=>({...v,incidentId:null})); setPaused(false); logEvent("External incident cleared. Compare recovered metrics with the incident run.");}}>Clear incident</button></div>}
+        {mode==="climb"&&<LiveHud stageIndex={stageIndex} elapsedAt={history.at(-1)?.at ?? 0} paused={paused} incidentTitle={incident?.title} />}
         {mode&&session.outcome!=="playing"&&!dismissedResolution&&<ResolutionScreen tier={session.outcome==="lost"?"lost":metrics.slo.passed?"won":"partial"} reason={session.outcome==="lost"?session.outcomeReason:metrics.slo.passed?"Every target in the expedition contract was met — latency, success, cost, quality and safety all held.":"The climb succeeded, but the expedition contract wasn't fully met. Open the debrief to see exactly what to fix next run."} slo={metrics.slo} onPlayAgain={()=>enterMode(mode)} onViewDebrief={()=>{setDismissedResolution(true); setDrawer("report");}} />}
       </>}
       {tutorial&&<MissionBriefing mode={mode} onDone={dismissTutorial} />}
