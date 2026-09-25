@@ -42,6 +42,19 @@ import { IncidentBoard } from "./incident-board";
 import { RetryStormSim } from "./retry-storm-sim";
 import { SandboxLimits } from "./sandbox-limits";
 import { SpotTheInjection } from "./spot-the-injection";
+import { EvidenceLadder } from "./evidence-ladder";
+import { TypedDecisionPlayground } from "./typed-decision-playground";
+import { CascadeCalculator } from "./cascade-calculator";
+import { ConfidenceRouter } from "./confidence-router";
+import { GuardrailPipeline } from "./guardrail-pipeline";
+import { DecomposeDemo } from "./decompose-demo";
+import { CalibrationBars } from "./calibration-bars";
+import { OptionSwapTest } from "./option-swap-test";
+import { JevDecisionGuide } from "./jev-decision-guide";
+import { TokenCostSplit } from "./token-cost-split";
+import { JevOrLaya } from "./jev-or-laya";
+import { ProjectFitExplorer } from "./project-fit-explorer";
+import { StudyQuiz } from "./study-quiz";
 import {
   Info,
   Lightbulb,
@@ -407,5 +420,18 @@ export const courseComponents = {
   RetryStormSim,
   SandboxLimits,
   SpotTheInjection,
+  EvidenceLadder,
+  TypedDecisionPlayground,
+  CascadeCalculator,
+  ConfidenceRouter,
+  GuardrailPipeline,
+  DecomposeDemo,
+  CalibrationBars,
+  OptionSwapTest,
+  JevDecisionGuide,
+  TokenCostSplit,
+  JevOrLaya,
+  ProjectFitExplorer,
+  StudyQuiz,
   pre: CodeBlock,
 };
