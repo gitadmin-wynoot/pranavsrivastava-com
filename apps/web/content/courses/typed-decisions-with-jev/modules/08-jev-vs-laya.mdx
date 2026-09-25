@@ -1,0 +1,172 @@
+---
+title: "Jev vs Laya: hosted API or open weights"
+summary: "Two typed-decision models with the same idea and opposite deployment: a managed API and an open-weights model you run. When to use which, and what can go wrong with each."
+module: 8
+time: 13
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="8" title="Jev vs Laya: hosted API or open weights" time="13" />
+
+<LearningObjectives>
+- Explain the deployment trade: hosted API versus open weights
+- Read the Jev vs Laya benchmark claims with the right amount of suspicion
+- Pick a lean using your own constraints, and know what to test
+- Keep your code provider-agnostic so the choice stays reversible
+</LearningObjectives>
+
+<Callout type="warning" title="Status on 25 September 2026">
+Jev launched on 15 September 2026. Laya was open-sourced on 18 September 2026 by an independent researcher, according to secondary write-ups, so it is about a week old. Both are moving quickly. The single most-shared comparison, a [Hugging Face community article](https://huggingface.co/blog/sora-2/jev-vs-laya-hosted-api-or-open-weights-2026-guide), is marked as a community post (not official Hugging Face content), uses a benchmark whose maintainer I could not establish, and has a promotional tone toward both products. Treat every number here as a hypothesis to test.
+</Callout>
+
+### Refresher: two ways to get the same kind of model
+
+You already know the pattern: text and typed questions in, typed values out. **Jev** is the version you rent: an API, run by TypeSafe AI. **Laya** ([repository](https://github.com/NandhaKishorM/laya)) is the same idea as **open weights** under an Apache 2.0 licence: you download it, run it on your own hardware, and can fine-tune it on your own labels. Laya is built from encoder models (ModernBERT-large at about 421 million parameters for English, a base-size multilingual version), the kind that read a whole input at once rather than writing token by token.
+
+This is the old rent-versus-own question, applied to AI.
+
+| | Renting (hosted API) | Owning (open weights) |
+|---|---|---|
+| Setup | An API key | Choose a checkpoint, serve it, monitor it |
+| Cost shape | Pay per token | Pay for hardware and people |
+| Data | Sent to a vendor | Stays where you run it |
+| Control | Vendor decides versions and price | You decide, and you are responsible |
+| Improvement | Vendor's roadmap | You can fine-tune on your data |
+
+### Side by side
+
+| | Jev | Laya |
+|---|---|---|
+| **What it is** | Managed API from TypeSafe AI, a funded company | Open-weights model by an independent researcher |
+| **Age** | Released 15 Sept 2026 | Released 18 Sept 2026 |
+| **Licence** | Not open source | Apache 2.0 |
+| **Zero-shot out of the box** | Reasonable on few-class English tasks (independent tests, mixed) | Base checkpoints near or below chance on a typed-decisions benchmark: 0.362 vs a 0.461 majority-class baseline |
+| **After fine-tuning** | Not applicable | 0.766 vs Jev's 0.727, but the fine-tune used that benchmark's own training split |
+| **Many options** | Up to 255 | Weak past about 20. On Banking77 (77 intents): Laya 0.425, Jev 0.870 |
+| **Input length** | 32,000 tokens per Cloudflare; a community post says 64,000, so check | 512 to 1,024 tokens on the tested checkpoints |
+| **Languages** | Weaker outside English | A multilingual checkpoint exists; quality varies by language |
+| **Speed** | Vendor: 70 to 500 ms. Independent medians about 236 to 276 ms | About 33 to 40 ms on a T4 GPU. On a CPU-only server, one author measured a median of 49.4 seconds; another saw 63 to 68 ms warm on Apple Silicon |
+| **Calibration** | Overconfident on choice/score in independent tests | Raw ECE 0.466, falling to 0.081 after fitting a temperature per question type |
+| **Cost** | About $0.042 per million input tokens, output free (list) | No per-token fee; you pay for the GPU and the work |
+| **Privacy** | Data goes to the API | Can run fully in your network |
+
+Sources for each row are in the list at the end of the chapter.
+
+### How to read the benchmark
+
+The community article cites a benchmark called JevBench v1.3.0 with 534 typed decisions. It reports Jev at a composite 74.4 and Laya at 54.4, with hard-case accuracy of 74.1% against 34.1%. It also says plainly that this is "not a universal product ranking" and uses an untuned Laya configuration.
+
+Read that as: **out of the box, on one decision set, Jev wins clearly.** It does not say a fine-tuned Laya on your data loses. Other write-ups found the opposite once Laya was trained on labels. One of them summed it up as: a direct drop-in replacement for Jev will likely disappoint, and the viable path is fine-tuning on your own labelled data ([BestHub](https://www.besthub.dev/articles/open-source-decision-model-laya-vs-jev-speed-wins-zero-shot-fails-befced0a2228)). Also note that the maintainer of JevBench is not stated, so I cannot tell how neutral it is.
+
+### Try it: lean toward one
+
+<JevOrLaya />
+
+### When to use which
+
+**Lean toward the hosted API (Jev) when:**
+- You need it working this week, with no GPU and no fine-tuning team
+- You have no labels yet and need zero-shot behaviour
+- Inputs are longer, or a single question has many options
+- Volume is modest. At list price a million 900-token decisions is about $38, so operating a GPU rarely beats it at small scale
+
+**Lean toward open weights (Laya) when:**
+- The data must stay inside your network
+- You can label a few thousand examples and own a fine-tune
+- You already run a GPU next to your LLM serving, so extra capacity is nearly free
+- You need decisions in tens of milliseconds inside a request path
+- Volume is huge, or you need multilingual control
+
+**Test both when:** you are unsure, the stakes are high, or the languages are mixed. A shadow run is cheap.
+
+### The challenges, honestly
+
+**Jev**
+- Very new; one vendor; price and terms can change
+- Overconfident probabilities; needs local calibration
+- Wording sensitivity; weaker outside English
+- Data leaves your system
+- No named production deployments
+
+**Laya**
+- Weak zero-shot: usable only after fine-tuning on labelled data
+- Small context window can truncate long inputs
+- Many-option questions degrade
+- Calibration is manual work, per question type
+- Without a GPU it is a batch tool, not a request path
+- One-person maintenance risk: support, security fixes and roadmap are not guaranteed
+- A "model lead is not a moat": what protects you is your data, thresholds and audit trail, not which model you picked ([Flowtivity](https://flowtivity.ai/blog/laya-open-source-jev-alternative/))
+
+**Both**
+- Both need a clear schema, stable labels, and a policy for uncertain answers
+- Neither writes text or explains itself
+- Both are unproven in high-stakes production
+
+### Keep the choice reversible
+
+The safest design does not pick. It hides the provider behind one function, so Jev, Laya, a fine-tuned model or a plain rules fallback can be swapped, or run side by side. This is the same rule as this repo's LLM gateway: no provider hard-coded. It also gives you a natural fallback: if the hosted API is down, drop to a local model.
+
+```python
+from typed_decide import decide
+
+class HostedDecider:
+    """Would call the vendor's API. Here it uses the toy stand-in."""
+    name = "hosted"
+    def decide(self, state, questions):
+        return decide(state, questions)
+
+class LocalDecider:
+    """Would call a model you serve yourself. Here it uses the toy stand-in."""
+    name = "local"
+    def decide(self, state, questions):
+        return decide(state, questions)
+
+class Flaky:
+    """A provider that is down, to show the fallback."""
+    name = "hosted-down"
+    def decide(self, state, questions):
+        raise TimeoutError("hosted API timed out")
+
+def decide_with_fallback(providers, state, questions):
+    errors = []
+    for p in providers:
+        try:
+            return {"by": p.name, **p.decide(state, questions)}
+        except Exception as e:
+            errors.append(f"{p.name}: {e}")
+    return {"by": "human", "answers": None, "errors": errors}   # last rung: a person
+
+questions = {"queue": {"type": "choice", "criteria": {"billing": ["charged", "refund"], "technical": ["error", "bug"]}}}
+print(decide_with_fallback([Flaky(), LocalDecider()], "I was charged twice", questions)["by"])
+print(decide_with_fallback([Flaky()], "I was charged twice", questions)["by"])
+```
+
+The first call falls back to the local provider; the second falls all the way to a human. That is the [fallback ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder) in a dozen lines.
+
+<ChapterSummary>
+- Jev is rented (managed API); Laya is owned (open weights, Apache 2.0). Same idea, opposite deployment
+- Out of the box Jev is much stronger; Laya improves greatly after fine-tuning on your labels, though that headline comparison was not like for like
+- Choose by constraints: data location, labels, GPU, option count, input length, language, volume
+- Both are new and unproven in high-stakes production; test both in shadow on your own data
+- Hide the provider behind one function so the decision stays reversible and you have a fallback
+</ChapterSummary>
+
+<Checkpoint>
+1. Laya beat Jev, 0.766 to 0.727. Give two reasons that is not proof Laya is better.
+2. A hospital wants to route clinician messages and cannot send them outside its network. Which lean, and what must it do before relying on it?
+3. Why does hiding the provider behind `decide()` help even if you are certain you want Jev?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- sora-2 and barcelloshugo, [Jev vs Laya: Hosted API or Open Weights? (2026 Guide)](https://huggingface.co/blog/sora-2/jev-vs-laya-hosted-api-or-open-weights-2026-guide), Hugging Face community article, 24 Sept 2026. JevBench numbers, context-window claim, decision guidance. Community post, promotional tone, benchmark maintainer unclear.
+- NandhaKishorM, [laya](https://github.com/NandhaKishorM/laya), GitHub. Checkpoints, licence, stated limits, latency and zero-shot numbers. I could not verify the adoption figures shown there and do not repeat them.
+- BestHub, [Open-source decision model Laya vs Jev](https://www.besthub.dev/articles/open-source-decision-model-laya-vs-jev-speed-wins-zero-shot-fails-befced0a2228). Speed, zero-shot weakness, Banking77, "drop-in replacement will likely disappoint".
+- Flowtivity, [Laya: the open-source Jev alternative, benchmarked honestly](https://flowtivity.ai/blog/laya-open-source-jev-alternative/). CPU latency measurements, fine-tuning cost, calibration, break-even reasoning.
+- Cloudflare, [Jev model page](https://developers.cloudflare.com/ai/models/typesafe/jev/). 32,000-token context.
+- xbill, [independent tests of Jev](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60). Independent latency and calibration on Jev.
+- TypeSafe AI, [launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev). List price and stated caveats.

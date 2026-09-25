@@ -1,0 +1,180 @@
+---
+title: "What a typed decision is"
+summary: "The three answer types (choice, score, yes/no probability), what goes in, what comes out, and a runnable stand-in you can use to learn the shape."
+module: 1
+time: 12
+level: "Beginner"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="1" title="What a typed decision is" time="12" />
+
+<LearningObjectives>
+- Name the three answer types and when to use each
+- Describe the request and response shape
+- Explain why the answer's shape is guaranteed but its correctness is not
+- Run a local stand-in that mimics the shape, so you can build before you buy
+</LearningObjectives>
+
+<Callout type="note" title="Status on 25 September 2026">
+The request and response shapes below follow [Cloudflare's published model page for Jev](https://developers.cloudflare.com/ai/models/typesafe/jev/) and [TypeSafe's launch material](https://typesafe.ai/blog/introducing-system-one-models-and-jev). Field names and limits may change while the product is in early access. Check the current documentation before you write production code.
+</Callout>
+
+### Refresher: what "typed" means
+
+In programming, a *type* says what kind of value something is: a number, a true/false, one of a fixed list. When a function is "type-safe", you cannot get a string where you expected a number.
+
+An LLM returns free text. Text has no type. To use it you have to read it, guess what it meant, and hope. A typed-decision model flips that: **you decide the shape of the answer first, and the model can only answer inside it.** That is where the guarantee comes from, and it is also its limit. The shape is guaranteed. What goes inside the shape is a judgement, and judgements can be wrong.
+
+### The three answer types
+
+| Type | What you get | Example question | Example answer |
+|---|---|---|---|
+| **choice** | One option from a list, plus a probability for every option | "Which queue does this ticket belong in?" | `billing` (0.91), account (0.05), technical (0.03) |
+| **score** | A number on a scale, with fractions allowed | "How urgent is this, 1 to 5?" | `4.3` |
+| **noul** | A probability from 0 to 1 for a yes/no question | "Is the customer at risk of leaving?" | `0.78` |
+
+(The odd word *noul* is TypeSafe's name for a calibrated yes/no. Read it as "yes-or-no probability".)
+
+A choice question takes up to 255 options in the vendor's docs, and a score runs across a small ladder of levels. You can ask many questions of the same text in one call, and the vendor says extra questions barely change the response time.
+
+### Try it
+
+Same input, two kinds of answer. Notice how much less your code has to guess on the right.
+
+<TypedDecisionPlayground />
+
+### What a request and a response look like
+
+The shape, per Cloudflare's model page:
+
+```json
+{
+  "state": "Ticket #8841. You charged me twice for the March plan...",
+  "questions": {
+    "queue": {
+      "type": "choice",
+      "instructions": "Which team should handle this ticket?",
+      "criteria": {
+        "billing": "Charges, refunds, invoices",
+        "account": "Login, profile, plan changes",
+        "technical": "Bugs and outages"
+      }
+    },
+    "at_risk": {
+      "type": "noul",
+      "instructions": "Is this customer likely to leave?",
+      "criteria": { "yes": "Threatens to cancel or dispute", "no": "Neutral or satisfied" }
+    }
+  }
+}
+```
+
+```json
+{
+  "answers": {
+    "queue": { "value": "billing", "confidence": 0.9, "probabilities": { "billing": 0.91, "account": 0.05, "technical": 0.03 } },
+    "at_risk": 0.78
+  },
+  "usage": { "input_tokens": 412, "output_tokens": 0 }
+}
+```
+
+Two things to notice. Everything you need is in `state` (the model only knows what you send it; it cannot look things up). And `output_tokens` is zero because the "answer" is a value, not text.
+
+### A stand-in you can run today
+
+You do not need an account to learn the shape. Save this as `typed_decide.py`. It is a **toy**: it counts keywords instead of using a model. Its only job is to return the same *kind* of thing, so the code in later chapters runs as written. Swap in a real client later without changing anything else.
+
+```python
+# file: typed_decide.py
+import math
+
+def _softmax(scores):
+    exps = [math.exp(s) for s in scores]
+    total = sum(exps)
+    return [e / total for e in exps]
+
+def _hits(text, words):
+    text = text.lower()
+    return sum(1 for w in words if w in text)
+
+def decide(state, questions):
+    """Toy stand-in for a typed-decision API. Same shape, no model."""
+    answers = {}
+    for name, q in questions.items():
+        kind = q["type"]
+        if kind == "choice":
+            options = list(q["criteria"])
+            scores = [1.5 * _hits(state, q["criteria"][o]) for o in options]
+            probs = _softmax(scores)
+            best = max(range(len(options)), key=lambda i: probs[i])
+            answers[name] = {
+                "value": options[best],
+                "confidence": round(probs[best], 2),
+                "probabilities": {o: round(p, 2) for o, p in zip(options, probs)},
+            }
+        elif kind == "noul":
+            hits = _hits(state, q["criteria"])   # criteria is a list of trigger words here
+            answers[name] = round(1 - 0.35 ** hits, 2) if hits else 0.05
+        elif kind == "score":
+            levels = q["criteria"]               # list of (level, [trigger words])
+            level = max((lv for lv, words in levels if _hits(state, words)), default=levels[0][0])
+            answers[name] = float(level)
+    return {"answers": answers, "usage": {"input_tokens": len(state) // 4, "output_tokens": 0}}
+
+if __name__ == "__main__":
+    state = "You charged me twice for the March plan. Fix this today or I will dispute it with my bank."
+    result = decide(state, {
+        "queue": {"type": "choice", "criteria": {
+            "billing": ["charged", "refund", "invoice", "plan"],
+            "account": ["login", "password", "profile"],
+            "technical": ["error", "crash", "bug"],
+        }},
+        "at_risk": {"type": "noul", "criteria": ["dispute", "cancel", "bank", "today"]},
+        "urgency": {"type": "score", "criteria": [(1, []), (3, ["please"]), (4, ["today"]), (5, ["dispute", "fraud"])]},
+    })
+    print(result)
+```
+
+Run it and you get a `billing` queue, a high at-risk probability, and an urgency of 5.0. A real model would understand meaning; this only matches words. It is here so you can see the *contract*.
+
+<Callout type="tip" title="Build against the shape, not the vendor">
+Write your code against `decide(state, questions)`, and keep the actual provider behind it. Then the vendor (Jev, Laya, a small model of your own) is a config choice, not a rewrite. It is the same idea as this repo's [LLM gateway](/courses/agentic-harness-patterns/10-the-fallback-ladder) rule: do not hard-code one provider. Chapter 8 does exactly this.
+</Callout>
+
+### What it cannot do
+
+Independent authors who tried it ([Flavio Copes](https://flaviocopes.com/jev/), [the Valyu guide](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e)) found the same short list, so learn it now:
+
+- **It cannot write.** No summaries, no replies, no code. If you need prose, that is an LLM's job.
+- **It answers only from `state`.** No outside knowledge. Ask "is this a valid IBAN?" without sending the rules and it will guess.
+- **It is unreliable at counting and date arithmetic.** Do those in code, then send the result.
+- **It reads instructions literally.** Negations and scoping ("not counting refunds") need explicit wording.
+- **It gets worse with irrelevant context.** Send the relevant part, not the whole inbox.
+
+That list is the seed of chapter 7.
+
+<ChapterSummary>
+- You choose the shape of the answer in advance: choice, score, or yes/no probability
+- The shape is guaranteed by construction; whether the value is correct is a separate question
+- Requests send `state` plus typed `questions`; responses return values and probabilities with zero output tokens
+- It cannot write, cannot fetch facts, and is weak at counting and dates
+- Keep the provider behind a small `decide()` function so you can swap or compare providers
+</ChapterSummary>
+
+<Checkpoint>
+1. You want to know whether a support message is angry. Which answer type fits, and why not choice?
+2. A teammate asks Jev "how many days between these two dates?" What is wrong with that, and what should they do instead?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- Cloudflare, [Jev model page](https://developers.cloudflare.com/ai/models/typesafe/jev/). Request and response fields, 32,000-token context window.
+- TypeSafe AI, [launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev). The three primitives and the "System One" framing.
+- Flavio Copes, [A deep dive into Jev](https://flaviocopes.com/jev/). Limitations found by hands-on testing.
+- Valyu, [How to use Jev](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e), DEV Community. Practical guide and limits.
+- Daniel Kahneman, *Thinking, Fast and Slow* (2011). The System 1 and System 2 idea that the product name borrows.

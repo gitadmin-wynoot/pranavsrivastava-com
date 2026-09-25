@@ -1,0 +1,132 @@
+---
+title: "Use case: guardrails and approval triage"
+summary: "Use a fast risk check in front of an agent's tool calls, fail closed, and never let a low score override a hard rule or a human gate."
+module: 4
+time: 11
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="4" title="Use case: guardrails and approval triage" time="11" />
+
+<LearningObjectives>
+- Place a typed risk check correctly among rules and approval gates
+- Explain why the check must fail closed
+- Build a guarded tool call that runs as written
+- Judge honestly how well proven this use case is
+</LearningObjectives>
+
+<Callout type="warning" title="How well proven? Status on 25 September 2026">
+**Plausible, but unproven for safety.** TypeSafe lists guardrails and jailbreak detection as a use case, and LangChain ships a [middleware that checks tool calls with Jev before they run](https://www.langchain.com/blog/building-a-harness-with-jev). I found **no independent test of Jev as a security guardrail**. The nearest evidence is on the open-weights Laya: its fine-tuned checkpoint scored about 0.755 to 0.762 on jailbreak and guardrail detection ([Flowtivity](https://flowtivity.ai/blog/laya-open-source-jev-alternative/)). That is useful, not safe: roughly one in four wrong. Treat any model-based guardrail as one layer among several.
+</Callout>
+
+### The scenario
+
+Kestrel Pay's support agent can call tools: look up an order, issue a refund, email a customer. Chapter 2 of [Agentic AI Harness Patterns](/courses/agentic-harness-patterns/02-the-permission-boundary) explained why an agent must be treated as capable of being fooled. Real cases make it vivid: [Replit's agent deleting a production database during a code freeze](/courses/agentic-harness-patterns/00-what-is-a-harness) and the EchoLeak research on Microsoft 365 Copilot.
+
+So before a tool call runs, something should ask: *does this look risky?* Asking a large LLM every time is slow and costs tokens on every single call. A typed decision returns a risk score in a fraction of a second, for a tiny cost.
+
+### Refresher: layers, not a single guard
+
+A guardrail is not one thing. The order matters:
+
+1. **Deterministic rules first.** Caps, allowlists, "never delete". Exact, free, explainable. If a rule can catch it, a rule should.
+2. **A model-based risk score second.** For the fuzzy cases rules cannot list: "this refund reason reads oddly", "this email looks like a bulk send".
+3. **The approval gate third.** Irreversible actions still need a human, whatever the score says.
+
+Try it. Pick a tool call. Move the line. Then tick "the risk API is down".
+
+<GuardrailPipeline />
+
+Three things worth noticing:
+
+- A rule stops the 4,000 refund before any model is consulted. **The cheapest, most reliable check does the most important job.**
+- A low score on "Refund 42" still goes to a human, because refunds cannot be undone. **A score never overrides an irreversible-action rule.**
+- With the API down, the call goes to a human. That is called **failing closed**. A guardrail that lets everything through when it breaks is a decoration.
+
+### Build it
+
+```python
+from typed_decide import decide
+
+RISK_QUESTIONS = {
+    "risky": {"type": "noul", "criteria": ["delete", "all customers", "bulk", "everyone", "override", "wire"]},
+}
+RISK_LINE = 0.50
+IRREVERSIBLE = {"issue_refund", "send_bulk_email", "delete_record"}
+LIMITS = {"issue_refund": 100}       # deterministic caps
+
+class GuardrailUnavailable(Exception):
+    pass
+
+def risk_score(description):
+    try:
+        return decide(description, RISK_QUESTIONS)["answers"]["risky"]
+    except Exception as e:                       # network, timeout, bad response
+        raise GuardrailUnavailable(str(e))
+
+def guarded(tool, args, description):
+    # 1. rules: exact and free
+    cap = LIMITS.get(tool)
+    if cap is not None and args.get("amount", 0) > cap:
+        return {"decision": "block", "by": "rule", "why": f"over cap {cap}"}
+    # 2. model risk check, failing closed
+    try:
+        score = risk_score(description)
+    except GuardrailUnavailable:
+        return {"decision": "human", "by": "fail_closed"}
+    if score >= RISK_LINE:
+        return {"decision": "human", "by": "risk", "score": score}
+    # 3. approval gate for irreversible actions, whatever the score
+    if tool in IRREVERSIBLE:
+        return {"decision": "human", "by": "irreversible_rule", "score": score}
+    return {"decision": "run", "score": score}
+
+print(guarded("get_order", {}, "look up order A-1043"))
+print(guarded("issue_refund", {"amount": 42}, "refund 42 for a damaged item"))
+print(guarded("issue_refund", {"amount": 4000}, "refund 4000"))
+print(guarded("send_bulk_email", {}, "send bulk email to all customers"))
+```
+
+Run it and read each result: one runs, three go to a human or are blocked, and each names the layer that decided.
+
+### Where the tokens are saved
+
+The saving is modest and honest: you avoid an LLM call **on every tool call** just to ask "is this fine?". In an agent that makes dozens of tool calls per task, a fast typed check at a tiny price adds up. But the real reason to do this is **latency**. A 100 to 500 millisecond check is tolerable in the loop; a multi-second LLM review often is not.
+
+### Approval triage: the same idea, pointed at humans
+
+The same risk score can **order the approval queue**, so the human sees the scary items first, or **batch** obviously routine ones ("these 12 refunds are all under 20"). Note what it does *not* do: it never approves anything. It decides who looks first.
+
+### What could go wrong
+
+- **A model-only guardrail.** An attacker who can steer the agent can often steer the guard's input too. Rules and permissions must hold on their own; see [the permission boundary](/courses/agentic-harness-patterns/02-the-permission-boundary).
+- **Fail-open on timeout.** The most common bug in guardrail code. Test it by unplugging the network.
+- **Threshold copied from a blog.** Independent testing found the stated confidence poorly calibrated ([scienthoon](https://github.com/scienthoon/jev-ood-calibration)). Set your risk line from your own labelled examples of bad and fine calls.
+- **False sense of safety.** A score of 0.03 is not "safe". It is "the model thinks it looks fine", which is exactly what a well-crafted attack aims for.
+- **Blocking too much.** If the guard cries wolf, people route around it. Measure the false-alarm rate.
+
+<ChapterSummary>
+- Order the layers: deterministic rules, then a model risk score, then the approval gate
+- A model score never overrides an irreversible-action rule or a hard cap
+- Fail closed: when the check cannot run, the call goes to a human
+- The saving is mostly latency and avoided LLM calls per tool use, not big money
+- Evidence: plausible and integrated by LangChain, but no independent test of Jev as a security guardrail found
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does the 4,000 refund get blocked before any model is asked?
+2. Write the one line of code that would turn a fail-closed guardrail into a fail-open one. Why is it dangerous?
+3. The risk score for a bulk email is 0.31. Should it run automatically? Explain.
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- LangChain, [Building a harness with Jev](https://www.langchain.com/blog/building-a-harness-with-jev). Router and guardrail middleware; the caveat that Jev is not a drop-in replacement for an LLM.
+- TypeSafe AI, [launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev). Guardrail and jailbreak-detection listed as intended uses.
+- Flowtivity, [Laya, benchmarked honestly](https://flowtivity.ai/blog/laya-open-source-jev-alternative/). Fine-tuned Laya guardrail scores; the closest available evidence.
+- scienthoon, [jev-ood-calibration](https://github.com/scienthoon/jev-ood-calibration). Why not to trust stated confidence uncalibrated.
+- This site: [Agentic AI Harness Patterns](/courses/agentic-harness-patterns), especially the permission boundary, approval gate and circuit breaker chapters.

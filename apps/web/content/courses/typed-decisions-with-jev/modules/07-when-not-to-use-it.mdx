@@ -1,0 +1,119 @@
+---
+title: "When not to use it"
+summary: "Hard stops, cautions and cheaper alternatives: every consideration that should make you keep a decision away from a typed-decision model."
+module: 7
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="7" title="When not to use it" time="12" />
+
+<LearningObjectives>
+- Separate hard stops from cautions
+- Recognise decisions where a regex, a classic model or a human is the better tool
+- Weigh vendor, privacy, legal and reliability risks for a high-stakes system
+- Walk your own decision through a checklist and get a verdict
+</LearningObjectives>
+
+<Callout type="warning" title="Status on 25 September 2026">
+Nothing in this chapter is anti-Jev. It is the chapter a careful buyer wants first. A young, fast, cheap tool is exactly the kind that gets adopted before anyone writes down where it does not belong.
+</Callout>
+
+### The mindset
+
+A typed-decision model is a **fast, cheap first look**, not a judge. The question to ask is not "can it do this?" (it will always return a value) but "**what happens when it is wrong, and would I know?**"
+
+Kestrel Pay's rule: *if being wrong is expensive and we would not notice, a human or a deterministic rule owns the decision.*
+
+### Hard stops
+
+If any of these is true, keep the decision out of a typed-decision model, at least until the evidence changes.
+
+| Hard stop | Why |
+|---|---|
+| **Each decision needs a written explanation or audit trail** | It returns probabilities, not reasoning. A customer or a regulator who asks "why?" gets nothing to read. |
+| **The decision is about a person's job, credit, insurance, housing or legal rights** | Decisions with legal or similarly significant effect carry human-involvement duties: see [GDPR Article 22](https://gdpr-info.eu/art-22-gdpr/) and the human-oversight requirement in [Article 14 of the EU AI Act](https://artificialintelligenceact.eu/article/14/). TypeSafe's reseller page lists résumé screening as a use case ([jevtypesafeai.com](https://jevtypesafeai.com/)); I found no bias audit or independent evaluation for it. Do not treat that as approval. |
+| **The answer needs facts that are not in the text you send** | It answers only from `state`. On an unanswerable priority question, one study saw it average 0.74 confidence while being right 44.7% of the time ([scienthoon](https://github.com/scienthoon/jev-ood-calibration)). |
+| **The task is arithmetic, counting or date comparison** | Independent authors call it unreliable here: "not a calculator" ([Flavio Copes](https://flaviocopes.com/jev/)). Compute in code, then pass the result in. |
+| **You need free-form text** | It cannot write. That is an LLM's job. |
+| **A single question has a very large option set** | Up to 255 options are supported, but many-option multi-class was a weak spot in independent testing ([xbill](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60)). |
+
+### Cautions
+
+None of these forbids it. Each one means: shadow-test, gate, and watch.
+
+| Caution | What to do |
+|---|---|
+| **Non-English text.** One review saw Russian drop from 88.3% to 77.3% and Spanish lose 3 to 6 points | Test each language separately, or send it to a bigger model |
+| **Long or noisy input.** The docs list a 32,000-token limit ([Cloudflare](https://developers.cloudflare.com/ai/models/typesafe/jev/)) and accuracy degrades with irrelevant context | Retrieve and filter first (chapter 5) |
+| **Wording sensitivity.** A rubric swap changed 32.5% of answers in one test | Pin versions, treat edits as releases |
+| **Irreversible consequences** | Always keep an approval gate ([chapter 3 of the harness course](/courses/agentic-harness-patterns/03-the-approval-gate)) |
+| **No labelled data** | You cannot calibrate or even measure it. Get a few hundred labels first |
+| **Latency promises.** Vendor: 70 to 500 ms. Independent medians around 240 to 280 ms, plus your network | Measure from your region before you promise a UI speed |
+| **Rate limits and outages** | Build a [fallback rung](/courses/agentic-harness-patterns/10-the-fallback-ladder) and a [circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker) |
+
+### Vendor and platform risks
+
+- **Age.** Released in early access on 15 September 2026. There has been almost no time for edge cases, incidents or long-run behaviour to surface.
+- **One vendor.** Price, availability, terms and model versions are all in one company's hands. TypeSafe wrote that it cannot prove its pricing is sustainable ([launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)).
+- **Conflicting status labels.** TypeSafe calls it early access; Cloudflare's model page shows it as generally available. Ask which one your contract reflects.
+- **Data leaving your system.** Cloudflare's page lists zero data retention. That is a statement on a third-party page, not your legal agreement. For regulated data read the actual terms, or consider a self-hosted route (chapter 8).
+- **Reseller confusion.** Some sites resell access and charge more. They may be perfectly legitimate, but they are a different supplier with different terms.
+- **No named production customers** on the vendor's own site as of 25 September 2026.
+
+### When a simpler tool wins
+
+| If the decision is... | Consider first |
+|---|---|
+| "Does the text contain one of these strings?" | A regex or word list: free, exact, explainable |
+| A well-labelled classic task, like spam | A TF-IDF plus logistic regression baseline. One review found Jev at 98.33% and that baseline at 98.39% on 18,514 emails |
+| A stable task with plenty of your own labels | A small model trained on your labels. The same review notes "a model trained on your own labels won wherever one was tried" |
+| Ranking documents | A dedicated reranker; the reviewed evidence shows a tie, so pick on operational grounds |
+| High-stakes and explainable | A rules engine, plus a human |
+
+"Beat the boring baseline first" is the best habit this course can give you.
+
+### Try it: is this decision a fit?
+
+Answer for a real decision in your system. Watch what turns red, and why.
+
+<JevDecisionGuide />
+
+### Kestrel Pay's "do not automate" list
+
+A worked example of the output of this chapter:
+
+- Anything that moves or freezes money: **rule + human**
+- Fraud and identity claims: **human first, typed decision only orders the queue**
+- Account closure: **human**
+- Refund reasons in Spanish and Russian: **LLM or human until measured**
+- Tone check on outgoing replies: **regex for banned phrases; skip the fuzzy check for now**
+- Ticket routing, English, few queues: **typed decision, shadow first, sampled forever**
+
+<ChapterSummary>
+- Ask what happens when it is wrong and whether you would notice
+- Hard stops: explanations required, decisions about people, missing facts, maths and dates, free text, huge option sets
+- Cautions: other languages, long input, wording sensitivity, irreversibility, no labels, latency, outages
+- Vendor risks: very new, single supplier, conflicting status labels, data leaving your system
+- Often a regex, a classic model or a human is the better and cheaper answer
+</ChapterSummary>
+
+<Checkpoint>
+1. Name two hard stops that apply to loan approvals. What should own that decision instead?
+2. A colleague proposes Jev to check that a "date of birth" is before "today". What do you tell them?
+3. Why is "zero data retention on a Cloudflare page" not the same as your compliance sign-off?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- xbill, [Jev after eight days of independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60). Language drops, spam vs TF-IDF baseline, many-option weakness, trained-on-your-labels result.
+- scienthoon, [jev-ood-calibration](https://github.com/scienthoon/jev-ood-calibration). The unanswerable-question overconfidence result.
+- Flavio Copes, [A deep dive into Jev](https://flaviocopes.com/jev/). Maths, dates and text-generation limits.
+- Cloudflare, [Jev model page](https://developers.cloudflare.com/ai/models/typesafe/jev/). Context window, zero data retention, availability label.
+- TypeSafe AI, [launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev). Pricing sustainability caveat; stated limits ("giving up string generation").
+- jevtypesafeai.com, [home](https://jevtypesafeai.com/) and [pricing](https://jevtypesafeai.com/pricing). Reseller; lists résumé screening as a use case; states it is not affiliated with TypeSafe AI.
+- EU General Data Protection Regulation, [Article 22](https://gdpr-info.eu/art-22-gdpr/); EU AI Act, [Article 14, human oversight](https://artificialintelligenceact.eu/article/14/). Not legal advice: take it to counsel for a real system.

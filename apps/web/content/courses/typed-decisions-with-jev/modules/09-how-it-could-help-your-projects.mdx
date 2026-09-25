@@ -1,0 +1,106 @@
+---
+title: "How it could help your projects"
+summary: "Concrete places a typed-decision layer could fit real projects: a personal site with agents, a small SaaS, and consulting work. Honest about what is a proposal, what it would save, and where it does not belong."
+module: 9
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="9" title="How it could help your projects" time="12" />
+
+<LearningObjectives>
+- Find the decisions in a project that are cheap classifications in disguise
+- Estimate honestly whether a typed decision would help, using volume and stakes
+- Know the first step for each project, and what to leave alone
+- Explain what is proposed versus what is built
+</LearningObjectives>
+
+<Callout type="note" title="Read this first">
+**Everything in this chapter is a proposal.** None of it is built or running in these projects. It is written the way a consultant would: here is where it might help, here is roughly what it would save, here is the risk, here is the cheapest test. And, as with the rest of the course, the product is ten days old and unproven in production, so the first step is always a shadow run, not an integration.
+</Callout>
+
+### How to spot a candidate
+
+Walk through a project and list every place a model is asked a question with a **short, fixed answer**. Those are cheap classifications in disguise, even if a big LLM is doing them today:
+
+- "Which route or queue?" (choice)
+- "How urgent or relevant, 1 to 5?" (score)
+- "Is this risky, spam, off-topic, angry?" (yes/no probability)
+
+Then apply the three filters from earlier chapters:
+
+1. **Volume.** Is it high enough that tokens or latency matter?
+2. **Stakes.** What happens when it is wrong, and would you notice?
+3. **Fit.** Few options, mostly English, answer contained in the input?
+
+### A reality check on money first
+
+Take a small project: 300 items a week, 2,000 tokens each, an LLM at $2 per million input tokens. That is 600,000 tokens a week, about **$1.20 a week** of input. Even if a typed filter drops 60% of the items before the LLM reads them, you save about **70 cents a week**.
+
+**For a personal site, cost is not the reason.** The reasons that survive are speed, cleaner outputs, less noise for a human, and the learning value of a well-measured experiment. Cost becomes a real argument at the scale of a product with millions of decisions a month, like the Kestrel Pay example. Say so out loud when you pitch it; being honest about a small saving is what keeps the large claims credible.
+
+### The projects
+
+Pick one. Each card gives the decision, how it helps, what it saves, what could go wrong, and the first step.
+
+<ProjectFitExplorer />
+
+### A sensible order
+
+If you were to try these, this is the order I would suggest:
+
+1. **AI Radar relevance scoring.** High volume, low stakes, and a human still reads the output. The safest place to learn how the model behaves on your data.
+2. **Site chat routing.** A visible, user-facing behaviour, so measure it carefully. Keep answers grounded in site content whatever the router decides. This fits the voice guide's rule that the assistant says so when it does not know.
+3. **Wynoot message triage.** Real value at scale, real customers, so shadow longer, and route money and cancellations to a confirmation step.
+4. **LLM gateway model routing.** Only once the [gateway](/courses/agentic-harness-patterns/10-the-fallback-ladder) exists, and only if your cheap and strong models differ enough in price to matter.
+5. **Agent cockpit queue ordering.** Useful, but it touches approvals, so keep the human decision untouched.
+6. **Qubitsy assessments.** Sell the shadow evaluation and the honest sums, not a vendor.
+
+And what I would leave alone: the writer agent's banned-phrase check (a regex does it better), and anything that decides for a person.
+
+### How it would plug into what you already have
+
+This repo already states the principles that make this safe. Each maps to a chapter:
+
+| Repo principle | What it means for a typed-decision layer |
+|---|---|
+| No single LLM provider (`packages/llm-gateway`) | Put decisions behind one `decide()` function ([chapter 8](/courses/typed-decisions-with-jev/08-jev-vs-laya)) so the provider is a config value |
+| Log every model call to Langfuse | Log each typed decision with its confidence, so the [trace](/courses/agentic-harness-patterns/07-the-trace-pipeline) can be used for calibration later |
+| Human approval for consequential actions | The risk score orders the queue; it never approves ([chapter 4](/courses/typed-decisions-with-jev/04-use-case-guardrails)) |
+| Nothing breaks if an agent is down | Add a fallback rung for when the decision API is unavailable |
+| Honest, plain voice | Say in the UI and in writing what is measured and what is not |
+
+### A two-week experiment, if you want one
+
+1. **Days 1 to 2:** pick one decision (AI Radar relevance is a good one). Write down the current process and its cost.
+2. **Days 3 to 5:** label 200 examples by hand. This is the most valuable part.
+3. **Days 6 to 9:** run the typed decision in shadow. Log confidence and result.
+4. **Days 10 to 12:** measure accuracy by confidence band, the wording sensitivity, and the repeat-run stability ([chapter 6](/courses/typed-decisions-with-jev/06-trusting-the-numbers)). Compare with a regex or a small baseline.
+5. **Days 13 to 14:** write it up honestly, numbers and failures included. That write-up is itself content for the site, and it is the kind that earns trust: *"I tried this, here is what I measured."*
+
+<Callout type="tip" title="The consulting angle">
+Very few teams have run this test yet. A short, honest engagement that finds a client's hidden cheap classifications, prices them, and measures a shadow run on the client's own data is useful precisely because the vendor's own benchmarks cannot answer it. The deliverable is the measurement.
+</Callout>
+
+<ChapterSummary>
+- Look for questions with short, fixed answers that a big LLM is answering today
+- Filter by volume, stakes and fit; at small volume the money is trivial, so name the real reason
+- Proposals here: site chat routing, AI Radar scoring, Wynoot triage, gateway routing, cockpit ordering, consulting assessments
+- Leave alone: anything a regex does better, and anything that decides for a person
+- The first step is always a labelled shadow run, then an honest write-up
+</ChapterSummary>
+
+<Checkpoint>
+1. Your project makes 200 LLM decisions a week. Give one reason to try a typed decision and one reason not to bother.
+2. Why is the banned-phrase check a poor first use for Jev?
+3. Which project above would you start with, and what would you log during the shadow run?
+</Checkpoint>
+
+### Sources
+
+- Repository documents: `VISION.md` (principles: provider independence, observability, human approval), `packages/llm-gateway/README.md` (planned LLM gateway), `docs/voice-and-style.md` (assistant honesty rule).
+- Arithmetic uses Jev's [list price](https://typesafe.ai/blog/introducing-system-one-models-and-jev) and placeholder LLM prices reported by [The Register](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711). Replace with your own.
+- Model routing idea: [LangChain, Building a harness with Jev](https://www.langchain.com/blog/building-a-harness-with-jev).
+- Everything about how well the underlying model performs: see the sources in chapters 0, 5 and 6.

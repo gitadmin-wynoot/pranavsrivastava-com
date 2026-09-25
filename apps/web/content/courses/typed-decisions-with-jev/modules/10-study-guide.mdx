@@ -1,0 +1,178 @@
+---
+title: "Study guide: cheat sheet, glossary, quiz, sources"
+summary: "One page to revise from: the key ideas, a glossary, a self-test, what to re-check, and the annotated list of sources with how far to trust each."
+module: 10
+time: 10
+level: "Beginner"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="10" title="Study guide: cheat sheet, glossary, quiz, sources" time="10" />
+
+<LearningObjectives>
+- Recall the core ideas of the course without looking back
+- Use the glossary to decode any typed-decision article you meet
+- Test yourself with ten questions
+- Know how far to trust each source, and what to re-check later
+</LearningObjectives>
+
+<Callout type="note" title="Status on 25 September 2026">
+Jev is ten days old and Laya is about a week old. Anything here that depends on a price, a benchmark or an availability label should be re-checked before you rely on it. See "What to re-check" below.
+</Callout>
+
+### The whole course on one page
+
+| Question | Short answer |
+|---|---|
+| What is it? | A model that answers typed questions (choice, score, yes/no probability) with values, not sentences |
+| Why is it cheap? | Cheap input price and no paid output at TypeSafe's list price |
+| Does it save LLM cost? | Only on the decisions it can make safely, so the LLM sees fewer items. It can add wrong decisions and adds its own costs |
+| The right way to measure | Cost per correct decision, with wrong-decision count and coverage beside it |
+| Where does it fit? | Triage cascades, tool-call risk checks, decomposed classification, context filtering, model routing |
+| Where does it not? | Explanations needed, decisions about people, missing facts, maths and dates, free text, many options |
+| Can I trust its confidence? | Not without calibrating it on your data. Independent tests found overconfidence on choice and score answers |
+| What must I do first? | Label a few hundred examples, then run it in shadow beside your current process |
+| Hosted or open weights? | Hosted (Jev) for speed to start and long inputs; open weights (Laya) for data control, fine-tuning, and huge volume. Test both |
+| How proven is it? | Not proven in high-stakes production. Mixed independent evidence in week one |
+
+### Decision flow
+
+<Diagram title="Should this decision go to a typed-decision model?">
+
+```
+  Do you need an explanation, or is it about a person's rights?
+      yes ──► human or rules. Stop.
+      no
+       │
+  Is the answer fully inside the text, few options, mostly English?
+      no ───► LLM, or test very carefully
+      yes
+       │
+  Would a regex or a classic model do as well?
+      yes ──► use that. It is cheaper and explainable.
+      no
+       │
+  Do you have labels and a shadow test?
+      no ───► get labels, shadow first
+      yes
+       │
+  Is a wrong answer reversible or caught downstream?
+      no ───► keep an approval gate in front
+      yes ──► canary, monitor, sample forever, keep a fallback
+```
+
+</Diagram>
+
+### Glossary
+
+| Term | Plain meaning |
+|---|---|
+| **Typed decision** | An answer with a fixed shape (a choice, a score, a probability) |
+| **System One model** | A fast, gut-reaction model for decisions, versus a slower, wordier reasoning model (after Kahneman) |
+| **Choice / score / noul** | The three answer types: pick one option; place on a scale; yes/no probability |
+| **State** | The text or data you send; the only thing the model knows |
+| **Token** | A chunk of text, roughly three-quarters of a word; what you are billed on |
+| **Cascade** | A cheap model handles the easy cases; the unsure ones go to an expensive model or a person |
+| **Calibration** | Whether stated confidence matches real accuracy |
+| **ECE** | Expected calibration error: the average gap between stated confidence and actual accuracy |
+| **Temperature scaling** | A one-number correction that makes probabilities less (or more) confident |
+| **Shadow mode** | Running a new model beside the live process without acting on it |
+| **Canary** | Sending a small share of real traffic to the new version, with a way back |
+| **Fail closed** | When a safety check breaks, the safe action happens (usually a human), not the risky one |
+| **Open weights** | A model whose parameters you can download and run yourself |
+| **Fine-tuning** | Further training on your own labelled examples |
+| **Coverage** | The share of items a system answers on its own; report it next to accuracy |
+| **Jevons paradox** | When something gets cheaper, total use often rises |
+
+### Check yourself
+
+<StudyQuiz />
+
+### What to re-check in three months
+
+- Jev's price, limits (32,000 vs 64,000 tokens) and whether it is generally available or still early access
+- Whether TypeSafe publishes calibration metrics and named production customers
+- Whether independent benchmarks agree with the week-one ones
+- Laya's maintenance, releases and any independent fine-tuned results
+- Whether the community benchmark (JevBench) has a named, neutral maintainer
+- Any incident, outage or terms change; any regulator guidance on model-based guardrails
+
+### Annotated sources, and how far to trust each
+
+Every page below was read on **25 September 2026**. I read them through a summarising fetch tool, so figures may carry extraction errors: check any number on the linked page before you quote it. "Trust" means how much weight the source deserves for the specific claim I used it for.
+
+**Vendor sources (claims, not proof)**
+
+| Source | Used for | Trust |
+|---|---|---|
+| [TypeSafe AI, Introducing System One Models & Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev) | Architecture, pricing, benchmark claims, the vendor's own caveats | Useful for what they claim. Benchmarks are self-built, comparator unnamed. It also states some numbers are not empirical |
+| [TypeSafe AI home](https://typesafe.ai/) | Status ("early access"), headline claims | Marketing. No named customers listed |
+| [Cloudflare, Jev model page](https://developers.cloudflare.com/ai/models/typesafe/jev/) | API shape, 32,000-token limit, availability label, zero data retention | Good for the API. Third-party host; availability label conflicts with the vendor |
+| [LangChain, Building a harness with Jev](https://www.langchain.com/blog/building-a-harness-with-jev) | Router and guardrail middleware, integration pattern | An integration write-up, not an evaluation |
+
+**Press**
+
+| Source | Used for | Trust |
+|---|---|---|
+| [The Register, 16 Sept 2026](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711) | Launch coverage, the "hallucination-free is not a fair comparison" point, placeholder LLM prices | Reliable for what happened and what was claimed; not a test |
+
+**Independent tests and reviews (week one)**
+
+| Source | Used for | Trust |
+|---|---|---|
+| [xbill, Jev after eight days of independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) | Pooled accuracy, speed and cost multiples, language drops, wording sensitivity, repeatability | A synthesis of other studies by one author; check the underlying studies it names |
+| [scienthoon, jev-ood-calibration](https://github.com/scienthoon/jev-ood-calibration) | Calibration on unseen tasks; per-type miscalibration | Reproducible, cheap to re-run (about $0.06). Synthetic tickets, one study |
+| [Beri, phishing decomposition](https://www.beri.net/article/typesafe-jev-typed-decision-model-calibration-decomposition-shadow-eval) | 62.6% vs 95.0%, cost per 1,000 emails, shadow advice | One dataset with synthetic bodies. Interesting, not general |
+| [Layer3 Labs, Jev benchmarks](https://www.layer3labs.io/guides/jev-benchmarks) | What the vendor has not published; caution for high stakes | Analysis of vendor claims, not new measurements |
+| [Flavio Copes, A deep dive into Jev](https://flaviocopes.com/jev/) | Hands-on limits (maths, dates); "cost per solved task" | Honest about not having used it in production |
+| [Valyu, How to use Jev](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e) | Launch-week demos, limits, when to use | Author-observed, small demos |
+
+**Jev vs Laya**
+
+| Source | Used for | Trust |
+|---|---|---|
+| [Hugging Face community post by sora-2 and barcelloshugo](https://huggingface.co/blog/sora-2/jev-vs-laya-hosted-api-or-open-weights-2026-guide) | JevBench numbers, decision guidance, context-window claim | Community article, not official Hugging Face. Benchmark maintainer unclear; promotional tone |
+| [NandhaKishorM, laya (GitHub)](https://github.com/NandhaKishorM/laya) | Laya's checkpoints, licence, stated limits | Primary source for Laya's own claims. I could not verify the adoption figures shown |
+| [BestHub, Laya vs Jev](https://www.besthub.dev/articles/open-source-decision-model-laya-vs-jev-speed-wins-zero-shot-fails-befced0a2228) | Speed, zero-shot weakness, Banking77 | Independent write-up; check its numbers |
+| [Flowtivity, Laya benchmarked honestly](https://flowtivity.ai/blog/laya-open-source-jev-alternative/) | CPU latency, fine-tuning cost, break-even | Author-measured; small tests |
+
+**Reseller**
+
+| Source | Used for | Trust |
+|---|---|---|
+| [jevtypesafeai.com](https://jevtypesafeai.com/) and [pricing](https://jevtypesafeai.com/pricing) | Reseller pricing, and its own statement that it is independent of TypeSafe AI | Read the operator statement. A different supplier with different terms |
+
+**Regulation (context, not legal advice)**
+
+- [GDPR Article 22: automated individual decision-making](https://gdpr-info.eu/art-22-gdpr/)
+- [EU AI Act Article 14: human oversight](https://artificialintelligenceact.eu/article/14/)
+
+**Background reading**
+
+- Daniel Kahneman, *Thinking, Fast and Slow* (2011): the System 1 and System 2 idea
+- William Stanley Jevons, *The Coal Question* (1865): the paradox
+- This site: [Agentic AI Harness Patterns](/courses/agentic-harness-patterns), [Harness Engineering](/courses/harness-engineering), [Context Engineering](/courses/context-engineering), [Production RAG](/courses/production-rag), [AI Ops](/courses/ai-ops)
+
+### Things I could not verify
+
+- Who maintains JevBench, and how neutral it is
+- Laya's real-world adoption (figures on its page looked implausible for a week-old repository)
+- Jev's true context limit (32,000 per Cloudflare, 64,000 per a community post)
+- Whether Jev is "early access" or "generally available" contractually
+- Any independent test of Jev as a security guardrail
+- Any named, high-stakes production deployment of either model
+
+<ChapterSummary>
+- Typed decisions are cheap, fast, well-shaped first looks, not judges
+- They save LLM tokens on the easy majority, but you must count wrong decisions and hidden costs
+- Calibrate and shadow-test on your own data before trusting any confidence number
+- Keep the provider swappable, keep a fallback, keep humans on anything that cannot be undone
+- Re-check prices, limits and benchmarks; the field is days old
+</ChapterSummary>
+
+<Checkpoint>
+1. Explain the whole course in three sentences to a colleague.
+2. Which two sources would you re-read first before recommending this to a client, and why?
+3. Pick one decision in a system you know. Run it through the decision flow. What is your verdict?
+</Checkpoint>

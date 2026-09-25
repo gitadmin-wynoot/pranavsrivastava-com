@@ -1,0 +1,139 @@
+---
+title: "Use case: decompose, filter, route"
+summary: "Three cheap moves that save LLM tokens: split a hard question into small ones, filter context before the LLM sees it, and route to the right model."
+module: 5
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="5" title="Use case: decompose, filter, route" time="12" />
+
+<LearningObjectives>
+- Turn one vague question into several narrow ones and combine the answers
+- Use a relevance filter to shrink what an LLM has to read
+- Route requests to a cheap or strong model
+- Rank these three uses by how well proven they are
+</LearningObjectives>
+
+<Callout type="note" title="How well proven? Status on 25 September 2026">
+**Decomposing: one worked study, promising.** **Filtering: one independent comparison, level with a dedicated reranker.** **Routing: shipped by LangChain, not independently tested.** Details and links below. All three are days old.
+</Callout>
+
+### Move 1: decompose
+
+**The idea.** Do not ask one fuzzy question. Ask five specific ones, then combine the answers with something simple.
+
+**The evidence.** An independent author tested 2,000 phishing emails. Asked *"is this phishing?"* once, Jev got 62.6% right and caught only 43.2% of the phishing emails, while wrongly flagging 18.0% of the legitimate ones. Split into five narrow questions (a shortened link? a free email address? and so on), with a logistic regression fitted on 1,000 labelled emails and scored on the other 1,000, it reached 95.0% ([Beri](https://www.beri.net/article/typesafe-jev-typed-decision-model-calibration-decomposition-shadow-eval)).
+
+<DecomposeDemo />
+
+Read the yellow box and the quote under it twice. Two takeaways:
+
+1. **The gain came from the structure**, not the model alone. A two-line regex scored 91.8%, and the gap between Jev and Claude Haiku was not statistically significant.
+2. **Baseline first.** If a regex is nearly as good, the model's edge is small, and its cost is the label data and the maintenance.
+
+Here is the mechanism, in code. Five yes/no signals go in; a small fitted model turns them into one verdict. Runs as written, no libraries:
+
+```python
+import math, random
+
+random.seed(3)
+
+def make_email(phish):
+    """Synthetic 'signals': each is a yes-probability such as Jev's noul would return."""
+    base = [0.75, 0.6, 0.7, 0.5, 0.65] if phish else [0.1, 0.2, 0.15, 0.25, 0.1]
+    return [min(0.99, max(0.01, random.gauss(b, 0.2))) for b in base], int(phish)
+
+data = [make_email(i % 2 == 0) for i in range(600)]
+train, test = data[:300], data[300:]
+
+def fit(rows, steps=400, lr=0.5):
+    w, b = [0.0] * 5, 0.0
+    for _ in range(steps):
+        gw, gb = [0.0] * 5, 0.0
+        for x, y in rows:
+            p = 1 / (1 + math.exp(-(sum(wi * xi for wi, xi in zip(w, x)) + b)))
+            for i in range(5):
+                gw[i] += (p - y) * x[i]
+            gb += p - y
+        w = [wi - lr * g / len(rows) for wi, g in zip(w, gw)]
+        b -= lr * gb / len(rows)
+    return w, b
+
+def predict(w, b, x):
+    return 1 / (1 + math.exp(-(sum(wi * xi for wi, xi in zip(w, x)) + b)))
+
+w, b = fit(train)
+acc = sum((predict(w, b, x) >= 0.5) == bool(y) for x, y in test) / len(test)
+single = sum((x[0] >= 0.5) == bool(y) for x, y in test) / len(test)     # trust one signal only
+print(f"one signal alone: {single:.1%}   five signals + fitted weights: {acc:.1%}")
+```
+
+The point is not the numbers (the data is invented). It is the shape: **narrow questions plus weights learned from your labels beat one vague question.** And note who did the learning: you, with your data.
+
+**Token angle.** Each extra question costs only its own tokens, and output stays free, so five questions cost far less than one LLM paragraph. The [LangChain write-up](https://www.langchain.com/blog/building-a-harness-with-jev) notes that adding questions barely changes the response time and only costs the tokens of the extra questions.
+
+### Move 2: filter before the LLM reads
+
+**The idea.** An LLM answering a question over retrieved documents reads *everything you send it*. If a typed relevance score drops the irrelevant chunks first, the LLM reads less.
+
+Worked sum: retrieval returns 20 chunks of about 300 tokens, so 6,000 input tokens. A filter that keeps the 4 most relevant leaves 1,200. That cuts **80% of the LLM's input on that step**, and often improves the answer, because less irrelevant text is in the way. (Chapter 6 of the harness course makes the same point about the [context boundary](/courses/agentic-harness-patterns/06-the-context-boundary), and [Context Engineering](/courses/context-engineering) covers it in depth.)
+
+**The evidence.** One independent review found Jev "level with a dedicated reranker on eight retrieval sets, 0.692 against 0.691" ([xbill](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60)). Independent authors also warn accuracy *drops* with irrelevant context, so the advice is "retrieve, filter, then decide" ([Valyu guide](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e)). See also [Production RAG](/courses/production-rag).
+
+```python
+from typed_decide import decide
+
+def keep_relevant(question, chunks, keep=4):
+    """Score each chunk with a typed question, keep the best, send only those to the LLM."""
+    scored = []
+    for c in chunks:
+        q = {"relevant": {"type": "noul", "criteria": question.lower().split()}}
+        scored.append((decide(c, q)["answers"]["relevant"], c))
+    scored.sort(key=lambda t: t[0], reverse=True)
+    return [c for _, c in scored[:keep]]
+
+chunks = [f"chunk {i} about something else" for i in range(16)] + [
+    "refund policy: refunds within 30 days",
+    "how to request a refund step by step",
+    "refund timing: refunds take 5 days",
+    "contact us about refund disputes",
+]
+kept = keep_relevant("how do refunds work", chunks)
+print(len(chunks), "->", len(kept), "chunks")
+```
+
+### Move 3: route to the right model
+
+**The idea.** Cheap model for lookups and extraction; strong model for architecture and high-stakes reasoning. A typed decision picks. LangChain's article shows a router that chooses between a fast model and a stronger one, with the choice made by Jev ([LangChain](https://www.langchain.com/blog/building-a-harness-with-jev)).
+
+**The saving** is the price gap between your two models, times the share of requests routed down. **The risk** is the quiet one: a hard question sent to the cheap model just gets a worse answer, and nobody notices. Sample the routed-down traffic and read it. This connects to the [Cost and Rate Governor](/courses/agentic-harness-patterns/09-the-cost-and-rate-governor) and the [fallback ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder).
+
+### Launch-week demos, kept in perspective
+
+The Valyu guide lists five launch-week experiments: classifying 1,018 papers for $0.08, a browser agent booking a flight, computer control at $0.0002 per step, a trading bot, and a drone controller ([Valyu](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e)). They show speed and price. They do not show reliability. The drone example is described as advisory only, with the safety logic kept in code, which is the right instinct.
+
+<ChapterSummary>
+- Decompose: several narrow questions plus weights fitted on your labels beat one vague question, but a regex baseline came close
+- Filter: a relevance score before the LLM can cut its input tokens sharply; evidence: level with a reranker in one review
+- Route: choose cheap or strong model per request; saving equals the price gap; watch for quiet quality loss
+- Each is cheap to test in shadow; none is proven at scale
+</ChapterSummary>
+
+<Checkpoint>
+1. In the phishing study, what mattered more than the model: asking once or asking five questions? What else was required?
+2. Retrieval returns 12 chunks of 250 tokens. A filter keeps 3. How many LLM input tokens do you save on that step?
+3. Why should you read a sample of the traffic your router sent to the cheap model?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- Beri, [TypeSafe's Jev scores 62.6% asked once and 95% split five ways](https://www.beri.net/article/typesafe-jev-typed-decision-model-calibration-decomposition-shadow-eval). The 2,000-email phishing experiment. Dataset has synthetic email bodies.
+- xbill, [Jev after eight days of independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60). Reranker parity.
+- Valyu, [How to use Jev](https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e). Launch-week demos and the advice to filter first.
+- LangChain, [Building a harness with Jev](https://www.langchain.com/blog/building-a-harness-with-jev). Router middleware, and the point that extra questions are cheap.
+- This site: [Context Engineering](/courses/context-engineering), [Production RAG](/courses/production-rag), [Agentic AI Harness Patterns](/courses/agentic-harness-patterns).

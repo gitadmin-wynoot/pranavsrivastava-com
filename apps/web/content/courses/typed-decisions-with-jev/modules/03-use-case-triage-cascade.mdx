@@ -1,0 +1,136 @@
+---
+title: "Use case: the triage cascade"
+summary: "Route high-volume incoming items with a typed decision, escalate the unsure ones, and keep humans in charge of anything that touches money."
+module: 3
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="3" title="Use case: the triage cascade" time="12" />
+
+<LearningObjectives>
+- Build a working triage cascade with an escalation threshold
+- Explain why the confidence line is the most dangerous number in the design
+- Decide what may be automated and what must never be
+- Judge how well proven this use case is
+</LearningObjectives>
+
+<Callout type="note" title="How well proven? Status on 25 September 2026">
+**Reasonable fit, mixed evidence.** [Independent reviewers](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) found the model best at binary or few-class decisions on English text, and level with a simple baseline on spam. It was overconfident on choice answers in an [out-of-distribution test](https://github.com/scienthoon/jev-ood-calibration). No high-stakes production deployment is publicly documented.
+</Callout>
+
+### The scenario
+
+Kestrel Pay (our made-up payments app) gets 2 million support messages a month. Three things matter: send each to the right team, spot the angry or at-risk customers early, and never do anything irreversible without a person.
+
+Today an LLM reads every message. It is accurate, slow, and expensive. Most messages are boring ("how do I change my email?"). A few are dangerous ("I don't recognise this transaction").
+
+### The design
+
+<Diagram title="Triage cascade for a payments app">
+
+```
+  message ─► typed decision:  queue (choice) + at_risk (noul) + fraud_signal (noul)
+                 │
+                 ├─ fraud_signal high ──────────────► human, immediately (never automated)
+                 │
+                 ├─ queue confident AND low risk ───► route straight to the team
+                 │
+                 └─ anything else ──────────────────► LLM reads it, or a human does
+```
+
+</Diagram>
+
+Look at what is *not* automated: anything that could be fraud goes to a person no matter what the model's confidence says. The typed decision **routes**. It never decides money.
+
+### Try it: draw the line
+
+This simulation gives 300 tickets a stated confidence each. Pick the line above which nobody double-checks. Then switch between "perfectly calibrated" and "overconfident" and watch the red squares.
+
+<ConfidenceRouter />
+
+That is the lesson in one screen: the line means what it says **only if the confidence is honest**. Independent tests found Jev's choice answers overconfident, and [TypeSafe has not published a calibration measure](https://www.layer3labs.io/guides/jev-benchmarks). So your line has to come from your own labelled data, not from the number on the response.
+
+### Build it
+
+Use the `typed_decide.py` stand-in from chapter 1.
+
+```python
+from typed_decide import decide
+
+QUESTIONS = {
+    "queue": {"type": "choice", "criteria": {
+        "billing":   ["charged", "refund", "invoice", "plan"],
+        "account":   ["login", "password", "profile"],
+        "technical": ["error", "crash", "bug"],
+    }},
+    "fraud": {"type": "noul", "criteria": ["don't recognise", "stolen", "unauthorised", "fraud"]},
+}
+
+AUTO_LINE = 0.80      # calibrate this on your own labelled data, never copy it
+FRAUD_LINE = 0.20     # low on purpose: better a false alarm than a miss
+
+def llm_triage(message):
+    return {"route": "llm_review", "by": "llm"}          # stand-in for a real LLM call
+
+def triage(message):
+    a = decide(message, QUESTIONS)["answers"]
+    if a["fraud"] >= FRAUD_LINE:
+        return {"route": "human_now", "by": "rule", "why": f"fraud signal {a['fraud']}"}
+    q = a["queue"]
+    if q["confidence"] >= AUTO_LINE:
+        return {"route": q["value"], "by": "typed", "confidence": q["confidence"]}
+    return llm_triage(message)
+
+for m in [
+    "You charged me twice for the plan, please refund",
+    "I don't recognise this transaction, my card was stolen",
+    "Something is odd with my thing",
+]:
+    print(triage(m))
+```
+
+Read the output. The fraud message never reaches the auto route. The vague one falls through to the LLM. That is the whole pattern in 20 lines.
+
+### Where the tokens are saved
+
+Only on the messages routed straight through. In the calculator, that was the "share handled alone". If half your traffic is routine, you avoid LLM input and output on that half. The saving is real, but it is exactly as big as the **share you can safely automate**, and that share depends on your data.
+
+### The rules that make it safe
+
+1. **Route, do not decide** anything involving money, identity, or safety.
+2. **Set the escalation line from data.** A few hundred labelled examples, split by confidence band.
+3. **Sample the auto-routed traffic** weekly. A human reads 50. If errors creep up, tighten the line.
+4. **Log every decision** with its confidence to the [trace](/courses/agentic-harness-patterns/07-the-trace-pipeline).
+5. **Have a fallback rung** if the API is down: send everything to the LLM or to a queue, do not stop the support desk. See the [fallback ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder).
+
+### What could go wrong
+
+- **A confident wrong route.** A billing ticket that is really fraud lands in the wrong queue and waits. Keep the fraud line separate and low.
+- **Drift.** Kestrel Pay launches a new product; new kinds of message arrive; accuracy slides quietly. Sampling catches it.
+- **Non-English customers.** [Independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) saw a drop in Russian and a smaller one in Spanish. Test each language separately, or route non-English to the LLM.
+- **A prompt tweak that changes everything.** [One review](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) saw a third of answers change after swapping the rubric wording. Treat criteria edits as releases (chapter 6).
+
+<ChapterSummary>
+- A cascade uses a typed decision to route the easy majority and escalates the unsure rest
+- The saving equals the share of traffic you can safely automate, and no more
+- The confidence line is the riskiest number: set it from your labelled data, and audit it
+- Anything touching money, identity or safety is routed to a person, never decided
+- Evidence: reasonable fit for few-class English routing, but no high-stakes production proof yet
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does Kestrel Pay use a separate, low threshold for the fraud signal instead of relying on the queue confidence?
+2. Your line is 80%. A week later, a sample shows a 15% error among auto-routed tickets. What are your options?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- xbill, [independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60). Few-class strength, spam parity, language drop, wording sensitivity.
+- scienthoon, [jev-ood-calibration](https://github.com/scienthoon/jev-ood-calibration). Overconfidence on choice answers; 900-ticket out-of-distribution test.
+- Layer3 Labs, [Jev benchmarks](https://www.layer3labs.io/guides/jev-benchmarks). What TypeSafe has and has not published.
+- Agentic AI Harness Patterns (this site): [Approval Gate](/courses/agentic-harness-patterns/03-the-approval-gate), [Fallback Ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder).

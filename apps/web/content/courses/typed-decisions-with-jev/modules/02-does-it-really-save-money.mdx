@@ -1,0 +1,144 @@
+---
+title: "Does it really save money?"
+summary: "Where the token and cost savings come from, when they are real, when they are not, and how to do the sum honestly with a calculator."
+module: 2
+time: 14
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="2" title="Does it really save money?" time="14" />
+
+<LearningObjectives>
+- Explain the two sources of saving: cheaper input and no paid output
+- Use cost per correct decision, not cost per token
+- Run the cascade calculator and read its trade-offs
+- List the hidden costs that eat the saving
+</LearningObjectives>
+
+<Callout type="warning" title="Status on 25 September 2026">
+Every price here is a snapshot. Jev's list price is $0.042 per million input tokens with free output ([TypeSafe launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)). TypeSafe itself wrote that it [cannot prove the price is sustainable](https://typesafe.ai/blog/introducing-system-one-models-and-jev). LLM prices below are placeholders from [press coverage on 16 September 2026](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711). Put your own numbers into the calculators.
+</Callout>
+
+### The short answer
+
+**Yes, it can cut the cost of an LLM system, but only in a specific way, and not automatically.** It saves LLM tokens you would otherwise have spent on decisions a cheap, fast model can make just as well. It does not save anything on the hard cases, and it adds costs of its own.
+
+Let us see why, from the ground up.
+
+### Refresher: what a token is, and who pays for which
+
+A **token** is a chunk of text, roughly three-quarters of a word. Model providers charge per million tokens, and they charge *differently* for two things:
+
+- **Input tokens:** what you send (the ticket, your instructions)
+- **Output tokens:** what the model writes back. These usually cost several times more than input tokens, because generating text is the slow part.
+
+Now the key move. An LLM has to *write* its decision. Jev's decision is a value, and at list price **output is free**. So one source of the saving is simply that you stop paying for the paragraph.
+
+### Where the money goes in one decision
+
+Slide the numbers. With the defaults, the written answer alone is half the LLM bill.
+
+<TokenCostSplit />
+
+That is the first source of saving: **no paid output.** The second is a **much lower input price**. Put together, one decision can be around a hundred times cheaper per call. That is the number that makes headlines.
+
+### Why the headline number is not your saving
+
+The vendor says ["193.6x faster, 444.6x cheaper"](https://typesafe.ai/blog/introducing-system-one-models-and-jev). One [independent reviewer](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60) noted (as did [Layer3 Labs](https://www.layer3labs.io/guides/jev-benchmarks)) that the comparison model is not named and that, averaged across all eight of TypeSafe's own workflow setups, the figures come to 97.8x faster and 149.2x cheaper. Against Claude Haiku 4.5 on a phishing task, the same reviewer measured 2.9x faster and 12x cheaper. Against a local open model it was *slower*, and against one DeepSeek setup it cost *more*.
+
+So the multiple depends on **what you compare to**. Cheap per call is not the same as cheap per problem solved. [One author](https://flaviocopes.com/jev/) put it well: the useful metric is *cost per solved task*, not cost per token.
+
+### Try it: the cascade
+
+The way most systems would actually use this is a **cascade**. Jev looks at every item. The ones it handles confidently are done. The rest go on to a bigger model (or a person). The LLM only sees the hard cases.
+
+<Diagram title="A cascade">
+
+```
+  every ticket ──► typed decision ──┬── confident ──► act on it            (cheap)
+                                    │
+                                    └── unsure ────► LLM, or a human       (expensive)
+```
+
+</Diagram>
+
+Play with the calculator. Watch two outputs, not one: the monthly bill and the number of wrong decisions.
+
+<CascadeCalculator />
+
+With the defaults (a million decisions a month, Jev handling 70% alone at 94% accuracy, the LLM at 96%), you should see roughly:
+
+| | Monthly cost | Wrong decisions | Cost per correct one |
+|---|---|---|---|
+| LLM on everything | about $3,600 | about 40,000 | about $0.0038 |
+| Jev first, LLM for the rest | about $1,118 | about 54,000 | about $0.0012 |
+
+The cascade saves about two-thirds of the bill. It also makes about 14,000 more wrong decisions. **Both facts are true at once.** Whether that is a good trade is a business question: is each extra wrong decision worth less than the roughly $0.18 each one saved you? For a low-stakes tag, yes. For a refund decision at a bank, probably not, and you would push the "handled alone" share down until it is.
+
+### When it does *not* save money
+
+Try these in the calculator:
+
+- **Set "share Jev handles alone" to 20%.** You still pay Jev to look at everything, and the LLM still sees 80%. The saving nearly vanishes.
+- **Drop Jev's accuracy to 80%.** The bill falls; the wrong-decision count balloons.
+- **Make the LLM prices tiny.** If your LLM decision already costs a fraction of a cent, there is little left to save, and the engineering effort dominates.
+
+And some cases the calculator cannot show:
+
+- **Every decision needs a real explanation anyway.** You will call the LLM regardless, so Jev is just extra cost.
+- **A regex would do.** If the decision is "does the text contain one of these ten strings", the cheapest baseline is free, exact and explainable.
+- **Volume is small.** At Jev's list price a million 900-token decisions costs about $38 a month. One [review](https://flowtivity.ai/blog/laya-open-source-jev-alternative/) worked out that 40,000 decisions a month costs about $1.34. If your monthly LLM bill for that decision is $20, you are optimising pennies. The reason to adopt it at low volume is speed or a cleaner output, not money.
+
+### The hidden costs
+
+| Cost | Why it exists |
+|---|---|
+| Labelled data | You need a few hundred examples to test it, and more to calibrate it |
+| Shadow testing | Running beside your current process before trusting it (chapter 6) |
+| Human review | Someone has to check the unsure and sampled cases |
+| Decomposition | Asking five small questions instead of one is more calls (still cheap, but not free) |
+| Engineering | Integrating, monitoring, a fallback for when the API is down |
+| Vendor risk | A ten-day-old service. A price rise, an outage, or a model version change lands on you |
+| Re-testing | Small wording changes moved a third of answers in [one test](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60), so every prompt edit is a release |
+
+None of these are reasons not to use it. They are the reasons to do the sum on **cost per correct decision, including these**, before you claim a saving.
+
+### The Jevons twist
+
+The model is named after the economist behind the Jevons paradox: when something gets cheaper, we use more of it. Watch for this in your own system. If a decision costs almost nothing, someone will add fifteen more questions to every ticket, and the total bill can rise even as the unit price falls. That is not a failure; it may be exactly the value you wanted. But budget for it. The [Cost and Rate Governor](/courses/agentic-harness-patterns/09-the-cost-and-rate-governor) applies here too.
+
+### A fair way to claim a saving
+
+1. Measure your current cost and accuracy per decision. Real traffic, real numbers.
+2. Run the typed-decision model in shadow on the same items.
+3. Measure its accuracy against labels, **by confidence band**.
+4. Pick the "handle alone" line where the error is acceptable for the stakes.
+5. Then, and only then, compute the saving, with the wrong-decision count next to it.
+
+<ChapterSummary>
+- Two sources of saving: much cheaper input, and no paid output
+- The headline "hundreds of times cheaper" depends on the comparison; independent tests saw 12x down to none
+- A cascade saves LLM tokens on the easy cases only, and can add wrong decisions
+- Judge it by cost per correct decision, including labels, testing, review and vendor risk
+- At low volume the dollar saving is tiny; the case then rests on speed and clean output
+</ChapterSummary>
+
+<Checkpoint>
+1. In the calculator, what happens to the saving when Jev handles only 20% alone? Why?
+2. Your current LLM decision costs 0.2 cents and you make 50,000 a month. Is cost the reason to adopt Jev? What might be?
+3. Why is "cost per correct decision" a better measure than "cost per token"?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- TypeSafe AI, [launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev). List price, comparison methodology, and its own stated caveats.
+- The Register, [16 Sept 2026](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711). Press-quoted LLM prices used as calculator placeholders.
+- xbill, [independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60). Speed and cost multiples against Haiku 4.5, local models and DeepSeek; averaged vendor figures.
+- Layer3 Labs, [Jev benchmarks](https://www.layer3labs.io/guides/jev-benchmarks). Unnamed comparator; "terrible tradeoff" warning for costly errors.
+- Flowtivity, [Laya vs Jev](https://flowtivity.ai/blog/laya-open-source-jev-alternative/). The 40,000-decisions arithmetic.
+- Flavio Copes, [A deep dive into Jev](https://flaviocopes.com/jev/). Cost per solved task.
+- William Stanley Jevons, *The Coal Question* (1865). The paradox the product name refers to.

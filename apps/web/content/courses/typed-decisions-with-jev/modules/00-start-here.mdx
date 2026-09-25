@@ -1,0 +1,130 @@
+---
+title: "Start here: what Jev is, and how well proven it is"
+summary: "A typed-decision model answers with a value your code can branch on, not a paragraph. Here is what that means, why it might cut LLM cost, and the honest state of the evidence on 25 September 2026."
+module: 0
+time: 12
+level: "Beginner"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="0" title="Start here: what Jev is, and how well proven it is" time="12" />
+
+<LearningObjectives>
+- Explain in a sentence what a typed-decision model is and how it differs from an LLM
+- Say honestly how well proven Jev is, as of 25 September 2026
+- Know what this course promises, and what it deliberately does not
+- Read the evidence labels used throughout
+</LearningObjectives>
+
+<Callout type="warning" title="Status on 25 September 2026">
+Jev is about ten days old. TypeSafe AI released it in early access on 15 September 2026 ([The Register](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711), [TypeSafe launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)). Almost everything you will read about it is either the vendor's own claim or a review written in its first week. This course is dated on purpose: prices, limits and benchmarks are moving, and some of what follows will be out of date soon.
+</Callout>
+
+### A story, and an invoice
+
+Picture Kestrel Pay, a made-up payments app. Every support message, about two million a month, is read by a large language model that answers, in a friendly paragraph: *"This looks like a billing issue, the customer seems frustrated, I would treat it as high priority."* Then a bit of code tries to read that paragraph to work out which queue the ticket goes to. Sometimes the parsing breaks. Sometimes "high priority" turns into a 3 when the team meant a 4.
+
+The engineer looking at the invoice notices something odd. The model is writing a whole paragraph to make a decision that fits in three words: *billing, urgent, at risk.* And the writing is the expensive part.
+
+That observation is the whole reason typed-decision models exist.
+
+### The one-sentence version
+
+A **typed-decision model** takes some text and a list of questions, and returns *values*: a category, a score, or a yes/no probability. It does not write sentences.
+
+**Jev**, from a company called TypeSafe AI, is the first commercial one. Its makers call the category **System One models** ([launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)), after the fast, gut-reaction thinking in Daniel Kahneman's *Thinking, Fast and Slow*. An LLM is closer to System Two: slow, wordy, deliberate.
+
+<Diagram title="Two ways to make the same decision">
+
+```
+   LLM
+   ticket text ──► [ model writes a paragraph ] ──► your code parses it ──► queue
+                     (slow, priced by output tokens)   (can break)
+
+   Typed-decision model
+   ticket text + questions ──► [ model returns values ] ──► queue
+                     (fast, output is free at list price)   (always the shape you asked for)
+```
+
+</Diagram>
+
+### Why anyone should care
+
+Four things, in order of how much they matter:
+
+1. **The answer is always the right shape.** No parsing paragraphs. Your code branches on `queue == "billing"`.
+2. **It is fast.** The vendor says [70 to 500 milliseconds](https://typesafe.ai/blog/introducing-system-one-models-and-jev); independent write-ups measured a median around a quarter of a second ([BestHub](https://www.besthub.dev/articles/open-source-decision-model-laya-vs-jev-speed-wins-zero-shot-fails-befced0a2228), [Flowtivity](https://flowtivity.ai/blog/laya-open-source-jev-alternative/)). Fast enough for a user waiting on a screen.
+3. **It is cheap per decision,** at least at TypeSafe's list price. Chapter 2 does the sums properly.
+4. **It says how sure it is.** That lets you send only the unsure cases to an expensive model. (Chapter 6 explains why you must not take that "sure" at face value.)
+
+The name is a small joke. It nods to the economist William Stanley Jevons, whose paradox says that when something gets cheaper to use, people use *more* of it. If asking a question of a model costs almost nothing, you start asking it about everything.
+
+### How well proven is it?
+
+Here is the honest part, and the reason for this course's shape. Every headline claim, checked against what independent people found in the first ten days. Filter by label. Open the ones that surprise you.
+
+<EvidenceLadder />
+
+If you take one thing from this chapter: **"0 hallucinations" and "0 type errors" describe the *shape* of the answer, not whether the answer is right.** A perfectly formatted wrong decision is still a wrong decision, and in a payments or healthcare system that is the one that matters.
+
+### What this course promises
+
+| It will | It will not |
+|---|---|
+| Explain typed decisions from scratch, with interactives | Tell you Jev is great or terrible |
+| Show exactly where token and money savings come from, with a calculator | Promise a savings percentage |
+| Give high-stakes use cases, each labelled by evidence | Pretend the evidence is stronger than it is |
+| Cover when **not** to use it, in a full chapter | Sell you anything |
+| Compare Jev with the open-weights Laya | Declare a winner |
+| Propose how it could help real projects, honestly marked as proposals | Claim any of that is built |
+
+### How the chapters fit
+
+<Diagram title="The route through the course">
+
+```
+  0 Start here ─► 1 What a typed decision is ─► 2 Does it save money?
+                                                       │
+        ┌──────────────────────────────────────────────┤
+        ▼                    ▼                         ▼
+  3 Triage cascade   4 Guardrails         5 Decompose, filter, route
+        └──────────────────────┬───────────────────────┘
+                               ▼
+                  6 Trusting the numbers ─► 7 When NOT to use it
+                               │
+                  8 Jev vs Laya ─► 9 Your projects ─► 10 Study guide
+```
+
+</Diagram>
+
+It leans on the harness ideas from [Agentic AI Harness Patterns](/courses/agentic-harness-patterns): the [approval gate](/courses/agentic-harness-patterns/03-the-approval-gate), the [circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker), the [shadow evaluation harness](/courses/agentic-harness-patterns/08-the-shadow-evaluation-harness), and the [fallback ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder). A typed-decision model does not replace those. It plugs into them.
+
+<Callout type="note" title="A note on the website you were sent">
+The site jevtypesafeai.com says on its own pricing page that it is an independent platform operated by CODEFASHION TECH LTD, not affiliated with TypeSafe AI. It resells access at $0.25 to $0.42 per million input tokens ([their pricing page](https://jevtypesafeai.com/pricing)); TypeSafe's own list price is $0.042 ([launch post](https://typesafe.ai/blog/introducing-system-one-models-and-jev)). Read the official docs and terms before you build on either.
+</Callout>
+
+<ChapterSummary>
+- A typed-decision model returns values (a category, a score, a probability), not prose
+- Jev is a hosted System One model from TypeSafe AI, released in early access on 15 September 2026
+- Its headline claims are mostly vendor claims; independent tests in week one are mixed
+- "Zero type errors" is about the shape of the answer, not its correctness
+- The value proposition is real but narrow: fast, cheap, well-shaped decisions on the right kind of task
+</ChapterSummary>
+
+<Checkpoint>
+1. In one sentence, what is the difference between what an LLM returns and what a typed-decision model returns?
+2. Why does "0 type errors" not tell you the decision is correct?
+3. Which claim in the evidence ladder would you most want independent proof for before using Jev in a payments system, and why?
+</Checkpoint>
+
+### Sources
+
+All pages read on 25 September 2026. Figures were pulled through a summarising fetch tool, so check any number on the linked page before you quote it.
+
+- TypeSafe AI, [Introducing System One Models & Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev). Vendor source: architecture, pricing, benchmark claims and stated caveats.
+- The Register, [TypeSafe AI debuts model for machines that plays Doom](https://www.theregister.com/ai-and-ml/2026/09/16/typesafe-ai-debuts-model-for-machines-that-plays-doom/5296711), 16 Sept 2026. Press coverage with a sceptical note on "hallucination-free".
+- Cloudflare, [Jev model page](https://developers.cloudflare.com/ai/models/typesafe/jev/). API shape, context limit, availability label.
+- xbill, [Jev after eight days of independent tests](https://dev.to/aws-builders/jev-after-eight-days-of-independent-tests-level-with-mid-price-llms-behind-the-frontier-1c60), DEV Community, 24 Sept 2026. Independent synthesis of several studies.
+- BestHub, [Laya vs Jev](https://www.besthub.dev/articles/open-source-decision-model-laya-vs-jev-speed-wins-zero-shot-fails-befced0a2228) and Flowtivity, [Laya, benchmarked honestly](https://flowtivity.ai/blog/laya-open-source-jev-alternative/). Latency measurements.
+- jevtypesafeai.com, [Pricing](https://jevtypesafeai.com/pricing). A reseller that states it is independent of TypeSafe AI.

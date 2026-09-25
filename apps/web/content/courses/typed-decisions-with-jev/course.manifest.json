@@ -1,0 +1,111 @@
+{
+  "course_id": "typed-decisions-with-jev",
+  "title": "Typed Decisions with Jev (and Laya)",
+  "summary": "Cheaper, faster decisions inside LLM systems: what typed-decision models are, where they really save tokens and money, where they do not, how Jev compares with the open-weights Laya, and what is proven versus not, dated 25 September 2026.",
+  "level": "Intermediate",
+  "track": "applied-ai",
+  "order": 7,
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-09-25",
+  "tags": [
+    "Jev",
+    "Laya",
+    "Typed Decisions",
+    "Token Cost",
+    "Routing",
+    "Guardrails",
+    "Calibration",
+    "High Stakes"
+  ],
+  "modules": [
+    {
+      "id": "00-start-here",
+      "title": "Start here: what Jev is, and how well proven it is",
+      "time_minutes": 12,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "01-what-a-typed-decision-is",
+      "title": "What a typed decision is",
+      "time_minutes": 12,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "02-does-it-really-save-money",
+      "title": "Does it really save money?",
+      "time_minutes": 14,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "03-use-case-triage-cascade",
+      "title": "Use case: the triage cascade",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "04-use-case-guardrails",
+      "title": "Use case: guardrails and approval triage",
+      "time_minutes": 11,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "05-use-case-decompose-filter-route",
+      "title": "Use case: decompose, filter, route",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "06-trusting-the-numbers",
+      "title": "Trusting the numbers: calibration and shadow tests",
+      "time_minutes": 13,
+      "level": "Advanced",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "07-when-not-to-use-it",
+      "title": "When not to use it",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "08-jev-vs-laya",
+      "title": "Jev vs Laya: hosted API or open weights",
+      "time_minutes": 13,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "09-how-it-could-help-your-projects",
+      "title": "How it could help your projects",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "10-study-guide",
+      "title": "Study guide: cheat sheet, glossary, quiz, sources",
+      "time_minutes": 10,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    }
+  ]
+}
