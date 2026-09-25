@@ -29,6 +29,13 @@ import { CapabilityLadder } from "./capability-ladder";
 import { ModelCostCompare } from "./model-cost-compare";
 import { StackByScale } from "./stack-by-scale";
 import { StackDecisionTool } from "./stack-decision-tool";
+import { ToolGateway } from "./tool-gateway";
+import { BlastRadiusSlider } from "./blast-radius-slider";
+import { CircuitBreakerSim } from "./circuit-breaker-sim";
+import { TraceExplorer } from "./trace-explorer";
+import { ShadowEvalSim } from "./shadow-eval-sim";
+import { CostGovernor } from "./cost-governor";
+import { FallbackLadder } from "./fallback-ladder";
 import {
   Info,
   Lightbulb,
@@ -381,5 +388,12 @@ export const courseComponents = {
   ModelCostCompare,
   StackByScale,
   StackDecisionTool,
+  ToolGateway,
+  BlastRadiusSlider,
+  CircuitBreakerSim,
+  TraceExplorer,
+  ShadowEvalSim,
+  CostGovernor,
+  FallbackLadder,
   pre: CodeBlock,
 };
