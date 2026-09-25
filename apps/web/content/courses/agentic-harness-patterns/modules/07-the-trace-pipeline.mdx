@@ -1,0 +1,111 @@
+---
+title: "The Trace Pipeline"
+summary: "Record every step an agent takes as a structured trace, so you can see what it did, why it was slow, and what it cost."
+module: 7
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="7" title="The Trace Pipeline" time="12" />
+
+<LearningObjectives>
+- Explain the difference between a log line and a trace
+- Name the fields every span should carry
+- Instrument an agent step with a decorator
+- Use a trace to find the slow, expensive, or wrong step
+</LearningObjectives>
+
+### The problem
+
+Something went wrong. A customer got a bad answer yesterday at 14:07. Without a trace you have the final text and a guess. With one you can open the run and see: the plan, the order lookup, the retrieved chunks and their scores, the draft, the guard result, and which step took four seconds.
+
+A **trace** is one agent run. It is made of **spans**, one per step, each with a start, a duration, inputs, outputs, and a parent. The **Trace Pipeline** is the habit of emitting these everywhere, in one shape, to one place.
+
+### Explore a real-shaped trace
+
+Click a span. Notice which one is slowest, which one costs the most, and which is mostly waiting on a human.
+
+<TraceExplorer />
+
+### What every span carries
+
+| Field | Why |
+|---|---|
+| `trace_id`, `span_id`, `parent_id` | Reassemble the run |
+| `name`, `kind` | llm, tool, retrieval, guard |
+| `start`, `duration_ms` | Find the slow part |
+| `input`, `output` (redacted) | See what happened |
+| `model`, `tokens_in`, `tokens_out`, `cost` | Find the expensive part |
+| `status`, `error` | Find the failed part |
+
+This repo's rule is the same: every agent run logs agent name, model, tokens, cost, tool calls, and status to Langfuse.
+
+### Instrument once
+
+```python
+import functools, time, uuid, json
+
+TRACE = []          # in real life: send to Langfuse, not a list
+_current = {"trace": None, "parent": None}
+
+def span(kind):
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            sid, parent = uuid.uuid4().hex[:8], _current["parent"]
+            _current["parent"] = sid
+            t0, status, err = time.time(), "ok", None
+            try:
+                return fn(*args, **kwargs)
+            except Exception as e:
+                status, err = "error", str(e)
+                raise
+            finally:
+                TRACE.append({
+                    "trace": _current["trace"], "span": sid, "parent": parent,
+                    "name": fn.__name__, "kind": kind,
+                    "ms": round((time.time() - t0) * 1000),
+                    "status": status, "error": err,
+                })
+                _current["parent"] = parent
+        return wrapper
+    return deco
+
+@span("tool")
+def get_order(order_id): return {"id": order_id, "status": "delivered"}
+
+@span("llm")
+def draft_reply(order): return f"Your order {order['id']} was delivered."
+
+_current["trace"] = uuid.uuid4().hex[:8]
+draft_reply(get_order("A-1043"))
+print(json.dumps(TRACE, indent=1))
+```
+
+Wrap the gateway call and the model call once and every run is traced without touching agent logic.
+
+<Callout type="important" title="Redact before you record">
+Traces are a second copy of your data. Strip card numbers, emails, and keys before they are stored, and decide how long traces live. A trace store that leaks is a worse leak than the app.
+</Callout>
+
+### Three questions traces answer
+
+1. **Where did the time go?** The waterfall. Usually one LLM call or one wait.
+2. **Where did the money go?** Sum cost by span kind, by tool, by user.
+3. **Why was this answer wrong?** Read the retrieved chunks. Most bad answers are bad retrieval, visible in one glance at the retrieval span.
+
+Traces are also the raw material for the next pattern: a shadow evaluation replays real inputs recorded here. For the wider picture, see [AI Agents Observability](/courses/ai-agents-observability) and the [observability module of the agents course](/courses/ai-agents/08-observability-langfuse).
+
+<ChapterSummary>
+- A trace is one run; spans are its steps; one shape everywhere
+- Carry ids, timing, redacted input and output, model, tokens, cost, and status
+- Instrument at the gateway and the model call, not inside every agent
+- Redact before storing, and set a retention period
+</ChapterSummary>
+
+<Checkpoint>
+1. A run took 6 seconds and 5 of them are one span. Name two different reasons that span might be slow, and which extra field would tell them apart.
+2. Why should the trace capture retrieval scores, not only the final answer?
+</Checkpoint>

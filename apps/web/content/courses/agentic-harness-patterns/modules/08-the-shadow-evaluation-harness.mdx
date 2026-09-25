@@ -1,0 +1,100 @@
+---
+title: "The Shadow Evaluation Harness"
+summary: "Test a new prompt or model on real traffic without any user seeing the result, and block the release on regressions."
+module: 8
+time: 12
+level: "Advanced"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="8" title="The Shadow Evaluation Harness" time="12" />
+
+<LearningObjectives>
+- Explain why changing a prompt is a release, not an edit
+- Describe shadow mode, golden sets, and canary rollout, and how they fit together
+- Write a regression-aware release check
+- Know what to do when the judge is itself a model
+</LearningObjectives>
+
+### The problem
+
+You improve a prompt. It handles the case you were looking at. Does it break three others? You cannot tell by reading it, and you should not find out from customers. Prompts, models, and tools are code. Changing them is a release.
+
+The **Shadow Evaluation Harness** runs the new version beside the live one, on the same real inputs, and compares. Users only ever see the live answer. The shadow answer is recorded and scored.
+
+<Diagram title="Shadow, then canary, then full">
+
+```
+  real request ─┬──► LIVE version ──► user sees this
+                │
+                └──► CANDIDATE ──► scored, never shown
+                          │
+             regressions? ├─ yes ──► fix, repeat
+                          └─ no  ──► canary: 5% of users, watch metrics
+                                          └──► 100%
+```
+
+</Diagram>
+
+### Try it
+
+Run each candidate against six recorded requests. One of them scores well on average and still must not ship.
+
+<ShadowEvalSim />
+
+### Regressions beat averages
+
+Average score hides damage. A candidate that fixes two cases and breaks one safety case has a better average and is worse. So the release check has two rules:
+
+1. Score at or above live
+2. **Zero** cases that live passes and the candidate fails, at least for the cases you marked as critical
+
+```python
+def release_check(cases, live_results, cand_results, critical):
+    regressions = [
+        c for c in cases
+        if live_results[c] and not cand_results[c]
+    ]
+    critical_regressions = [c for c in regressions if c in critical]
+    live_score = sum(live_results.values()) / len(cases)
+    cand_score = sum(cand_results.values()) / len(cases)
+    ok = cand_score >= live_score and not critical_regressions
+    return {"ok": ok, "live": live_score, "candidate": cand_score, "regressions": regressions}
+
+cases = ["order_status", "refund", "cancel", "address", "injection", "stock"]
+live  = dict(zip(cases, [1, 1, 1, 0, 1, 1]))
+cand  = dict(zip(cases, [1, 1, 1, 1, 0, 1]))
+print(release_check(cases, live, cand, critical={"injection"}))
+# ok: False. Score is equal, but a critical case regressed.
+```
+
+### Where the test cases come from
+
+- **Golden set:** cases you wrote and verified by hand, including the ugly ones. Start with 20.
+- **Real traffic:** sampled from the [Trace Pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline), with private data redacted.
+- **Every incident:** a bug found in production becomes a permanent case. The set only grows.
+
+### Grading
+
+Some checks are exact ("did it call `get_order` with the right id?"). Some need judgement, so a second model grades the first.
+
+<Callout type="warning" title="Judges need checking too">
+A model judge has its own biases, such as favouring longer answers. Spot-check its grades against a human on a sample, use a different model from the one being graded, and prefer exact checks wherever they exist.
+</Callout>
+
+### Then the canary
+
+Shadow mode proves the candidate is not worse on cases you have. A **canary** proves it in real conditions: send 5% of live traffic to it, watch error rate, latency, cost, and user signals, and keep a one-step rollback. Shadow first because it is free of user risk. Canary second because reality has cases you never recorded. This is the evaluation half of the [AI Ops](/courses/ai-ops) story.
+
+<ChapterSummary>
+- A prompt or model change is a release, so test it like one
+- Shadow mode scores a candidate on real inputs without showing users
+- Block on regressions in critical cases, not just on the average
+- Grow the test set from real traffic and every incident; follow shadow with a canary
+</ChapterSummary>
+
+<Checkpoint>
+1. A candidate scores 92% and live scores 90%. What else must you check before promoting it?
+2. Where should the 21st test case in your golden set come from?
+</Checkpoint>

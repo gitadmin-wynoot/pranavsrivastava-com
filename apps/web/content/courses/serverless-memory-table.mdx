@@ -791,3 +791,5 @@ A pattern, not just a class. You have taken a stateless, time-boxed function and
 ---
 
 You now have the full picture: *why* a durable memory is needed the instant an agent can pause, *what* a LangGraph checkpointer must do, and *how* to implement one on DynamoDB that is compressed, multi-tenant, and safe to resume across separate Lambda invocations. The natural next steps are to wire this into an approvals dashboard (the GSI already supports it), to add the async methods if you move to `ainvoke`, and to reuse the exact same pattern for any long-running, human-gated workflow — refunds, moderation, deployments — not just bookings.
+
+The approval side of this is pattern 3 in [Agentic AI Harness Patterns](/courses/agentic-harness-patterns/03-the-approval-gate).

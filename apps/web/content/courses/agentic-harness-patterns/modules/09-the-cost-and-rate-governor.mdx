@@ -1,0 +1,100 @@
+---
+title: "The Cost and Rate Governor"
+summary: "Give every agent run a budget and a step cap, because a stuck loop is the most expensive bug you can ship."
+module: 9
+time: 10
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="9" title="The Cost and Rate Governor" time="10" />
+
+<LearningObjectives>
+- Explain why agent loop cost grows faster than the number of steps
+- Set four limits: tokens or dollars per run, steps per run, calls per minute, spend per day
+- Implement a governor that stops a run cleanly
+- Choose what happens when a limit is hit
+</LearningObjectives>
+
+### The problem
+
+A chatbot costs one model call per message. An agent runs a loop, and each turn re-sends the growing history. Turn one sends 2,000 tokens, turn two sends 2,400, turn ten sends 6,000. Ten turns cost far more than ten times turn one. If the agent gets stuck, retrying the same failing step, nothing in the loop stops it. The invoice does.
+
+A **governor** is the part of a steam engine that stops it running away. Same job here.
+
+### Try it
+
+Run a stuck loop with and without a governor. Move the budget and step cap.
+
+<CostGovernor />
+
+### Four limits
+
+| Limit | Scope | Protects against |
+|---|---|---|
+| Budget per run | One task | A single stuck loop |
+| Step cap | One task | Loops that never converge |
+| Rate limit | Per user or key, per minute | Abuse and bursts |
+| Daily spend cap | Whole system | Everything else, as a last net |
+
+Set them before the agent runs, not after the first surprise. This repo's rule says the same: budget limits before any long-running task.
+
+### Implementation
+
+```python
+class BudgetExceeded(Exception):
+    pass
+
+class Governor:
+    def __init__(self, max_usd=0.50, max_steps=12):
+        self.max_usd, self.max_steps = max_usd, max_steps
+        self.spent, self.steps = 0.0, 0
+
+    def before_step(self, est_usd):
+        if self.steps >= self.max_steps:
+            raise BudgetExceeded(f"step cap {self.max_steps} reached")
+        if self.spent + est_usd > self.max_usd:
+            raise BudgetExceeded(f"next step would exceed ${self.max_usd:.2f}")
+
+    def after_step(self, tokens_in, tokens_out, in_price=3e-6, out_price=15e-6):
+        self.steps += 1
+        self.spent += tokens_in * in_price + tokens_out * out_price
+
+gov = Governor(max_usd=0.05, max_steps=8)
+history_tokens = 2000
+try:
+    while True:
+        gov.before_step(est_usd=history_tokens * 3e-6)
+        # ... call the model here ...
+        gov.after_step(history_tokens, 300)
+        history_tokens += 400
+except BudgetExceeded as e:
+    print("stopped:", e, f"(spent ${gov.spent:.3f})")
+```
+
+Check *before* the step using an estimate, so the run stops under budget instead of just over it. Prices vary by model and change often, so read them from config, not from your head. The model cost comparison in [Designing AI Applications](/courses/designing-ai-applications) shows how wide the gap between models is, which is also why routing simple steps to a smaller model is a cost lever.
+
+### What happens at the limit
+
+Do not just crash. Pick one on purpose:
+
+1. **Stop and report:** "I used my budget. Here is what I found so far."
+2. **Ask to continue:** hand to the [Approval Gate](/courses/agentic-harness-patterns/03-the-approval-gate) for a larger budget
+3. **Downgrade:** finish the task on a cheaper model
+
+<Callout type="tip" title="Cap the context, too">
+The cheapest saving is often trimming history: summarise old turns and drop tool output the agent no longer needs. It cuts cost and usually improves answers. Cross-link: [Context Engineering](/courses/context-engineering).
+</Callout>
+
+<ChapterSummary>
+- Agent cost grows faster than step count because history is re-sent every turn
+- Use four limits: per-run budget, step cap, rate limit, daily cap
+- Check before each step using an estimate
+- Decide what a limit means: stop and report, ask for more, or downgrade
+</ChapterSummary>
+
+<Checkpoint>
+1. Your average run costs 4 cents and your budget is 50 cents. Is that a good limit? What does it protect against, and what would you check in the trace?
+2. Why check the budget before a step instead of after?
+</Checkpoint>
