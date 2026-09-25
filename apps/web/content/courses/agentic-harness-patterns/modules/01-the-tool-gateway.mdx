@@ -1,0 +1,137 @@
+---
+title: "The Tool Gateway"
+summary: "Put one checkpoint between the model and every tool it can call: registry, schema, permission, limit, log."
+module: 1
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="1" title="The Tool Gateway" time="12" />
+
+<LearningObjectives>
+- Explain why a model should never call a tool function directly
+- Name the five checks a gateway runs on every call
+- Build a working gateway in about 40 lines of Python
+- Return errors to the model in a form it can actually recover from
+</LearningObjectives>
+
+### The problem
+
+A model does not call tools. It writes text that *looks like* a tool call: a name and some arguments. Your code decides whether to run it. If that code is just `tools[name](**args)`, then whatever the model writes, happens. It can invent a tool that does not exist, pass a string where you wanted a number, or repeat the same call 500 times.
+
+The **Tool Gateway** is the fix: one function that every tool call must pass through. Think of the front desk of an office building. Visitors do not walk to any floor they like. They sign in, get checked against a list, and get a badge for exactly the floors they may visit.
+
+<Diagram title="Without and with a gateway">
+
+```
+  WITHOUT                          WITH
+
+  model ──► tools[name](**args)    model ──► GATEWAY ──► tool
+            (runs anything)                  1 registered?
+                                             2 schema valid?
+                                             3 permitted?
+                                             4 under limits?
+                                             5 log + timeout
+```
+
+</Diagram>
+
+### Try it
+
+Send five different calls through the gateway and watch where each one stops.
+
+<ToolGateway />
+
+### The five checks
+
+| Check | Catches | Example |
+|---|---|---|
+| Registered | Invented tools | The model calls `delete_everything` |
+| Schema valid | Wrong types, missing fields | `to: "not-an-email"` |
+| Permitted | Right tool, wrong agent | A read-only agent tries `issue_refund` |
+| Under limits | Loops and runaway cost | The 61st identical call in a minute |
+| Logged with a timeout | Hangs and silent failures | A slow API blocks the whole run |
+
+### A working gateway
+
+```python
+import time
+from dataclasses import dataclass, field
+from typing import Callable
+
+@dataclass
+class Tool:
+    fn: Callable
+    required: dict            # arg name -> expected type
+    allowed_roles: set
+    max_per_minute: int = 30
+
+@dataclass
+class Gateway:
+    tools: dict = field(default_factory=dict)
+    calls: dict = field(default_factory=dict)   # (role, tool) -> [timestamps]
+    log: list = field(default_factory=list)
+
+    def register(self, name, tool):
+        self.tools[name] = tool
+
+    def call(self, role, name, args):
+        tool = self.tools.get(name)
+        if tool is None:
+            return self._err(name, "unknown_tool", f"No tool called {name}. Available: {list(self.tools)}")
+
+        for arg, typ in tool.required.items():
+            if arg not in args or not isinstance(args[arg], typ):
+                return self._err(name, "bad_args", f"{arg} must be {typ.__name__}")
+
+        if role not in tool.allowed_roles:
+            return self._err(name, "forbidden", f"Role {role} cannot use {name}")
+
+        now = time.time()
+        recent = [t for t in self.calls.get((role, name), []) if now - t < 60]
+        if len(recent) >= tool.max_per_minute:
+            return self._err(name, "rate_limited", "Too many calls. Stop and report what you have.")
+        self.calls[(role, name)] = recent + [now]
+
+        try:
+            result = tool.fn(**args)
+            self.log.append({"tool": name, "args": args, "ok": True})
+            return {"ok": True, "result": result}
+        except Exception as e:
+            return self._err(name, "tool_failed", str(e))
+
+    def _err(self, name, code, message):
+        self.log.append({"tool": name, "ok": False, "code": code})
+        return {"ok": False, "code": code, "message": message}
+
+gw = Gateway()
+gw.register("search_docs", Tool(lambda query: f"3 results for {query}", {"query": str}, {"support", "admin"}))
+gw.register("issue_refund", Tool(lambda order, amount: "refunded", {"order": str, "amount": (int, float)}, {"admin"}))
+
+print(gw.call("support", "search_docs", {"query": "refund policy"}))
+print(gw.call("support", "issue_refund", {"order": "A-1043", "amount": 42}))
+```
+
+The second call prints a `forbidden` error. Nothing ran.
+
+<Callout type="tip" title="Errors are messages to the model">
+Do not raise an exception and crash the run. Return a short, specific error the model can read. "amount must be a number" lets it fix the call and retry. "Error 500" does not. The unknown-tool error above lists the tools that do exist, which is often all the model needed.
+</Callout>
+
+### Where it sits with MCP
+
+If your tools come from MCP servers, the gateway is the layer in front of them. MCP standardises *how* a tool is described and called. It does not decide who may call what, or how often. See the [MCP for Practical Builders](/courses/mcp) course, and its security chapter in particular.
+
+<ChapterSummary>
+- The model writes text that looks like a tool call; your code decides whether to run it
+- A gateway is one function every call passes through: registered, valid, permitted, under limits, logged
+- Return structured errors so the model can recover; do not crash the run
+- The gateway is where the next patterns plug in: permissions, approvals, limits, traces
+</ChapterSummary>
+
+<Checkpoint>
+1. A model calls `send_invoice` but you only registered `create_invoice`. Which check catches it, and what should the error say?
+2. Your gateway works, but an agent still burns money by searching the same query 200 times. Which check was missing or set too loosely?
+</Checkpoint>

@@ -1,0 +1,105 @@
+---
+title: "The Sandboxed Runtime"
+summary: "When an agent writes and runs code, run it somewhere that cannot hurt you."
+module: 4
+time: 10
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="4" title="The Sandboxed Runtime" time="10" />
+
+<LearningObjectives>
+- Explain why executing model-written code is a different risk from calling a tool
+- List the four things a sandbox must limit
+- Run untrusted code with real limits in Python
+- Choose between a subprocess, a container, and a microVM
+</LearningObjectives>
+
+### The problem
+
+A tool call has a fixed shape you defined in advance. Code execution does not. When an agent writes Python to analyse a spreadsheet, it can also write `import os; os.system("rm -rf ~")`, on purpose or by accident. If that runs on your machine or your server, you have handed a stranger a shell.
+
+The **Sandboxed Runtime** pattern runs generated code in a place where the worst case is "the sandbox got messy, throw it away."
+
+<Diagram title="What a sandbox limits">
+
+```
+  generated code ──►┌─────────────── sandbox ────────────────┐
+                    │ filesystem : one scratch dir, nothing  │
+                    │              else visible              │
+                    │ network    : off (or an allowlist)     │
+                    │ resources  : CPU, memory, wall-clock   │
+                    │ secrets    : none inside                │
+                    └────────────────────────────────────────┘
+                              output only ──► back to the agent
+```
+
+</Diagram>
+
+### The four limits
+
+| Limit | Stops |
+|---|---|
+| Filesystem | Reading your keys or `.env`, deleting real files |
+| Network | Sending data out, downloading more code |
+| Resources | Infinite loops, memory bombs |
+| Secrets | Anything valuable to steal in the first place |
+
+Secrets are the one people forget. If the sandbox has no credentials, a compromised sandbox has nothing to leak.
+
+### A minimal version
+
+This is a teaching version, not a security guarantee. It shows the shape: a separate process, a time limit, a memory limit, a throwaway directory.
+
+```python
+import resource, subprocess, sys, tempfile, textwrap
+
+def limit():
+    resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024,) * 2)   # 256 MB
+    resource.setrlimit(resource.RLIMIT_CPU, (5, 5))                    # 5 CPU seconds
+
+def run_untrusted(code: str, timeout=10):
+    with tempfile.TemporaryDirectory() as scratch:
+        try:
+            p = subprocess.run(
+                [sys.executable, "-I", "-c", textwrap.dedent(code)],
+                cwd=scratch, capture_output=True, text=True,
+                timeout=timeout, preexec_fn=limit, env={},   # empty env: no secrets
+            )
+            return {"ok": p.returncode == 0, "stdout": p.stdout[-2000:], "stderr": p.stderr[-2000:]}
+        except subprocess.TimeoutExpired:
+            return {"ok": False, "stderr": "timed out"}
+
+print(run_untrusted("print(sum(range(10**6)))"))
+print(run_untrusted("while True: pass"))
+```
+
+The second call is killed by the limits. Note `env={}` and the trimmed output: the agent gets back a bounded amount of text, not an unlimited stream.
+
+### Picking the isolation level
+
+| Option | Isolation | Startup | Use when |
+|---|---|---|---|
+| Subprocess with limits | Weak: shares the kernel and machine | Instant | Local experiments, your own trusted code |
+| Container (Docker) | Medium: shared kernel, separate view | Around a second | Internal tools, moderate risk |
+| MicroVM or hosted sandbox | Strong: separate kernel | Under a second on modern services | Code from users or the open web |
+
+The rule of thumb: the less you trust the code's author, the further the isolation should be from your own machine. Model-written code from a prompt that included web content is not trusted.
+
+<Callout type="warning" title="Do not run this on a public server as-is">
+The subprocess version above shares your machine. Fine on your laptop for your own experiments. For anything exposed to other people's input, use a container at minimum, and a hosted or microVM sandbox for real risk. This is also why the repo's own rules keep shell-capable MCP servers local-only.
+</Callout>
+
+<ChapterSummary>
+- Generated code is open-ended, so it needs a boundary a fixed tool call does not
+- Limit filesystem, network, resources, and secrets
+- Return bounded output to the agent, never a raw stream
+- Match isolation strength to how much you trust the code's source
+</ChapterSummary>
+
+<Checkpoint>
+1. Your sandbox has no network but has your `OPENAI_API_KEY` in its environment. What is still at risk?
+2. Which isolation level would you choose for an agent that runs code from a stranger's uploaded notebook, and why?
+</Checkpoint>

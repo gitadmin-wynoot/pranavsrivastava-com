@@ -1,0 +1,114 @@
+---
+title: "The Circuit Breaker"
+summary: "Stop calling something that is failing, give it time to recover, and test it carefully before trusting it again."
+module: 5
+time: 11
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="5" title="The Circuit Breaker" time="11" />
+
+<LearningObjectives>
+- Describe the three breaker states and what moves between them
+- Explain why retries alone make outages worse
+- Implement a breaker in about 30 lines
+- Decide what an agent should do while a breaker is open
+</LearningObjectives>
+
+### The problem
+
+A dependency starts failing: a search API, a database, a model provider. A naive agent retries. Every retry is slower, costs tokens, and hammers a service that is already struggling. Ten agents doing that turn a small outage into a big one.
+
+The name comes from the electrical breaker in your fuse box. When too much current flows, it trips, cutting power before the wiring burns. The software version trips when too many calls fail.
+
+### The three states
+
+<Diagram title="Breaker state machine">
+
+```
+            failures reach threshold
+   CLOSED ────────────────────────────► OPEN
+   (calls flow)                         (calls refused instantly)
+      ▲                                    │
+      │ trial call succeeds                │ cooldown elapsed
+      │                                    ▼
+      └─────────────────────────────── HALF-OPEN
+                trial call fails ──►   (one test call allowed)
+                back to OPEN
+```
+
+</Diagram>
+
+### Try it
+
+You are the flaky API. Fail three calls, then wait out the cooldown.
+
+<CircuitBreakerSim />
+
+### Implementation
+
+```python
+import time
+
+class CircuitOpen(Exception):
+    pass
+
+class Breaker:
+    def __init__(self, threshold=3, cooldown=30):
+        self.threshold, self.cooldown = threshold, cooldown
+        self.failures, self.opened_at = 0, None
+
+    def call(self, fn, *args, **kwargs):
+        if self.opened_at is not None:
+            if time.time() - self.opened_at < self.cooldown:
+                raise CircuitOpen("dependency is down; try the fallback")
+            # cooldown over: half-open, let this one call through as a trial
+        try:
+            result = fn(*args, **kwargs)
+        except Exception:
+            self.failures += 1
+            if self.opened_at is not None or self.failures >= self.threshold:
+                self.opened_at = time.time()      # (re)open
+            raise
+        self.failures, self.opened_at = 0, None   # success closes it
+        return result
+
+search_breaker = Breaker(threshold=3, cooldown=30)
+
+def flaky_search(q):
+    raise TimeoutError("search API timed out")
+
+for _ in range(5):
+    try:
+        search_breaker.call(flaky_search, "refund policy")
+    except CircuitOpen as e:
+        print("skipped:", e)          # calls 4 and 5 never touch the API
+    except TimeoutError:
+        print("failed")
+```
+
+### What the agent does while it is open
+
+An open breaker is information. Return a message the model can use: "search is unavailable for about 30 seconds." Then the agent can answer from what it already has, tell the user, or take the next step on the [Fallback Ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder). What it must not do is loop on the failing call.
+
+<Callout type="tip" title="One breaker per dependency">
+Give each external service its own breaker. If the search API is down, that should not stop the agent from using the calendar. A single global breaker turns one failing service into a full outage.
+</Callout>
+
+### A related failure: the agent loop
+
+The same idea applies inside the loop. If the agent has made the same call with the same arguments three times and got the same error, trip a breaker on that pattern. This connects directly to [Loop Engineering](/courses/loop-engineering), where the loop must always be able to stop.
+
+<ChapterSummary>
+- Retrying a failing dependency makes an outage bigger
+- Closed passes calls, open refuses them, half-open tests once
+- Give the model a clear "unavailable" message so it can adapt
+- One breaker per dependency, and one for repeated identical failures inside the loop
+</ChapterSummary>
+
+<Checkpoint>
+1. Your breaker threshold is 1. What goes wrong on a dependency that fails once a day for no reason?
+2. What should the agent tell the user while the model provider's breaker is open?
+</Checkpoint>

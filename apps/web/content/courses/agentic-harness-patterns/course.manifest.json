@@ -1,0 +1,102 @@
+{
+  "course_id": "agentic-harness-patterns",
+  "title": "Agentic AI Harness Patterns",
+  "summary": "Harness Engineering told you what surrounds the model. This is the field guide of ten named, reusable patterns for building that system: the Tool Gateway, the Circuit Breaker, the Shadow Evaluation Harness and seven more, each with working code and an interactive playground.",
+  "level": "Intermediate to Advanced",
+  "track": "applied-ai",
+  "order": 6,
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-09-25",
+  "tags": [
+    "Harness",
+    "Agent Architecture",
+    "Guardrails",
+    "Observability",
+    "Evaluations",
+    "Reliability",
+    "Patterns"
+  ],
+  "modules": [
+    {
+      "id": "01-the-tool-gateway",
+      "title": "The Tool Gateway",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "02-the-permission-boundary",
+      "title": "The Permission Boundary",
+      "time_minutes": 11,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "03-the-approval-gate",
+      "title": "The Approval Gate",
+      "time_minutes": 10,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "04-the-sandboxed-runtime",
+      "title": "The Sandboxed Runtime",
+      "time_minutes": 10,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "05-the-circuit-breaker",
+      "title": "The Circuit Breaker",
+      "time_minutes": 11,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "06-the-context-boundary",
+      "title": "The Context Boundary",
+      "time_minutes": 11,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "07-the-trace-pipeline",
+      "title": "The Trace Pipeline",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "08-the-shadow-evaluation-harness",
+      "title": "The Shadow Evaluation Harness",
+      "time_minutes": 12,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "09-the-cost-and-rate-governor",
+      "title": "The Cost and Rate Governor",
+      "time_minutes": 10,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
+    {
+      "id": "10-the-fallback-ladder",
+      "title": "The Fallback Ladder",
+      "time_minutes": 11,
+      "level": "Intermediate",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    }
+  ]
+}

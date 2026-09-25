@@ -1,0 +1,91 @@
+---
+title: "The Approval Gate"
+summary: "Pause before actions that cannot be undone, save the state, and let a human decide."
+module: 3
+time: 10
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="3" title="The Approval Gate" time="10" />
+
+<LearningObjectives>
+- Decide which actions need a human and which do not
+- Explain why a gate needs a durable checkpoint, not just a prompt
+- Sketch the propose → pause → decide → resume flow
+- Avoid approval fatigue
+</LearningObjectives>
+
+### The problem
+
+Some actions cannot be taken back: sending an email, moving money, deleting a record, deploying. The Permission Boundary limits *what* an agent can do. The **Approval Gate** handles the actions it is allowed to do but should not do alone.
+
+The agent does the thinking and preparation. A human owns the commitment.
+
+### Flow
+
+<Diagram title="Propose, pause, decide, resume">
+
+```
+  agent works ─► proposes action ─► CHECKPOINT saved ─► waits
+                                                          │
+                            human sees: what, why, cost, undo?
+                                                          │
+                                   approve ──► action runs ──► agent resumes
+                                   reject  ──► agent told why, re-plans
+                                   edit    ──► action runs with the human's change
+```
+
+</Diagram>
+
+The checkpoint matters. A human might answer in two seconds or two days. The agent's state has to survive that wait, so it goes to storage, not memory. The full mechanics, including LangGraph's interrupt, are in the [Human-in-the-Loop module](/courses/ai-agents/modules/09-human-in-the-loop) and its timeline component:
+
+<CheckpointTimeline />
+
+### Which actions get a gate
+
+<AutonomyMatrix />
+
+A workable rule: reversible and cheap runs automatically, reversible but visible gets logged, irreversible or expensive gets a gate.
+
+### A minimal gate
+
+```python
+RISK = {"search_docs": "low", "draft_reply": "low", "send_email": "high", "issue_refund": "high"}
+
+pending = {}   # proposal_id -> proposal (use a database in real life)
+
+def gated_call(gateway, role, tool, args, reason):
+    if RISK.get(tool, "high") == "low":          # unknown tools count as high
+        return gateway.call(role, tool, args)
+    pid = f"p{len(pending) + 1}"
+    pending[pid] = {"tool": tool, "args": args, "reason": reason, "role": role}
+    return {"ok": False, "code": "awaiting_approval", "proposal": pid}
+
+def decide(gateway, pid, approve, edited_args=None):
+    p = pending.pop(pid)
+    if not approve:
+        return {"ok": False, "code": "rejected"}
+    return gateway.call(p["role"], p["tool"], edited_args or p["args"])
+```
+
+<Callout type="important" title="Show the reviewer enough to decide">
+A prompt saying "Approve send_email?" gets rubber-stamped. Show the actual email, who it goes to, why the agent wants to send it, and whether it can be undone. If the reviewer has to go and investigate, the gate is too expensive and people will start clicking through.
+</Callout>
+
+### Approval fatigue
+
+Gate everything and people stop reading. Gate the few actions that matter, batch similar ones ("approve these 12 refunds under 20"), and track how often humans change or reject a proposal. A gate that is never rejected is either perfect or ignored, and it is usually ignored.
+
+<ChapterSummary>
+- The gate covers actions the agent may do but should not do alone
+- It needs a durable checkpoint so the wait can be as long as a human needs
+- Reviewers need the concrete action, the reason, and whether it can be undone
+- Gate sparingly, or approvals become a habit instead of a decision
+</ChapterSummary>
+
+<Checkpoint>
+1. An agent proposes 40 refunds of 5 each. Design the approval so a human can review it in one minute without approving blindly.
+2. Why must the agent's state be saved to storage before waiting for approval?
+</Checkpoint>
