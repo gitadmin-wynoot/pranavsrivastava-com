@@ -36,6 +36,12 @@ import { TraceExplorer } from "./trace-explorer";
 import { ShadowEvalSim } from "./shadow-eval-sim";
 import { CostGovernor } from "./cost-governor";
 import { FallbackLadder } from "./fallback-ladder";
+import { HarnessAnatomy } from "./harness-anatomy";
+import { AgentLoopPrimer } from "./agent-loop-primer";
+import { IncidentBoard } from "./incident-board";
+import { RetryStormSim } from "./retry-storm-sim";
+import { SandboxLimits } from "./sandbox-limits";
+import { SpotTheInjection } from "./spot-the-injection";
 import {
   Info,
   Lightbulb,
@@ -395,5 +401,11 @@ export const courseComponents = {
   ShadowEvalSim,
   CostGovernor,
   FallbackLadder,
+  HarnessAnatomy,
+  AgentLoopPrimer,
+  IncidentBoard,
+  RetryStormSim,
+  SandboxLimits,
+  SpotTheInjection,
   pre: CodeBlock,
 };

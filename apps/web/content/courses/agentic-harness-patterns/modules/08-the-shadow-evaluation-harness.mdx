@@ -12,18 +12,29 @@ updatedAt: "2026-09-25"
 
 <LearningObjectives>
 - Explain why changing a prompt is a release, not an edit
-- Describe shadow mode, golden sets, and canary rollout, and how they fit together
+- Describe shadow mode, golden sets and canary rollout, and how they fit together
 - Write a regression-aware release check
-- Know what to do when the judge is itself a model
+- Know what to do when the grader is itself a model
 </LearningObjectives>
 
-### The problem
+### The scare
 
-You improve a prompt. It handles the case you were looking at. Does it break three others? You cannot tell by reading it, and you should not find out from customers. Prompts, models, and tools are code. Changing them is a release.
+**1 August 2012.** Knight Capital, a trading firm, rolled out new software to its servers. Seven of eight got the update. The eighth still had old code from years earlier, and a reused setting switched that old code back on when the market opened. Over about 45 minutes it sent millions of unintended orders. The firm lost roughly $440 million and was bought within days.
 
-The **Shadow Evaluation Harness** runs the new version beside the live one, on the same real inputs, and compares. Users only ever see the live answer. The shadow answer is recorded and scored.
+Not an AI story. So why is it in an AI course? Because the mistake is the same one people make with prompts: change something, ship it to everyone, and find out from the outside world whether it worked.
 
-<Diagram title="Shadow, then canary, then full">
+Pip is a smaller version. Someone tidies the system prompt to make replies friendlier. It handles the case they were looking at. Does it now fall for the "give me a refund or else" trick it used to resist? You will not know by reading it.
+
+### Refresher: a prompt is code
+
+We tend to think of code as serious and prompts as text. A prompt changes what the system does as surely as an `if` statement. So a prompt change deserves what a code change gets: tests, and a staged rollout. Models get swapped, tools get edited, retrieval settings get tuned. Each is a release.
+
+Two ideas cover almost everything here:
+
+- **Shadow mode:** run the new version on *real* requests alongside the live one. Only the live answer reaches the user. The new one's answer is recorded and scored.
+- **Canary:** after shadow looks good, send a small slice of real traffic (say 5%) to the new version for real, watching closely, with a one-step way back.
+
+<Diagram title="Shadow, then canary, then everyone">
 
 ```
   real request ─┬──► LIVE version ──► user sees this
@@ -39,23 +50,20 @@ The **Shadow Evaluation Harness** runs the new version beside the live one, on t
 
 ### Try it
 
-Run each candidate against six recorded requests. One of them scores well on average and still must not ship.
+Two candidate prompts, six real-ish requests. Run the shadow replay on each. One of them looks fine at first glance.
 
 <ShadowEvalSim />
 
 ### Regressions beat averages
 
-Average score hides damage. A candidate that fixes two cases and breaks one safety case has a better average and is worse. So the release check has two rules:
+An average hides damage. A candidate that fixes two cases and breaks one *safety* case has a better score and is worse. So the release rule has two parts:
 
 1. Score at or above live
-2. **Zero** cases that live passes and the candidate fails, at least for the cases you marked as critical
+2. **No** cases that live passes and the candidate fails, at least among those you marked critical
 
 ```python
 def release_check(cases, live_results, cand_results, critical):
-    regressions = [
-        c for c in cases
-        if live_results[c] and not cand_results[c]
-    ]
+    regressions = [c for c in cases if live_results[c] and not cand_results[c]]
     critical_regressions = [c for c in regressions if c in critical]
     live_score = sum(live_results.values()) / len(cases)
     cand_score = sum(cand_results.values()) / len(cases)
@@ -66,26 +74,31 @@ cases = ["order_status", "refund", "cancel", "address", "injection", "stock"]
 live  = dict(zip(cases, [1, 1, 1, 0, 1, 1]))
 cand  = dict(zip(cases, [1, 1, 1, 1, 0, 1]))
 print(release_check(cases, live, cand, critical={"injection"}))
-# ok: False. Score is equal, but a critical case regressed.
+# ok: False. The scores are equal, but a critical case regressed.
 ```
 
-### Where the test cases come from
+### Where test cases come from
 
-- **Golden set:** cases you wrote and verified by hand, including the ugly ones. Start with 20.
+- **A golden set:** cases you wrote and checked by hand, including the ugly ones. Start with twenty.
 - **Real traffic:** sampled from the [Trace Pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline), with private data redacted.
-- **Every incident:** a bug found in production becomes a permanent case. The set only grows.
+- **Every incident:** a failure found in production becomes a permanent case. The set only grows. In a year it is the most valuable file you own.
 
-### Grading
+### Who grades?
 
-Some checks are exact ("did it call `get_order` with the right id?"). Some need judgement, so a second model grades the first.
+Some checks are exact: "did Pip call `get_order` with the right id?" Use those wherever you can. Others need judgement, so a second model grades the first.
 
-<Callout type="warning" title="Judges need checking too">
-A model judge has its own biases, such as favouring longer answers. Spot-check its grades against a human on a sample, use a different model from the one being graded, and prefer exact checks wherever they exist.
+<Callout type="warning" title="Graders need checking too">
+A model grader has its own habits, like preferring longer answers. Spot-check its marks against a human on a sample, use a different model from the one being graded, and prefer exact checks wherever they exist.
 </Callout>
 
-### Then the canary
+### When it goes wrong
 
-Shadow mode proves the candidate is not worse on cases you have. A **canary** proves it in real conditions: send 5% of live traffic to it, watch error rate, latency, cost, and user signals, and keep a one-step rollback. Shadow first because it is free of user risk. Canary second because reality has cases you never recorded. This is the evaluation half of the [AI Ops](/courses/ai-ops) story.
+- **Testing only the happy path.** Half the golden set should be things that go wrong: injection attempts, angry customers, vague questions.
+- **A tiny set.** Six cases can be fooled by luck. Grow it.
+- **Skipping the canary.** Shadow proves the new version is not worse on cases you have. Reality has cases you never recorded.
+- **No way back.** Before promoting, know the one command that returns to the old version.
+
+This is the evaluation half of the [AI Ops](/courses/ai-ops) story, and it is the natural next use of everything the trace pipeline recorded.
 
 <ChapterSummary>
 - A prompt or model change is a release, so test it like one
@@ -96,5 +109,5 @@ Shadow mode proves the candidate is not worse on cases you have. A **canary** pr
 
 <Checkpoint>
 1. A candidate scores 92% and live scores 90%. What else must you check before promoting it?
-2. Where should the 21st test case in your golden set come from?
+2. Where should the 21st case in your golden set come from?
 </Checkpoint>

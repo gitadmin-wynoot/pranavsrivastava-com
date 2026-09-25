@@ -12,41 +12,47 @@ updatedAt: "2026-09-25"
 
 <LearningObjectives>
 - Design an ordered list of fallbacks for a failing agent step
-- Distinguish errors worth retrying from errors that are not
+- Tell errors worth retrying apart from errors that are not
 - Implement retry with backoff and provider fallback
 - Make the last rung something that can never fail
 </LearningObjectives>
 
-### The problem
+### The scare
 
-Every pattern so far can say no: the gateway refuses, a breaker opens, the governor stops the run. Each of those needs an answer to "then what?" If the answer is "an error page," the harness protects you and hurts the user.
+Every pattern so far knows how to say no. The gateway refuses. The breaker opens. The governor stops the run. And each of those leaves the same awkward question: *then what does the customer get?*
 
-The **Fallback Ladder** is a planned sequence of progressively simpler ways to still be useful. You decide the order in advance, calmly, instead of improvising during an outage.
+If the answer is "an error page", you have built a harness that protects the system and abandons the person. Picture Pip on the day the model provider has a bad afternoon. Lumen & Co's customers are asking where their parcels are. The choices are a spinner forever, a cryptic error, or a message that says "I can't answer that right now, a person will reply by tomorrow." Only one of those keeps anyone's trust.
 
-### Try it
+### Refresher: graceful degradation
 
-Knock out rungs and watch where the request lands.
+Lifts have this figured out. If the motor fails, the lift does not fall. It stops, brakes hold, lights stay on, an intercom works. There is a chain of "if that fails, then this", and the last link is deliberately simple.
+
+Software calls it **graceful degradation**: get worse in steps, not all at once. Planning the steps ahead of time, calmly, beats improvising them during an outage.
+
+### The pattern
+
+The **Fallback Ladder** is an ordered list of ways to still be useful, best first. Knock some rungs out and see where the request lands.
 
 <FallbackLadder />
 
-### The rungs
+The rungs, in order:
 
-1. **Primary:** the best model with full tools
-2. **Retry with backoff:** for temporary errors only (timeouts, rate limits, 5xx)
-3. **Secondary provider:** a different provider's model. This is why the repo routes every call through the LLM gateway and does not hard-code one vendor
+1. **Primary:** the best model with all its tools
+2. **Retry with backoff:** for temporary errors only
+3. **Secondary provider:** a different provider's model. This is one reason every model call in this repo goes through the LLM gateway instead of hard-coding one vendor
 4. **Smaller model or cached answer:** worse, but still an answer
-5. **Graceful refusal and a human:** say what happened and who will follow up. This rung has no dependencies, so it cannot fail
+5. **Honest refusal and a human:** say what happened and who will follow up. No dependencies, so it cannot fail
 
 ### Retry only what is worth retrying
 
 | Error | Retry? |
 |---|---|
-| Timeout, 429, 500, 503 | Yes, with backoff |
+| Timeout, 429, 500, 503 | Yes, with backoff and jitter (chapter 5 showed why) |
 | 400 bad request, schema error | No. Retrying repeats the mistake |
 | 401 or 403 | No. Fix the credential |
-| Content refusal from the model | No. Change the request or escalate |
+| The model refuses the request | No. Change it or escalate |
 
-### Implementation
+### Build it
 
 ```python
 import random, time
@@ -74,15 +80,28 @@ def answer(question, providers, cache):
         "text": "I cannot answer this right now. A person has been notified and will reply by tomorrow.",
         "via": "human_handoff",
     }
+
+def down(_): raise Retryable("provider unavailable")
+def ok(q): return f"Answer to: {q}"
+
+print(answer("Where is order A-1043?", [("primary", down), ("secondary", ok)], {}))
+print(answer("Where is order A-1043?", [("primary", down), ("secondary", down)], {}))
 ```
 
-Each rung records `via` in the [trace](/courses/agentic-harness-patterns/07-the-trace-pipeline). Watching how often traffic lands below rung 1 is one of the best health signals you have. Pair each rung with its own [circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker) so a dead rung is skipped instantly.
+Every result carries `via`, the rung that answered. Log it to the [trace](/courses/agentic-harness-patterns/07-the-trace-pipeline). How often traffic lands below rung 1 is one of the best health signals you have. Give each rung its own [circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker), so a dead rung gets skipped instantly instead of retried.
 
-<Callout type="important" title="Tell the user what they got">
-A degraded answer presented as a full one is worse than an honest one. If the answer came from the cache or a smaller model, say so in a line. Trust survives "this may be a bit less detailed than usual." It does not survive being quietly wrong.
+<Callout type="important" title="Tell people what they got">
+A degraded answer dressed up as a full one is worse than an honest one. If it came from the cache or a smaller model, say so in a line. Trust survives "this may be a bit less detailed than usual". It does not survive being quietly wrong.
 </Callout>
 
-### Putting the ten together
+### When it goes wrong
+
+- **A ladder that has never been tested.** Turn the primary off on purpose, in a quiet hour, and watch. Rungs nobody has walked tend to be broken.
+- **A fallback that costs three times as much.** Pair the ladder with the [governor](/courses/agentic-harness-patterns/09-the-cost-and-rate-governor).
+- **A fallback with different rules.** The secondary model must go through the same gateway, permissions and context labelling. A backdoor rung is worse than none.
+- **A last rung that calls a model.** The last rung must depend on nothing.
+
+### All ten, one request
 
 <Diagram title="One request through the whole harness">
 
@@ -96,27 +115,40 @@ A degraded answer presented as a full one is worse than an honest one. If the an
   Tool Gateway ──► Permission Boundary ──► Approval Gate
      │                                        │
      ▼                                        ▼
-  Sandboxed Runtime / real tools       human decides
+  Sandboxed Runtime / real tools         human decides
      │
   Circuit Breaker on each dependency
      │
   Fallback Ladder if anything above fails
      │
-  every step ──► Trace Pipeline ──► Shadow Evaluation Harness (before the next release)
+  every step ──► Trace Pipeline ──► Shadow Evaluation (before the next release)
 ```
 
 </Diagram>
 
-The ten patterns are not a checklist to complete in one go. Start with the gateway and the trace, because they make everything else possible. Add the governor before your first long-running agent. Add the rest as the agent gains more power. The wider argument is in [Harness Engineering](/courses/harness-engineering); the day-to-day practice of running it is in [AI Ops](/courses/ai-ops).
+### What to build first
+
+You do not need all ten on day one. A sensible order:
+
+1. **Tool Gateway** and **Trace Pipeline**: almost everything else plugs into these
+2. **Permission Boundary** and **Cost Governor**: before the agent gets real power or runs unattended
+3. **Approval Gate**: before it can do anything irreversible
+4. **Context Boundary**: before it reads anything from outside
+5. **Circuit Breaker** and **Fallback Ladder**: before real users depend on it
+6. **Sandbox**: before it writes code
+7. **Shadow Evaluation**: before your second release, which comes sooner than you think
+
+The wider argument is in [Harness Engineering](/courses/harness-engineering), and the day-to-day running of all this is [AI Ops](/courses/ai-ops).
 
 <ChapterSummary>
-- Plan the degradation order in advance, ending in a rung that cannot fail
+- Plan the order of degradation in advance, ending in a rung that cannot fail
 - Retry only temporary errors, with backoff and jitter
 - Route across providers through one gateway so a vendor outage is a rung, not an outage
 - Record which rung answered, and tell the user when the answer is degraded
+- Build the ten in the order the agent gains power, not all at once
 </ChapterSummary>
 
 <Checkpoint>
-1. Your primary model is down and your secondary is 3x the price. Where does the Cost Governor fit into the ladder decision?
+1. Your primary model is down and your secondary costs three times as much. Where does the Cost Governor come into the ladder decision?
 2. Why must the final rung avoid calling any model?
 </Checkpoint>

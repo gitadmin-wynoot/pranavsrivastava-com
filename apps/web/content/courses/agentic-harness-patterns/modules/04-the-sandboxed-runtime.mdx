@@ -11,17 +11,31 @@ updatedAt: "2026-09-25"
 <ChapterHeader number="4" title="The Sandboxed Runtime" time="10" />
 
 <LearningObjectives>
-- Explain why executing model-written code is a different risk from calling a tool
+- Explain why model-written code is a different risk from a fixed tool call
 - List the four things a sandbox must limit
 - Run untrusted code with real limits in Python
 - Choose between a subprocess, a container, and a microVM
 </LearningObjectives>
 
-### The problem
+### The scare
 
-A tool call has a fixed shape you defined in advance. Code execution does not. When an agent writes Python to analyse a spreadsheet, it can also write `import os; os.system("rm -rf ~")`, on purpose or by accident. If that runs on your machine or your server, you have handed a stranger a shell.
+Pip is good at answering questions. Lumen & Co's owner asks for more: "Can Pip look at the sales spreadsheet and tell me which products are dying?" Sensible. To do it, Pip writes a Python script and the harness runs it.
 
-The **Sandboxed Runtime** pattern runs generated code in a place where the worst case is "the sandbox got messy, throw it away."
+Look at what changed. Before, Pip could only use tools you had built, each with a fixed shape. Now Pip is writing *programs*. A program can read any file the process can read, open network connections, run forever, and eat all the memory. The model does not need to be malicious. It just needs to write `shutil.rmtree` while "tidying up", or to `pip install` something odd it half-remembers.
+
+### Refresher: a tool call versus a program
+
+| | Tool call | Generated code |
+|---|---|---|
+| Shape | Fixed, you designed it | Anything Python can do |
+| Review | Gateway can check it | Nobody read it |
+| Worst case | Whatever that one tool does | Whatever the process can do |
+
+That last row is the reason this pattern exists. When the model can write code, the worst case stops being "one tool misfires" and becomes "the whole machine".
+
+### The pattern
+
+Run generated code somewhere the worst case is "the sandbox got messy, throw it away."
 
 <Diagram title="What a sandbox limits">
 
@@ -31,34 +45,32 @@ The **Sandboxed Runtime** pattern runs generated code in a place where the worst
                     │              else visible              │
                     │ network    : off (or an allowlist)     │
                     │ resources  : CPU, memory, wall-clock   │
-                    │ secrets    : none inside                │
+                    │ secrets    : none inside               │
                     └────────────────────────────────────────┘
                               output only ──► back to the agent
 ```
 
 </Diagram>
 
-### The four limits
+### Try it
 
-| Limit | Stops |
-|---|---|
-| Filesystem | Reading your keys or `.env`, deleting real files |
-| Network | Sending data out, downloading more code |
-| Resources | Infinite loops, memory bombs |
-| Secrets | Anything valuable to steal in the first place |
+Five things an agent might plausibly write. Everything starts unprotected. Switch limits on until every card goes green, and notice which limit rescues which snippet.
 
-Secrets are the one people forget. If the sandbox has no credentials, a compromised sandbox has nothing to leak.
+<SandboxLimits />
 
-### A minimal version
+The secrets one is the one people forget. If the sandbox has no credentials in it, a compromised sandbox has nothing to steal.
 
-This is a teaching version, not a security guarantee. It shows the shape: a separate process, a time limit, a memory limit, a throwaway directory.
+### Build it
+
+A teaching version, not a security guarantee. It shows the shape: a separate process, a time limit, a memory limit, a throwaway directory, an empty environment.
 
 ```python
 import resource, subprocess, sys, tempfile, textwrap
 
 def limit():
-    resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024,) * 2)   # 256 MB
     resource.setrlimit(resource.RLIMIT_CPU, (5, 5))                    # 5 CPU seconds
+    if sys.platform.startswith("linux"):                               # macOS ignores this one
+        resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024,) * 2)   # 256 MB
 
 def run_untrusted(code: str, timeout=10):
     with tempfile.TemporaryDirectory() as scratch:
@@ -76,30 +88,41 @@ print(run_untrusted("print(sum(range(10**6)))"))
 print(run_untrusted("while True: pass"))
 ```
 
-The second call is killed by the limits. Note `env={}` and the trimmed output: the agent gets back a bounded amount of text, not an unlimited stream.
+The second call gets killed by the limits. (The memory cap only works on Linux; on a Mac you get the CPU and time limits, which is fine for trying it out.) Also notice `[-2000:]`: the agent receives a bounded amount of output, not an unlimited stream.
 
 ### Picking the isolation level
 
 | Option | Isolation | Startup | Use when |
 |---|---|---|---|
-| Subprocess with limits | Weak: shares the kernel and machine | Instant | Local experiments, your own trusted code |
-| Container (Docker) | Medium: shared kernel, separate view | Around a second | Internal tools, moderate risk |
-| MicroVM or hosted sandbox | Strong: separate kernel | Under a second on modern services | Code from users or the open web |
+| Subprocess with limits | Weak: shares the kernel and machine | Instant | Your laptop, your own code |
+| Container (Docker) | Medium: shared kernel, separate view | About a second | Internal tools, moderate risk |
+| MicroVM or hosted sandbox | Strong: separate kernel | Under a second on modern services | Code influenced by strangers |
 
-The rule of thumb: the less you trust the code's author, the further the isolation should be from your own machine. Model-written code from a prompt that included web content is not trusted.
+Rule of thumb: the less you trust where the code came from, the further the isolation should sit from your own machine. Code written by a model that just read a web page counts as "influenced by strangers".
 
-<Callout type="warning" title="Do not run this on a public server as-is">
-The subprocess version above shares your machine. Fine on your laptop for your own experiments. For anything exposed to other people's input, use a container at minimum, and a hosted or microVM sandbox for real risk. This is also why the repo's own rules keep shell-capable MCP servers local-only.
+<Callout type="warning" title="Do not run the subprocess version on a public server">
+That example shares your machine. Fine for your own experiments. For anything exposed to other people's input use a container at minimum, and a hosted or microVM sandbox for real risk. This is also why this repo keeps shell-capable MCP servers local-only.
 </Callout>
+
+### When it goes wrong
+
+- **A sandbox with network access "just for pip install".** That is a door. Pre-build the image with the libraries you want.
+- **Sharing a sandbox between users.** One person's files become another's. Fresh sandbox per task, or per user at minimum.
+- **Forgetting the output.** A sandbox can be perfect and the agent can still be handed a 500 MB string. Cap it.
+- **Trusting the sandbox with secrets.** If the code needs an API, pass a short-lived token, not your master key.
+
+### Where it connects
+
+The sandbox is what the Tool Gateway hands work to when a tool is "run code". The [Cost Governor](/courses/agentic-harness-patterns/09-the-cost-and-rate-governor) supplies the wall-clock cap, and the [Trace Pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline) records what ran.
 
 <ChapterSummary>
 - Generated code is open-ended, so it needs a boundary a fixed tool call does not
 - Limit filesystem, network, resources, and secrets
 - Return bounded output to the agent, never a raw stream
-- Match isolation strength to how much you trust the code's source
+- Match isolation strength to how far you trust the code's source
 </ChapterSummary>
 
 <Checkpoint>
-1. Your sandbox has no network but has your `OPENAI_API_KEY` in its environment. What is still at risk?
-2. Which isolation level would you choose for an agent that runs code from a stranger's uploaded notebook, and why?
+1. Your sandbox has no network but your `OPENAI_API_KEY` is in its environment. What is still at risk?
+2. Which isolation level would you pick for an agent that runs code from a stranger's uploaded notebook, and why?
 </Checkpoint>

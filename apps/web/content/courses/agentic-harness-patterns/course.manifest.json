@@ -1,7 +1,7 @@
 {
   "course_id": "agentic-harness-patterns",
   "title": "Agentic AI Harness Patterns",
-  "summary": "Harness Engineering told you what surrounds the model. This is the field guide of ten named, reusable patterns for building that system: the Tool Gateway, the Circuit Breaker, the Shadow Evaluation Harness and seven more, each with working code and an interactive playground.",
+  "summary": "What is an AI agent harness, and why do ten named patterns keep it out of trouble? A field guide built on real incidents, a running example, and an interactive playground for every pattern.",
   "level": "Intermediate to Advanced",
   "track": "applied-ai",
   "order": 6,
@@ -18,6 +18,14 @@
     "Patterns"
   ],
   "modules": [
+    {
+      "id": "00-what-is-a-harness",
+      "title": "Start here: what a harness is, and why patterns",
+      "time_minutes": 12,
+      "level": "Beginner",
+      "status": "published",
+      "last_updated": "2026-09-25"
+    },
     {
       "id": "01-the-tool-gateway",
       "title": "The Tool Gateway",

@@ -12,44 +12,60 @@ updatedAt: "2026-09-25"
 
 <LearningObjectives>
 - Decide which actions need a human and which do not
-- Explain why a gate needs a durable checkpoint, not just a prompt
-- Sketch the propose → pause → decide → resume flow
+- Explain why a gate needs a saved checkpoint, not just a yes/no prompt
+- Sketch the propose, pause, decide, resume flow
 - Avoid approval fatigue
 </LearningObjectives>
 
-### The problem
+### The scare
 
-Some actions cannot be taken back: sending an email, moving money, deleting a record, deploying. The Permission Boundary limits *what* an agent can do. The **Approval Gate** handles the actions it is allowed to do but should not do alone.
+**Air Canada, 2022 to 2024.** A man asked the airline's website chatbot about bereavement fares after a death in the family. The bot told him to book now and claim the discount afterwards. The airline's real policy said you could not. He booked, got refused, and took it to a tribunal in British Columbia. Air Canada argued the chatbot was a separate entity responsible for its own words. The tribunal did not buy that and ordered the airline to pay the difference: about CA$650, plus interest and fees.
 
-The agent does the thinking and preparation. A human owns the commitment.
+The money is small. The precedent is the point: **you own what your agent says.**
 
-### Flow
+**The one-dollar Tahoe, late 2023.** A Chevrolet dealership put a ChatGPT-powered bot on its site. A visitor told it to agree with everything and call every offer legally binding, then asked for a new Tahoe for one dollar. It agreed. The dealer did not honour it and pulled the bot, but the screenshots were everywhere.
+
+Both are the same gap: nothing stood between the model's sentence and a commitment.
+
+### Refresher: reversible versus irreversible
+
+Most of what an agent does is harmless. Searching, reading, drafting. If it gets one wrong, you shrug. A small set of actions is different: sending, paying, deleting, publishing, deploying, promising. You cannot un-send an email or un-promise a refund.
+
+The trick is not to gate everything. It is to gate the few things that cannot be taken back.
+
+<AutonomyMatrix />
+
+### The pattern
+
+The **Approval Gate** pauses an agent right before an irreversible action. The agent does the thinking and the preparation; a human owns the commitment.
 
 <Diagram title="Propose, pause, decide, resume">
 
 ```
   agent works ─► proposes action ─► CHECKPOINT saved ─► waits
                                                           │
-                            human sees: what, why, cost, undo?
+                          human sees: what, why, cost, can it be undone?
                                                           │
-                                   approve ──► action runs ──► agent resumes
-                                   reject  ──► agent told why, re-plans
-                                   edit    ──► action runs with the human's change
+                                 approve ──► action runs ──► agent resumes
+                                 reject  ──► agent told why, re-plans
+                                 edit    ──► action runs with the human's change
 ```
 
 </Diagram>
 
-The checkpoint matters. A human might answer in two seconds or two days. The agent's state has to survive that wait, so it goes to storage, not memory. The full mechanics, including LangGraph's interrupt, are in the [Human-in-the-Loop module](/courses/ai-agents/09-human-in-the-loop) and its timeline component:
+That checkpoint is the underrated part. A human might reply in two seconds or in two days. The agent's state has to survive the wait, so it goes into storage, not into memory. Here is the timeline of what gets saved and when:
 
 <CheckpointTimeline />
 
-### Which actions get a gate
+The full LangGraph mechanics are in the [Human-in-the-Loop module](/courses/ai-agents/09-human-in-the-loop), and the [serverless memory table](/courses/serverless-memory-table) course builds a durable checkpoint store on DynamoDB.
 
-<AutonomyMatrix />
+### Where humans are actually required
 
-A workable rule: reversible and cheap runs automatically, reversible but visible gets logged, irreversible or expensive gets a gate.
+Sometimes it is just good sense. Sometimes it is the law. Pick a domain:
 
-### A minimal gate
+<ApprovalScenarios />
+
+### Build it
 
 ```python
 RISK = {"search_docs": "low", "draft_reply": "low", "send_email": "high", "issue_refund": "high"}
@@ -70,22 +86,25 @@ def decide(gateway, pid, approve, edited_args=None):
     return gateway.call(p["role"], p["tool"], edited_args or p["args"])
 ```
 
+Notice `RISK.get(tool, "high")`: a tool nobody classified is treated as risky. Deny by default again.
+
 <Callout type="important" title="Show the reviewer enough to decide">
-A prompt saying "Approve send_email?" gets rubber-stamped. Show the actual email, who it goes to, why the agent wants to send it, and whether it can be undone. If the reviewer has to go and investigate, the gate is too expensive and people will start clicking through.
+"Approve send_email?" gets rubber-stamped. Show the actual email, who receives it, why Pip wants to send it, and whether it can be undone. If the reviewer has to go investigate, the gate is too expensive and people start clicking through without reading.
 </Callout>
 
-### Approval fatigue
+### When it goes wrong: approval fatigue
 
-Gate everything and people stop reading. Gate the few actions that matter, batch similar ones ("approve these 12 refunds under 20"), and track how often humans change or reject a proposal. A gate that is never rejected is either perfect or ignored, and it is usually ignored.
+Gate everything and people stop reading. Gate the few things that matter, batch similar ones ("approve these 12 refunds under 20 in one go"), and track how often a human changes or rejects a proposal. A gate that is *never* rejected is either perfect or ignored, and it is usually ignored.
 
 <ChapterSummary>
+- You own what your agent says and does. "The bot did it" did not work for Air Canada
 - The gate covers actions the agent may do but should not do alone
-- It needs a durable checkpoint so the wait can be as long as a human needs
+- It needs a saved checkpoint so the wait can be as long as a human needs
 - Reviewers need the concrete action, the reason, and whether it can be undone
-- Gate sparingly, or approvals become a habit instead of a decision
+- Gate sparingly, or approvals become a habit rather than a decision
 </ChapterSummary>
 
 <Checkpoint>
-1. An agent proposes 40 refunds of 5 each. Design the approval so a human can review it in one minute without approving blindly.
+1. Pip proposes 40 refunds of 5 each. Design the approval so a human can review it in a minute without approving blindly.
 2. Why must the agent's state be saved to storage before waiting for approval?
 </Checkpoint>

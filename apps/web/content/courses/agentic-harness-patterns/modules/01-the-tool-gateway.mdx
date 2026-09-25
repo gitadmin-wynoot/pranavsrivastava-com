@@ -1,6 +1,6 @@
 ---
 title: "The Tool Gateway"
-summary: "Put one checkpoint between the model and every tool it can call: registry, schema, permission, limit, log."
+summary: "One checkpoint between the model and every tool it can call: is it registered, valid, permitted, within limits, and logged?"
 module: 1
 time: 12
 level: "Intermediate"
@@ -11,50 +11,63 @@ updatedAt: "2026-09-25"
 <ChapterHeader number="1" title="The Tool Gateway" time="12" />
 
 <LearningObjectives>
-- Explain why a model should never call a tool function directly
+- Explain why a model's tool call is a suggestion, not an action
 - Name the five checks a gateway runs on every call
 - Build a working gateway in about 40 lines of Python
-- Return errors to the model in a form it can actually recover from
+- Return errors the model can actually recover from
 </LearningObjectives>
 
-### The problem
+### The scare
 
-A model does not call tools. It writes text that *looks like* a tool call: a name and some arguments. Your code decides whether to run it. If that code is just `tools[name](**args)`, then whatever the model writes, happens. It can invent a tool that does not exist, pass a string where you wanted a number, or repeat the same call 500 times.
+Pip, our made-up support agent, has a Tuesday like this. A customer asks about a late order. Pip decides to be helpful and writes:
 
-The **Tool Gateway** is the fix: one function that every tool call must pass through. Think of the front desk of an office building. Visitors do not walk to any floor they like. They sign in, get checked against a list, and get a badge for exactly the floors they may visit.
+`send_apology_voucher(customer="dana", amount=500)`
 
-<Diagram title="Without and with a gateway">
+There is no such tool. The developer's code, written in a hurry, does `tools[name](**args)`, catches the `KeyError`, shrugs, and moves on. So far so harmless. But swap `send_apology_voucher` for a tool that *does* exist, and the code runs it with whatever arguments the model made up. Nothing checks that 500 is a sensible amount, or that Pip is even allowed to hand out vouchers.
+
+This one is invented, but every team that has built an agent has met a version of it. Models make up tool names, mangle arguments, and repeat themselves.
+
+### Refresher: a tool call is just text
+
+When an agent "calls a tool", the model does not call anything. It writes a small piece of structured text, like this:
+
+<Diagram title="What actually happens on a tool call">
 
 ```
-  WITHOUT                          WITH
-
-  model ──► tools[name](**args)    model ──► GATEWAY ──► tool
-            (runs anything)                  1 registered?
-                                             2 schema valid?
-                                             3 permitted?
-                                             4 under limits?
-                                             5 log + timeout
+  model writes:    {"tool": "get_order", "args": {"order": "A-1043"}}
+                                   │
+                                   ▼
+  your code:       reads that text, and DECIDES whether to run it
+                                   │
+                                   ▼
+  real world:      the order system gets queried
 ```
 
 </Diagram>
 
+The middle box is the whole game. If it says "run whatever the text says," the model has your permissions. If it says "check first," you have a gateway.
+
+### The pattern
+
+The **Tool Gateway** is a single function that every tool call must go through. Think of the front desk in an office building. Visitors do not wander to any floor. They are checked against a list, asked what they are here for, and given a pass for exactly one floor.
+
+Five checks, in order:
+
+| Check | Catches | Pip example |
+|---|---|---|
+| Registered? | Invented tools | `send_apology_voucher` does not exist |
+| Schema valid? | Wrong types, missing fields | `amount` arrives as the string "lots" |
+| Permitted? | Right tool, wrong agent | Pip is read-only for billing |
+| Under the limit? | Loops, runaway calls | The 61st identical search this minute |
+| Logged + timed out? | Hangs and silent failures | A slow API freezing the whole run |
+
 ### Try it
 
-Send five different calls through the gateway and watch where each one stops.
+Send five different calls through the gateway and see which check stops each one.
 
 <ToolGateway />
 
-### The five checks
-
-| Check | Catches | Example |
-|---|---|---|
-| Registered | Invented tools | The model calls `delete_everything` |
-| Schema valid | Wrong types, missing fields | `to: "not-an-email"` |
-| Permitted | Right tool, wrong agent | A read-only agent tries `issue_refund` |
-| Under limits | Loops and runaway cost | The 61st identical call in a minute |
-| Logged with a timeout | Hangs and silent failures | A slow API blocks the whole run |
-
-### A working gateway
+### Build it
 
 ```python
 import time
@@ -112,26 +125,34 @@ gw.register("issue_refund", Tool(lambda order, amount: "refunded", {"order": str
 
 print(gw.call("support", "search_docs", {"query": "refund policy"}))
 print(gw.call("support", "issue_refund", {"order": "A-1043", "amount": 42}))
+print(gw.call("support", "send_apology_voucher", {"amount": 500}))
 ```
 
-The second call prints a `forbidden` error. Nothing ran.
+Run it. The first call works. The second is refused with `forbidden`. The third gets `unknown_tool` plus a list of tools that do exist, which is often all the model needed to correct itself.
 
 <Callout type="tip" title="Errors are messages to the model">
-Do not raise an exception and crash the run. Return a short, specific error the model can read. "amount must be a number" lets it fix the call and retry. "Error 500" does not. The unknown-tool error above lists the tools that do exist, which is often all the model needed.
+Do not crash the run, and do not return "Error 500". The model reads whatever you return. "amount must be a number" gets a fixed retry. A stack trace gets a confused model and a wasted turn. Write your errors like you would write them for a new colleague who is smart but has never seen the system.
 </Callout>
 
-### Where it sits with MCP
+### When it goes wrong
 
-If your tools come from MCP servers, the gateway is the layer in front of them. MCP standardises *how* a tool is described and called. It does not decide who may call what, or how often. See the [MCP for Practical Builders](/courses/mcp) course, and its security chapter in particular.
+- **Checking only the tool name.** Registered is the easy check. Most damage comes from valid tools with bad arguments.
+- **One shared rate limit.** Limit per role and per tool, or one chatty tool starves the rest.
+- **Logging only successes.** The refusals are the interesting rows. They show what the model is *trying* to do.
+- **Doing the checks inside each tool.** Then each tool does them a little differently. Do them once, in front.
+
+### Where it connects
+
+If your tools come from MCP servers, the gateway is the layer in front of them. MCP standardises how a tool is described and called; it does not decide who may call what. The [MCP for Practical Builders](/courses/mcp) course has a security chapter that goes hand in hand with this one. The next two patterns, permissions and approvals, plug straight into check 3 here.
 
 <ChapterSummary>
-- The model writes text that looks like a tool call; your code decides whether to run it
-- A gateway is one function every call passes through: registered, valid, permitted, under limits, logged
-- Return structured errors so the model can recover; do not crash the run
-- The gateway is where the next patterns plug in: permissions, approvals, limits, traces
+- A tool call is text the model wrote; your code decides whether it runs
+- A gateway is one function every call passes through: registered, valid, permitted, within limits, logged
+- Return specific errors so the model can fix its own mistake
+- Do the checks once, in front of the tools, not inside each of them
 </ChapterSummary>
 
 <Checkpoint>
-1. A model calls `send_invoice` but you only registered `create_invoice`. Which check catches it, and what should the error say?
-2. Your gateway works, but an agent still burns money by searching the same query 200 times. Which check was missing or set too loosely?
+1. A model calls `send_invoice` but only `create_invoice` exists. Which check catches it, and what should the error message say?
+2. Pip works fine, but on one bad afternoon searches the same query 200 times. Which check was missing or too loose?
 </Checkpoint>

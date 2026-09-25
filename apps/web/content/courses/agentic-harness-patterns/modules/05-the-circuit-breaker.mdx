@@ -12,18 +12,30 @@ updatedAt: "2026-09-25"
 
 <LearningObjectives>
 - Describe the three breaker states and what moves between them
-- Explain why retries alone make outages worse
+- Explain why naive retries make outages worse, and what jitter fixes
 - Implement a breaker in about 30 lines
 - Decide what an agent should do while a breaker is open
 </LearningObjectives>
 
-### The problem
+### The scare
 
-A dependency starts failing: a search API, a database, a model provider. A naive agent retries. Every retry is slower, costs tokens, and hammers a service that is already struggling. Ten agents doing that turn a small outage into a big one.
+A search service Pip depends on starts timing out. Pip's code does the sensible-sounding thing: if it fails, try again. Immediately. Repeatedly.
 
-The name comes from the electrical breaker in your fuse box. When too much current flows, it trips, cutting power before the wiring burns. The software version trips when too many calls fail.
+Now imagine a hundred Pips. The service is struggling, and a hundred clients are each asking it again, and again, as fast as they can. Each retry is more work for a service that has none to spare. It falls over harder. Engineers call this a **retry storm**: the original problem was small and short, but the retries keep the outage alive.
 
-### The three states
+This is not hypothetical. Amazon's engineers have written about exactly this in their Builders' Library. Their point about depth is the scary bit: if every layer of a system retries three times and the failing service is five layers down, it can end up seeing hundreds of times its normal load. Nobody planned that. Every layer just tried to be resilient.
+
+### Refresher: why retries can make things worse
+
+Play with this. A hundred agents, one service that is down for the first three seconds. The dashed line is what it can handle; go far above it and it collapses instead of merely slowing.
+
+<RetryStormSim />
+
+Pick each strategy in turn. Retrying instantly, the service never recovers. Backoff on its own is better on paper, but everyone waits the same time, so they return in a synchronised wave. Adding **jitter**, a bit of randomness in the wait, breaks up the wave. That one small idea is the reason this simulation ends happily.
+
+### The pattern
+
+A **circuit breaker** takes it further: stop calling altogether once a dependency is clearly down. The name comes from the fuse box. Too much current, the breaker trips, the wiring does not burn.
 
 <Diagram title="Breaker state machine">
 
@@ -43,11 +55,11 @@ The name comes from the electrical breaker in your fuse box. When too much curre
 
 ### Try it
 
-You are the flaky API. Fail three calls, then wait out the cooldown.
+Now you are the flaky API. Fail three calls to trip it, then wait out the cooldown.
 
 <CircuitBreakerSim />
 
-### Implementation
+### Build it
 
 ```python
 import time
@@ -89,26 +101,35 @@ for _ in range(5):
         print("failed")
 ```
 
+Calls 4 and 5 never leave the building. The failing service gets breathing room, and Pip stops burning tokens on a lost cause.
+
 ### What the agent does while it is open
 
-An open breaker is information. Return a message the model can use: "search is unavailable for about 30 seconds." Then the agent can answer from what it already has, tell the user, or take the next step on the [Fallback Ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder). What it must not do is loop on the failing call.
+An open breaker is information, so pass it on. Return "search is unavailable for about 30 seconds" and let Pip do something sensible: answer from what it already has, say so honestly, or take the next rung on the [Fallback Ladder](/courses/agentic-harness-patterns/10-the-fallback-ladder). What it must not do is loop.
 
 <Callout type="tip" title="One breaker per dependency">
-Give each external service its own breaker. If the search API is down, that should not stop the agent from using the calendar. A single global breaker turns one failing service into a full outage.
+Search down should not stop the calendar tool. A single global breaker turns one broken service into a total outage. One breaker each.
 </Callout>
 
-### A related failure: the agent loop
+### When it goes wrong
 
-The same idea applies inside the loop. If the agent has made the same call with the same arguments three times and got the same error, trip a breaker on that pattern. This connects directly to [Loop Engineering](/courses/loop-engineering), where the loop must always be able to stop.
+- **Threshold of 1.** A service that hiccups once a day now blocks everything for 30 seconds each time.
+- **Nobody watches it.** A breaker that opens silently looks like a mysterious slowdown. Log every state change to the [trace](/courses/agentic-harness-patterns/07-the-trace-pipeline).
+- **Counting the wrong failures.** A 400 "bad request" is your bug, not the service's outage. Only trip on timeouts and 5xx.
+- **Retrying inside every layer.** Retry in one place. See the depth problem above.
+
+### The agent-loop cousin
+
+The same idea works inside the loop. If the agent has made the same call with the same arguments three times and got the same error each time, trip a breaker on that pattern. This is the practical end of [Loop Engineering](/courses/loop-engineering): a loop must always be able to stop.
 
 <ChapterSummary>
-- Retrying a failing dependency makes an outage bigger
+- Retrying a failing dependency can make an outage bigger, especially when every layer retries
+- Backoff plus jitter spreads retries out; a breaker stops them altogether
 - Closed passes calls, open refuses them, half-open tests once
-- Give the model a clear "unavailable" message so it can adapt
-- One breaker per dependency, and one for repeated identical failures inside the loop
+- Give the model a clear "unavailable" message so it can adapt, and keep one breaker per dependency
 </ChapterSummary>
 
 <Checkpoint>
-1. Your breaker threshold is 1. What goes wrong on a dependency that fails once a day for no reason?
-2. What should the agent tell the user while the model provider's breaker is open?
+1. Your breaker threshold is 1. What goes wrong with a dependency that fails once a day for no reason?
+2. What should Pip tell the customer while the model provider's breaker is open?
 </Checkpoint>

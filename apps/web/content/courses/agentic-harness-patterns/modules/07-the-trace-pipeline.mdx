@@ -17,19 +17,33 @@ updatedAt: "2026-09-25"
 - Use a trace to find the slow, expensive, or wrong step
 </LearningObjectives>
 
-### The problem
+### The scare
 
-Something went wrong. A customer got a bad answer yesterday at 14:07. Without a trace you have the final text and a guess. With one you can open the run and see: the plan, the order lookup, the retrieved chunks and their scores, the draft, the guard result, and which step took four seconds.
+Go back to the Replit incident. After the database was gone, the agent reportedly told the founder that recovery was not possible. It was possible. Now picture being the person on the other end. You have a chat transcript in which an AI says one thing, and reality says another. Who do you believe? How do you even find out?
 
-A **trace** is one agent run. It is made of **spans**, one per step, each with a start, a duration, inputs, outputs, and a parent. The **Trace Pipeline** is the habit of emitting these everywhere, in one shape, to one place.
+You need a record that does not depend on the agent's own account of itself: what was actually run, in what order, with what result. That is a trace.
 
-### Explore a real-shaped trace
+Less dramatic version: a customer complains about a bad answer Pip gave yesterday at 14:07. Without a trace, you have the final text and a guess. With one you can open the run and read it like a flight recorder.
 
-Click a span. Notice which one is slowest, which one costs the most, and which is mostly waiting on a human.
+### Refresher: logs versus traces
+
+A **log** line says "something happened." A **trace** says "here is the whole story of one run, step by step, with timings and who-called-whom."
+
+- A **trace** is one agent run, start to finish.
+- A **span** is one step inside it: one model call, one tool call, one retrieval.
+- Spans nest: the "answer a customer" span contains the "look up order" span, which contains the "call the API" span.
+
+A log is a pile of receipts. A trace is the receipts stapled together in order.
+
+### Explore one
+
+Here is a run of Pip's, drawn as a waterfall. Click the spans. Find the slowest one, then the most expensive one, then the one that is mostly waiting on a human.
 
 <TraceExplorer />
 
-### What every span carries
+### The pattern
+
+The **Trace Pipeline** is the habit of emitting a span from every step of every run, in one common shape, to one place. The fields every span should carry:
 
 | Field | Why |
 |---|---|
@@ -40,9 +54,9 @@ Click a span. Notice which one is slowest, which one costs the most, and which i
 | `model`, `tokens_in`, `tokens_out`, `cost` | Find the expensive part |
 | `status`, `error` | Find the failed part |
 
-This repo's rule is the same: every agent run logs agent name, model, tokens, cost, tool calls, and status to Langfuse.
+This repo's own rule is the same: every agent run logs agent name, model, tokens, cost, tool calls and status to Langfuse.
 
-### Instrument once
+### Build it
 
 ```python
 import functools, time, uuid, json
@@ -84,28 +98,38 @@ draft_reply(get_order("A-1043"))
 print(json.dumps(TRACE, indent=1))
 ```
 
-Wrap the gateway call and the model call once and every run is traced without touching agent logic.
+Wrap the gateway call and the model call once and every run is traced, without touching the agent's logic. That is why the gateway from chapter 1 is such a good place to hook in.
 
 <Callout type="important" title="Redact before you record">
-Traces are a second copy of your data. Strip card numbers, emails, and keys before they are stored, and decide how long traces live. A trace store that leaks is a worse leak than the app.
+A trace store is a second copy of your data, including whatever customers typed. Strip card numbers, emails and keys before it is stored, and decide how long traces live. A trace database that leaks is a worse day than the app leaking.
 </Callout>
 
-### Three questions traces answer
+### Three questions a trace answers
 
-1. **Where did the time go?** The waterfall. Usually one LLM call or one wait.
+1. **Where did the time go?** The waterfall. Usually one model call, or one wait.
 2. **Where did the money go?** Sum cost by span kind, by tool, by user.
-3. **Why was this answer wrong?** Read the retrieved chunks. Most bad answers are bad retrieval, visible in one glance at the retrieval span.
+3. **Why was this answer wrong?** Open the retrieval span and read the chunks. Most bad answers are bad retrieval, and it takes one look to see.
 
-Traces are also the raw material for the next pattern: a shadow evaluation replays real inputs recorded here. For the wider picture, see [AI Agents Observability](/courses/ai-agents-observability) and the [observability module of the agents course](/courses/ai-agents/08-observability-langfuse).
+### When it goes wrong
+
+- **Tracing the model but not the tools.** The tool calls are where the real-world effects happen. Trace those first.
+- **Logging everything forever.** Costly, and a privacy problem. Sample the boring successes; keep every error.
+- **Nobody looks.** A trace nobody reads is a diary. Set one alert (error rate, cost per run) so it taps you on the shoulder.
+- **Free-text logs.** Structured fields you can filter beat paragraphs you have to grep.
+
+### Where it connects
+
+Traces are the raw material for the next pattern: a shadow evaluation replays real inputs you recorded here. The trace is also where the breaker, the governor and the fallback ladder write down what they did. For the wider story, see [AI Agents Observability](/courses/ai-agents-observability) and the [observability module](/courses/ai-agents/08-observability-langfuse) of the agents course.
 
 <ChapterSummary>
-- A trace is one run; spans are its steps; one shape everywhere
-- Carry ids, timing, redacted input and output, model, tokens, cost, and status
+- A trace is one run; spans are its steps; use one shape everywhere
+- Carry ids, timing, redacted input and output, model, tokens, cost and status
 - Instrument at the gateway and the model call, not inside every agent
+- The trace is a record that does not depend on the agent's own account of itself
 - Redact before storing, and set a retention period
 </ChapterSummary>
 
 <Checkpoint>
 1. A run took 6 seconds and 5 of them are one span. Name two different reasons that span might be slow, and which extra field would tell them apart.
-2. Why should the trace capture retrieval scores, not only the final answer?
+2. Why should a trace capture retrieval scores, not only the final answer?
 </Checkpoint>

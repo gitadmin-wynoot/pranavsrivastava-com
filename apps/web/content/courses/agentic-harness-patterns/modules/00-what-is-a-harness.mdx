@@ -1,0 +1,103 @@
+---
+title: "Start here: what a harness is, and why patterns"
+summary: "Why the model is the small part of an AI agent, what the harness around it does, and why ten named patterns beat inventing your own every time."
+module: 0
+time: 12
+level: "Beginner"
+status: "published"
+updatedAt: "2026-09-25"
+---
+
+<ChapterHeader number="0" title="Start here: what a harness is, and why patterns" time="12" />
+
+<LearningObjectives>
+- Say in one sentence what a harness is and why an agent needs one
+- Describe how an agent loop works well enough to see where it can break
+- Read five real incidents as harness failures, not model failures
+- Know what a pattern is, and why this course teaches ten of them
+</LearningObjectives>
+
+### A story to start with
+
+In July 2025 a founder named Jason Lemkin was a week or so into a public experiment: build a real app by talking to an AI coding agent. He told it, in plain words, that there was a code freeze and nothing should change. The agent ran a destructive command against the live database anyway. Records on roughly 1,200 executives and as many companies were gone. Then it told him recovery was impossible, which turned out to be wrong.
+
+Ask most people what went wrong and they will say "the AI is unreliable." That is true and not very useful, because it is going to stay true. Models will keep being brilliant, quick, and occasionally very wrong. A better question is: *what should have been standing between that agent and that database?*
+
+Whatever the answer is, that is the harness.
+
+### What a harness is
+
+A **harness** is everything around the model that is not the model: the code that decides which tools it can call, what it can see, what it is allowed to change, when it must stop, when a human gets asked, and what gets written down.
+
+Think of a racehorse. The horse is the model: strong, fast, and not something you fully control. The harness is the reins, the saddle, the rail around the track, and the person who says "not today." Nobody would call a horse without any of that a better horse. It is just a loose horse.
+
+<Callout type="info" title="Where this fits">
+The [Harness Engineering](/courses/harness-engineering) course is the big picture: tools, memory, permissions, runtime, evaluations, observability. This course is the practical follow-up. It takes those areas and turns them into ten specific, named, buildable patterns.
+</Callout>
+
+### Refresher: what an agent actually does
+
+If you have not built one, here is the whole trick. A chatbot answers once. An **agent** runs a loop: the model reads what is going on, decides to use a tool, your code runs the tool, the result goes back to the model, and it goes round again until the model decides it is done.
+
+Step through this one. Watch two things: how many tokens get re-sent each turn, and the warning under each step. Every warning is a spot where a harness has a job.
+
+<AgentLoopPrimer />
+
+Two facts to hold onto from that:
+
+1. **The model never touches anything.** It writes text that looks like a tool call. *Your code* runs it. So whatever your code is willing to run, the model can make happen.
+2. **The model decides when to stop.** Nothing else in the loop forces an ending.
+
+Everything in this course grows out of those two facts.
+
+### Why the failures are not the model's fault
+
+Here are five real, publicly reported incidents. Read each chain, then look at the bit underneath: where a pattern from this course breaks it.
+
+<IncidentBoard />
+
+Notice that in every one of those, a slightly smarter model would not have saved anyone. Air Canada's bot needed a person to own the promise. Replit's agent needed a credential that could not delete production. Knight Capital, which is not an AI story at all, needed a ceiling on how much damage one run could do. These are **harness** problems, which is good news, because harness problems are solvable with ordinary engineering.
+
+### So why patterns?
+
+You could invent all of this yourself. Most teams do, once, after their first scare. The trouble is that invented fixes are patchy: a rule here, an `if` there, none of it written down.
+
+A **pattern** is a fix that plenty of people have arrived at independently, with a name attached. Names matter more than you would think. "We need a circuit breaker on the search dependency" is a one-line conversation. "We should probably somehow stop hammering that service when it's down" is a meeting.
+
+Each chapter in this course follows the same shape:
+
+| Part | What it gives you |
+|---|---|
+| **The scare** | A real incident, or a realistic one, so you feel why it exists |
+| **Refresher** | The background you need, so you can jump in cold |
+| **The pattern** | The idea in plain words, with a diagram |
+| **Try it** | An interactive you can poke |
+| **Build it** | Code that runs as written |
+| **When it goes wrong** | The mistakes people actually make |
+
+### Meet Pip
+
+To keep things concrete, most examples follow **Pip**, a made-up support agent for a made-up online shop called Lumen & Co. Pip answers customer questions, looks up orders, drafts replies, and occasionally wants to issue refunds. Pip is fictional. The incidents in the case files are not.
+
+### The map
+
+Ten patterns, one model. You will meet them roughly in the order a request meets them. Tap around.
+
+<HarnessAnatomy />
+
+<Callout type="tip" title="Do you have to build all ten?">
+No. Start with the Tool Gateway and the Trace Pipeline, because almost everything else plugs into those two. Add the Cost Governor before your first long-running agent. Add the rest as the agent gets more power. Chapter 10 has a build order.
+</Callout>
+
+<ChapterSummary>
+- A harness is everything around the model that decides what it can do, what it sees, when it stops, and what gets recorded
+- An agent is a loop: the model writes a tool call, your code runs it, the result goes back
+- The model never touches anything; your code does. The model also decides when to stop
+- The famous failures were harness failures. A smarter model would not have fixed them
+- A pattern is a named, proven fix. This course has ten
+</ChapterSummary>
+
+<Checkpoint>
+1. In the agent loop, who actually runs the tool: the model or your code? Why does that matter for security?
+2. Pick one of the five incidents. Which single pattern would you add first, and what would it have cost you to build?
+</Checkpoint>
