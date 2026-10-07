@@ -1,0 +1,175 @@
+---
+title: "The Online Path, Stage by Stage"
+summary: "Walk the request path from the moment a question arrives to the last streamed word. Each stage gets its own section, covering how it becomes slow in practice, the signs to look for and the first fix to try."
+module: 6
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="6" title="The Online Path, Stage by Stage" time="12" />
+
+<LearningObjectives>
+- Name the stages of the online path in the order a request meets them
+- Explain how each stage becomes slow in practice, and the signal that shows it
+- Identify why streaming can fail silently, and how to check every hop
+- Decide whether a slow session, a slow request or a slow fleet is the problem, and pick the first move for each
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Modules 2 to 5](/courses/rag-latency/02-what-search-really-does) covered the ideas: embeddings, approximate search, re-ranking, the context window and memory. This module puts them back on the request path, in order, and looks at how each stage goes wrong. [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes) then covers the fixes that work across stages.
+</Callout>
+
+It is the Monday after a sale. Support volume doubles, and the chatbot slows to a crawl for two hours. At 10 a.m., with three people testing it, everything was fine.
+
+The online path is where the crowd shows up. A system that works for three people can fail for three hundred, and the crowd is the one you actually have to design for.
+
+
+## The path in order
+
+A question on the online path meets seven stages:
+
+1. **Queue.** It waits for a free worker.
+2. **Embed.** It becomes a vector.
+3. **Search.** The vector finds candidate chunks.
+4. **Re-rank.** A cross-encoder reorders the candidates.
+5. **Assemble.** The prompt is built from parts.
+6. **First word.** The model reads the prompt and produces its first token.
+7. **Rest of the answer.** The model streams the remaining tokens back.
+
+Each stage has its own failure pattern. The sections below cover them in order. Search has its own depth in [Modules 2 and 3](/courses/rag-latency/03-approximate-search), so here it appears as a stage in the path.
+
+## Queue: the waiting room
+
+Every service has a fixed number of workers that can do work at once. Pip has eight. When twenty questions arrive together, the first eight start, and the other twelve wait for a free worker.
+
+<Diagram title="Twenty questions, eight workers" caption="The waiting room is the slowest room in the building, and it has no timer">
+{`
+  arrivals                  queue                    workers
+  ○○○○○○○○○○○○○○○○○○○○ ─►  ○○○○○○○○○○○○  ─►   [■][■][■][■]
+                            12 waiting           [■][■][■][■]
+                                                  all busy
+`}
+</Diagram>
+
+**The signal.** Queue time rises with load while every other span stays flat. A dashboard that shows only the work time looks healthy, which is why the queue is the most often missed stage.
+
+**The first fix.** Add workers, set a pool size that matches the downstream capacity, or set limits on the callers. A faster model changes nothing here, because the wait happens before the model starts. The [Harness Patterns course's circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker) covers how to stop a queue from growing without bound.
+
+## Embed: a small call with a large crowd
+
+Turning the question into a vector is usually a small call, a few tens of milliseconds. It becomes a problem when every question makes its own call to a shared service, or when the embedding model runs on a small instance that is also doing something else at night.
+
+**The signal.** The embed span is steady when traffic is light and grows when it is heavy, and it spikes at predictable hours. Check whether the embedding service shares a host with another job.
+
+**The first fix.** Batch questions where latency allows it. Cache the vectors of questions you have already seen, using the exact-match cache covered in [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes). Give the embedding service its own capacity.
+
+## Search: the largest stage
+
+In most systems this is the largest bar. [Module 3](/courses/rag-latency/03-approximate-search) covers the methods and the recall trade-off. On the path, the things to check are the search setting in use, the number of vectors each query touches, and whether the route sends the query to one part of the index or all of it. [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes) covers routing.
+
+**The signal.** Search time rises with the size of the corpus, not with traffic. If the index has grown since the setting was chosen, the setting may no longer be safe.
+
+**The first fix.** Re-measure recall on the current corpus, and then choose the cheapest setting that still meets the target.
+
+## Re-rank: the slow reader
+
+Re-ranking runs on the candidates the search returns. Its cost is the candidate count times the reader's cost per pair, so a long candidate list is the usual reason it gets slow. [Module 4](/courses/rag-latency/04-chunks-rerank-and-the-window) explains the cross-encoder in detail.
+
+**The signal.** Re-rank time moves with the candidate count, and the candidate count is often set in a config file that nobody has looked at for months.
+
+**The first fix.** Measure how often the right passage is already in the first five positions before re-ranking. If it usually is, shorten the candidate list.
+
+## Assemble: the cheap stage that decides the rest
+
+Building the prompt is quick in code and expensive in tokens. It is where the size of the prompt is decided, and [Module 5](/courses/rag-latency/05-context-and-memory) covers the parts in detail. The assembly stage is also where memory decisions take effect.
+
+**The signal.** The token count of the prompt rises over time, often without anyone deciding it should. Log it next to the first-word time, because the two move together.
+
+**The first fix.** Cut the passages to the best few, shorten the recent history, and check whether the instructions can be cached.
+
+## First word: where prefill lives
+
+Time to first token is mostly prefill, the reading of the whole prompt before the model writes anything. [Module 4](/courses/rag-latency/04-chunks-rerank-and-the-window) explained why. On the path, this stage is where the consequences of assembly show up.
+
+**The signal.** The first-word time tracks the token count of the prompt. A spike in first-word time with no change in search or re-ranking usually means the prompt got bigger.
+
+**The first fix.** Shorten the prompt, cache the stable prefix where the provider supports it, or use a smaller model for questions that do not need the larger one.
+
+## Rest of the answer: streaming that quietly isn't
+
+Streaming hides the decode phase, but only if every layer passes the tokens through as they arrive. A proxy or middleware that buffers the response turns a streamed answer back into a long silence.
+
+<Diagram title="Where streaming goes to die" caption="Each hop can buffer. Check the timestamp at every one.">
+{`
+  model ──► app server ──► proxy ──► browser
+   350 ms     350 ms        3.1 s     3.1 s   ◄── buffered here
+`}
+</Diagram>
+
+**The signal.** The first token leaves the model quickly, the first token reaches the browser late, and the gap is the same for every answer. That gap is a buffer, not the model.
+
+**The first fix.** Timestamp the first token at each hop. Turn off buffering in the proxy for streaming routes, and make sure the framework flushes each chunk. The [Harness Patterns course's trace pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline) shows how to record those timestamps across a system.
+
+## Connections: the handshake nobody sees
+
+Opening a database connection takes a handshake, and often authentication as well. If every question opens a fresh one, that cost repeats on every call. A connection pool keeps a few open and lends them out.
+
+<Diagram title="No pool, then a pool" caption="The work is the same. Only the setup changes.">
+{`
+  no pool   question ─► open (80 ms) ─► query ─► close ─► ...every time
+
+  pool      question ─► borrow ─► query ─► return
+            [conn 1][conn 2][conn 3][conn 4]   opened once, kept warm
+`}
+</Diagram>
+
+The pool is a small piece of code, and it is worth seeing it run. This one uses a queue of four stand-in connections:
+
+```python
+import queue
+
+pool = queue.Queue()
+for i in range(4):
+    pool.put(f"conn-{i}")   # pretend these are open database connections
+
+def run_query(sql):
+    conn = pool.get()        # borrow one, wait if all are busy
+    try:
+        return f"{conn} ran: {sql}"
+    finally:
+        pool.put(conn)       # hand it back for the next caller
+
+print(run_query("SELECT 1"))
+```
+
+**The signal.** Each call takes a fixed extra amount of time, the same on every request, and it does not depend on load in the way a queue does.
+
+**The first fix.** Use a pool, sized to the database's capacity, and create it once at startup rather than per request.
+
+## Which scope is it?
+
+Before choosing a fix, decide the scope of the problem. The same symptom can come from different causes at different scales.
+
+| Scope | Usually caused by | Looks like | Start with |
+|---|---|---|---|
+| One request | Big prompt, big candidate list, cold model | One slow answer, the rest fine | The span timings for that request |
+| One session | Repeated work, no cache, new connections each turn | Every turn is slower than the one before | Embedding cache, connection reuse |
+| The fleet | Queues, too few workers, shared instances | Fine at 3 users, bad at 300 | Queue time and pool size |
+
+If you cannot tell which scope you are in, look at how the slow requests are distributed over time. A cluster at lunchtime points to the fleet. A slow session that gets slower each turn points to repeated work. One outlier request points to its own inputs.
+
+<ChapterSummary>
+- The online path has seven stages, and each one has its own signal and its own first fix.
+- Queue time is the most often missed stage, and it rises with load while the work spans stay flat.
+- Streaming can be broken by a buffer at any hop. Timestamp the first token at each one.
+- Connection setup is a fixed cost per call. A pool removes it.
+- Decide the scope first: request, session or fleet. The first move depends on which one you are in.
+</ChapterSummary>
+
+<Checkpoint>
+1. Your queue span is flat at 40 ms all day, but users complain at lunchtime. Which stage would you examine next, and what would you check first?
+2. The model's first token is logged at 350 ms, but the browser sees it at 3.1 s. Describe two places in the path where that gap can come from, and how you would confirm each.
+3. Your session logs show each turn slower than the last, with the same question types. Which scope is this, and which two changes would you try first?
+</Checkpoint>

@@ -1,0 +1,145 @@
+---
+title: "Context and Memory: What the Model Reads Each Turn"
+summary: "A language model remembers nothing between calls. The application decides what the model reads each turn, from instructions and passages to conversation history and customer facts. This module shows how to build that prompt, what each memory strategy costs, and how long-term memory fits in."
+module: 5
+time: 16
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="5" title="Context and Memory: What the Model Reads Each Turn" time="16" />
+
+<LearningObjectives>
+- Explain why a model has no memory between calls, and where chatbot memory actually lives
+- Assemble a prompt from its parts and estimate what each part costs in tokens
+- Compare four memory strategies (full history, sliding window, summary plus window, structured facts) by what they keep, what they forget and what they cost
+- Place long-term memory in the request path, and say when it should be fetched
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Module 4](/courses/rag-latency/04-chunks-rerank-and-the-window) explained tokens, the context window and prefill. This module answers the question those ideas raise: what goes into the prompt in the first place, and who decides? [Module 6](/courses/rag-latency/06-the-online-path) then follows the request through the rest of the online path.
+</Callout>
+
+A customer writes, "like I said, the March one." The bot replies, "Could you tell me which order you mean?" They said it four messages ago. Customers notice this straight away, and it makes them feel unheard.
+
+Engineers usually notice later, in a ticket titled "bot forgot things". This module explains why it happens, and what it costs to stop it.
+
+
+## The model remembers nothing
+
+This is the most important sentence in this module. A language model has no memory between calls. Each request arrives empty. The model reads what is in front of it, writes an answer, and forgets the call ever happened.
+
+So when a chatbot seems to remember the last message, something else is doing the remembering. That something is the application. It stores the transcript, decides what to send back on the next turn, and assembles the whole prompt from scratch every time.
+
+Picture a phone call where the other person reads from a script. Each time you speak, the whole script goes back in front of them, updated with what you just said. The memory is the script, and whoever holds the script decides what it says.
+
+This makes memory a design decision with a direct cost. Everything in the script is read on every turn. A longer script is a slower first word and a bigger bill.
+
+## Assembling the prompt
+
+Pip builds a prompt from five parts, always in the same order.
+
+<Diagram title="What Pip sends on one turn" caption="Roughly 3,450 tokens, and every one of them is read before the first word">
+{`
+  ┌──────────────────────────────────────────────┐
+  │ instructions                       900 tok   │  fixed, cacheable
+  ├──────────────────────────────────────────────┤
+  │ 6 policy passages                1,800 tok   │  from the search
+  ├──────────────────────────────────────────────┤
+  │ customer facts                     120 tok   │  order no., purchase date
+  ├──────────────────────────────────────────────┤
+  │ last 4 turns                       600 tok   │  from the session store
+  ├──────────────────────────────────────────────┤
+  │ the question                        30 tok   │
+  └──────────────────────────────────────────────┘
+`}
+</Diagram>
+
+Each part has a different owner and a different cost.
+
+- **Instructions** are written by the team and do not change between turns. They are the best candidate for prompt caching, because the same text is processed on every call.
+- **Passages** come from the search. They change with every question and are the part you can cut most easily.
+- **Customer facts** come from a structured store. They are small, precise and cheap.
+- **Recent turns** come from the session store. They grow with the conversation unless you limit them.
+- **The question** is what the customer just typed. It is always small.
+
+Here is the same assembly in code. The session store is a dictionary here, but the shape carries over to Redis or a database.
+
+```python
+from collections import defaultdict, deque
+
+WINDOW = 4
+history = defaultdict(lambda: deque(maxlen=WINDOW))
+
+INSTRUCTIONS = "You are Pip, a returns assistant. Answer only from the passages."
+
+def remember(session_id, role, text):
+    history[session_id].append(f"{role}: {text}")
+
+def build_prompt(session_id, facts, passages, question):
+    parts = [
+        INSTRUCTIONS,
+        "Passages:\n" + "\n".join(passages),
+        "Customer facts: " + facts,
+        "Recent turns:\n" + "\n".join(history[session_id]),
+        "Question: " + question,
+    ]
+    return "\n\n".join(parts)
+
+remember("s1", "customer", "I bought a sofa in March.")
+remember("s1", "pip", "Thanks. What is the issue?")
+print(build_prompt("s1", "order 4471, purchased 2026-03-14",
+                   ["Returns are accepted within 30 days of delivery."],
+                   "Can I still return it?"))
+```
+
+The `deque` with `maxlen` is the sliding window in one line. Every new turn pushes the oldest one out. That single line is also where the memory decision lives.
+
+## Four memory strategies
+
+Every chatbot has to decide how much history to send, and the choices fall into four families. Each one keeps something and forgets something.
+
+**Full history** sends every previous turn. Nothing is forgotten, which makes it the most accurate option. Its cost grows with every turn, so both the bill and the first-word wait grow with the conversation. It works for short sessions and fails for long ones.
+
+**A sliding window** sends only the last few turns. It is cheap and predictable, but it forgets early details. A purchase date mentioned in turn one is gone by turn six. The `deque` above is this strategy.
+
+**A summary plus a window** periodically asks a model to summarise older turns, then sends the summary and the recent turns. It keeps the gist cheaply. Summaries tend to lose exact dates and order numbers, which are exactly the details a returns question depends on. The summary also costs a model call of its own. Run it after the answer has been sent, not before, so the customer does not wait for it.
+
+**Structured facts** pull out the things that must survive, such as the order number, the purchase date and the delivery date, and store them as a small record. That record goes into every prompt. It is the most precise option and the cheapest per turn, but it only holds what someone decided to extract.
+
+The interactive below compares them. Change the number of turns and the number of passages, then switch strategies to see what each one drops and what it adds to the prompt.
+
+<ContextBudget />
+
+## What Pip does, and why
+
+Pip uses structured facts on every turn, the last four turns of conversation, and nothing older. The facts keep the purchase date alive, so the question "I bought it in March" is never lost. The window keeps the conversation natural, so Pip does not repeat itself or ask for information it was just given.
+
+The trade-off is that a detail that is not in the facts and is more than four turns old is gone. Pip handles that by asking the customer to restate it, which is annoying but honest.
+
+## Long-term memory: remembering across sessions
+
+Some things should survive the end of a chat. A customer's preferred language, their past orders, or a note that a delivery was damaged last time should still be available next month. These facts live outside the transcript. They are stored as rows in a database, or as embeddings in a search index, and they are fetched when a question needs them.
+
+Picture a filing cabinet beside the phone script. You open a folder only when the call is about that customer.
+
+Each fetch is another hop before the model begins, whether it is a database read or a vector search. That makes long-term memory a latency question as much as a data question. Fetch only what the question needs, and run those fetches in parallel with the other lookups. [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes) covers the parallel pattern.
+
+The decision is what counts as "needed". Fetching on every question is safe and slow. Fetching only when the question mentions an order or an account is faster, but it needs a rule for what counts as a mention.
+
+For the design of memory itself, the [Giving AI a Memory course](/courses/giving-ai-a-memory) covers the options in depth. The [AI Agents course's memory module](/courses/ai-agents/05-memory) connects memory to agent loops, and the [Add memory to an AI agent lab](/labs/add-memory-to-an-agent) builds one.
+
+<ChapterSummary>
+- A model has no memory between calls. The application stores the transcript and assembles the whole prompt each turn.
+- The prompt has five parts: instructions, passages, customer facts, recent turns and the question. Each has a different owner and cost.
+- Full history is accurate and grows without limit. A window is cheap and forgets. A summary is compact and loses specifics. Structured facts are precise and only hold what was extracted.
+- Long-term memory is fetched from outside the transcript, and each fetch is latency on the request path.
+- Every memory decision is a trade between what the bot remembers and how long the first word takes.
+</ChapterSummary>
+
+<Checkpoint>
+1. A customer asks about a purchase date they mentioned seven turns ago. Which memory strategy loses it, and what change would keep it without sending the full history?
+2. Your summary strategy runs the summary call before each answer. Describe why that hurts the first-word time, and where the call should move.
+3. Pip's prompt is 3,450 tokens. Name the part you would cache first, and say why it is a safe candidate.
+</Checkpoint>

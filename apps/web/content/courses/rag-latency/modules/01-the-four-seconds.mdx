@@ -1,0 +1,178 @@
+---
+title: "The Four and a Half Seconds"
+summary: "A customer waits four and a half seconds for a chatbot to start answering. This module times every stage of that wait, explains percentiles and time to first token, and shows why the model is rarely the first suspect."
+module: 1
+time: 14
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="1" title="The Four and a Half Seconds" time="14" />
+
+<LearningObjectives>
+- Break one slow answer into stages and say which stage owns each slice of the wait
+- Explain the difference between p50, p95, time to first token and total time
+- Add timers to a pipeline so that queue time is visible, not hidden
+- Explain why "the model is slow" is usually a guess, and what to measure instead
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** This is the first module, so there is no earlier one to build on. Every later module picks up one of the stages you time here. [Module 2](/courses/rag-latency/02-what-search-really-does) starts with the first of them, search.
+</Callout>
+
+Nobody has ever got excited by a latency graph. And yet almost every RAG chatbot ends up staring at one, usually on a Monday, usually with a meeting in twenty minutes.
+
+This course is for that Monday. It is for the moment someone says "the model is too slow" and you need to know, with numbers, whether they are right.
+
+## A customer and a question
+
+A customer types one question into a furniture retailer's support chat:
+
+> Can I still return my sofa? I bought it in March and it arrived in May.
+
+The bot is called Pip. It has read the returns policy, the delivery terms and about sixty thousand product pages. It is a RAG bot, which means that before it can answer, it has to find the right passages and pass them to a language model. The first word appears four and a half seconds after the question was sent.
+
+That number is the whole problem. Within an hour, someone in the product meeting has said, "The model is too slow, can we switch to a smaller one?" It is a reasonable reflex. The model is the only part of the system that talks back, so it gets the blame. The other stages are quiet, so nobody looks at them.
+
+This course is about looking at them. We will follow Pip's four and a half seconds through the whole system, and by the end you will be able to say which slice of the wait belongs to which stage, and what to change about it.
+
+## Who this is for
+
+You might be the engineer on call at 2 a.m., looking at a dashboard that says the bot is slow and not saying why. This course gives you a map of where to look, and what each stage is likely to be doing.
+
+You might be a product lead who has been asked to approve a model switch. The course will not tell you to refuse it. It gives you the questions to ask first, so the decision is made on a measurement and not a feeling.
+
+You might be building your first RAG bot and have been handed a list of terms: embeddings, HNSW, prefill, re-ranking. Each one gets a plain definition, a picture and a reason to care.
+
+You do not need to know linear algebra. The only formula in the whole course is a cosine, and it comes with a worked example you can run. You do need to have called an API once, and to have seen a dashboard.
+
+## Where the time went
+
+Here is that question, timed one stage at a time. The numbers are illustrative, but they follow the shape of a real bot under load.
+
+<Diagram title="Pip, one question, one waterfall" caption="One block is 100 ms. The model is the fourth bar, not the first.">
+{`
+  waiting in line    ██████████████████████████   2.6 s
+  embed the query    ▏                            0.03 s
+  vector search      ██████████████               1.4 s
+  re-rank            ██                           0.18 s
+  model: first word  ███                          0.35 s
+                  to first word             4.6 s
+`}
+</Diagram>
+
+The biggest bar is not the model, and it is not the search. It is the wait before any work started. That wait is invisible in the code. The function that does the work has no idea it was queued. Its timers read zero, and the dashboard looks healthy while the customer watches a spinner.
+
+<KeyTerm definition="The time a request spends waiting for a free worker, connection or slot before any of its own work begins.">Queue time</KeyTerm> is the first thing to measure, because it is the easiest to forget. The rest of this module gives you the tools to measure it along with everything else.
+
+## Two clocks for every question
+
+Each question needs two clocks, not one.
+
+- **<KeyTerm definition="How long until the first word of the answer appears on screen. For a streamed answer, this is the number a person experiences as 'is it thinking?'">Time to first token (TTFT)</KeyTerm>** is how long until the first word appears.
+- **Total time** is how long until the answer is finished.
+
+They answer different questions. A bot that starts talking after one second and then writes for five feels alive. A bot that sits silent for four seconds and then writes for one feels broken, even though it finished sooner. Pip's problem is the first kind of slow, so its team tracks TTFT first and total time second.
+
+## Averages hide the bad days
+
+Averages lie in a particular way. If most answers come back in one second and one in twenty takes nine, the average looks fine. The people in that one-in-twenty are not fine.
+
+So teams use percentiles:
+
+- **p50** (the median) is the typical experience. Half of requests are faster, half are slower.
+- **p95** is what a bad afternoon feels like. One request in twenty is slower than this.
+
+When someone says "the chatbot is slow", ask which percentile they mean. A healthy p50 with a terrible p95 means a problem that only shows up under some conditions. That is almost always a queue, a cache miss, or one unusual kind of question.
+
+## Put a clock on every stage
+
+The fix for hidden time is simple in principle. Wrap each stage in a timer, record the result against the request ID, and look at the numbers across many requests.
+
+This snippet is a stand-in. Replace `fake_work` with your real calls and keep the shape.
+
+```python
+import time
+from contextlib import contextmanager
+
+timings = {}
+
+@contextmanager
+def span(name):
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        timings[name] = round((time.perf_counter() - start) * 1000)
+
+def fake_work(ms):
+    time.sleep(ms / 1000)
+
+def answer(question):
+    with span("queue"):
+        fake_work(120)
+    with span("embed"):
+        fake_work(25)
+    with span("vector_search"):
+        fake_work(120)
+    with span("rerank"):
+        fake_work(60)
+    with span("llm_first_token"):
+        fake_work(350)
+    with span("llm_rest"):
+        fake_work(200)
+    return "Yes, within 30 days of delivery."
+
+answer("Can I still return my sofa?")
+ttft = sum(timings[k] for k in ["queue", "embed", "vector_search", "rerank", "llm_first_token"])
+print(timings)
+print(f"time to first token: {ttft} ms")
+```
+
+Run it and you get one number per stage. Do that across a few hundred real questions and you have something you can argue with. Note that `queue` is the first span. In a real system it is the one most often missing.
+
+<Callout type="tip">
+In production, the span names should match the stage names on your dashboard, and each span should carry the request ID. Observability tools such as Langfuse record this per trace. The [AI Agents course](/courses/ai-agents/08-observability-langfuse) walks through the setup.
+</Callout>
+
+## Try Pip's situations
+
+Each of Pip's four situations is a pattern you will meet. Pick one and watch which bar grows.
+
+<LatencyStopwatch />
+
+In two of the four situations, the slowest piece is not the model. In the rush hour case, it is a queue. In the big shortlist case, it is re-ranking. The model is the most visible part of the answer because it is the part that types. Visible and slow are not the same thing.
+
+## How the modules connect
+
+The waterfall has six pieces. Each later module explains one or two of them, and this map shows where each one lives.
+
+<Diagram title="The course, stage by stage" caption="Each module owns one part of Pip's four and a half seconds">
+{`
+  01 timing ──► 02 embeddings ──► 03 approximate search ──► 04 chunks & re-ranking
+                                                                  │
+  07 routes & cheap fixes ◄── 06 online path ◄── 05 context & memory ◄┘
+          │
+          ▼
+  08 offline pipeline ──► 09 who pays ──► 10 putting it together
+`}
+</Diagram>
+
+## Working through it yourself
+
+If you want to practise before moving on, pick a bot you already run and do three things. First, add a span for queue time, even if it is only the gap between the request arriving and your handler starting. Second, record p50 and p95 for total time over one day. Third, compare the largest span with the model's span. If the model is not the largest, you have just found the right place to start.
+
+<ChapterSummary>
+- A slow answer is a sum of stages. Pip's four and a half seconds include a 2.6-second queue that no timer was counting.
+- Time to first token and total time are different numbers, and both matter.
+- p50 describes the typical request. p95 describes the bad days, and most complaints come from those.
+- Put a span on every stage, starting with queue time, and tag each span with a request ID.
+- The model is often not the largest span. Measure before you choose a fix.
+</ChapterSummary>
+
+<Checkpoint>
+1. Pip's waterfall shows 2.6 seconds of queue time. Why does the function doing the work show zero for that wait, and what change to the code would make it visible?
+2. A bot has a p50 of 1.1 seconds and a p95 of 8.4 seconds. Name two kinds of cause that would produce that gap, and say what you would measure first.
+3. A teammate says, "We should switch to a faster model." Using the waterfall, describe the measurement you would ask for before agreeing, and what result would make the model change the right call.
+</Checkpoint>

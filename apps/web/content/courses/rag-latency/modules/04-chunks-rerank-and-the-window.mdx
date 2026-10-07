@@ -1,0 +1,115 @@
+---
+title: "Chunks, Re-ranking and the Context Window"
+summary: "What the search actually returns, why a second and slower reader improves the top results, and how the model's context window and prefill decide when the first word can appear."
+module: 4
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="4" title="Chunks, Re-ranking and the Context Window" time="12" />
+
+<LearningObjectives>
+- Explain why the search returns chunks rather than documents, and how chunk size affects speed
+- Contrast a bi-encoder with a cross-encoder, and explain why re-ranking is slower but more accurate
+- Define a token and a context window, and estimate the size of a prompt
+- Explain prefill, and why a long prompt delays the first word
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Module 3](/courses/rag-latency/03-approximate-search) ended with a list of candidate passages from the index. This module covers what those passages are, how they are reordered, and how much of them the model has to read. [Module 5](/courses/rag-latency/05-context-and-memory) then builds the full prompt.
+</Callout>
+
+A product manager asks why the bot quoted the wrong clause from the returns policy. The engineer says the chunk was too big. The manager replies, reasonably, "So make it smaller?" That is the start of a conversation that goes badly unless both people understand what a chunk, a re-ranker and a context window actually do.
+
+This module gives you the vocabulary to have that conversation with numbers on the table.
+
+
+## Chunks: the unit of search
+
+Documents are not stored as whole documents. They are cut into pieces called <KeyTerm definition="A piece of a document, usually a few hundred tokens, that is embedded and stored as one unit. Search returns chunks, not documents.">chunks</KeyTerm>, and each chunk gets its own vector. The search returns chunks.
+
+Picture cutting a cookbook into recipe cards. Nobody searches the book. You search the cards, and a card either answers the question or it does not.
+
+Chunk size has a direct effect on speed.
+
+- **More chunks** means more vectors, a bigger index and more work per question.
+- **Tiny chunks** give you too many vectors and lose the context around each fact. A chunk that says "30 days" without saying "returns" is hard to use.
+- **Huge chunks** pull more text into the prompt later. That slows the first word, as the rest of this module shows.
+
+Cut chunks at structure where you can, such as headings and paragraph breaks. Cutting where the meaning shifts is smarter but much more expensive to compute. [Module 8](/courses/rag-latency/08-the-offline-pipeline) covers that trade-off in the ingestion pipeline. Pip uses about ten chunks per document, cut at headings, with a small overlap between neighbours.
+
+For the chunking choices themselves, the [Production RAG course's ingestion module](/courses/production-rag/04-ingestion-and-chunking) goes deeper, with an interactive sizer.
+
+## Two kinds of encoder
+
+Here is a distinction that explains most of the re-ranking trade-off.
+
+A <KeyTerm definition="An encoder that embeds the question and each passage separately, then compares the two vectors. Passage vectors do not depend on the question, so they can be computed once and stored.">bi-encoder</KeyTerm> embeds the question and each passage separately, then compares the vectors. This is what the first search uses. Because a passage's vector does not depend on the question, every passage can be embedded once, ahead of time, and stored.
+
+A <KeyTerm definition="A model that reads the question and a passage together and outputs a relevance score. More accurate than a bi-encoder, because it sees both texts at once, and much slower, because nothing can be precomputed.">cross-encoder</KeyTerm> reads the question and one passage together and outputs a relevance score. It sees both texts at once, so it can judge the relationship between them directly. That makes it more accurate. It also cannot be precomputed, because each question-passage pair is unique.
+
+The two fit together in a pattern that is now common. The bi-encoder retrieves a wide set of candidates cheaply. The cross-encoder reads each candidate against the question and reorders them.
+
+## Re-ranking: a slower, closer reader
+
+Picture the first search as a librarian pointing at shelves from the index. The re-ranker is someone who picks up each candidate book and reads the relevant page next to the question.
+
+Its cost is the number of candidates multiplied by a full pass through a model for each one. Twenty candidates is cheap. Two hundred on a small CPU can cost more than the search did.
+
+**The knobs.** How many candidates go in, which is often fifty retrieved and five kept. The size of the re-ranking model. Whether it runs in batches on suitable hardware, since batched scoring is much cheaper per pair than scoring one pair at a time.
+
+<Callout type="tip">
+A common mistake is to re-rank a long candidate list because more is safer. Measure how often the correct passage sits in positions 1 to 5 of the first search, and in the re-ranked top 5. If the first search already puts it in the top 5 most of the time, a long re-ranking list buys very little.
+</Callout>
+
+## Tokens: how the model counts text
+
+A language model does not read characters or words. It reads <KeyTerm definition="A unit of text that a model reads as a single item. On average, English text is about three-quarters of a word per token, so a 100-word passage is roughly 130 tokens.">tokens</KeyTerm>, which are pieces of words chosen by the model's tokeniser.
+
+For a quick estimate, multiply the word count by about four thirds. This snippet does that. For real counts, use the tokeniser that ships with your model, because the exact number depends on the model.
+
+```python
+def estimate_tokens(text):
+    return round(len(text.split()) * 4 / 3)
+
+passage = "Returns are accepted within 30 days of delivery. Items must be unused and in the original packaging."
+print(estimate_tokens(passage))  # about 23 tokens
+```
+
+## The context window: the desk
+
+The <KeyTerm definition="The maximum number of tokens a model can take as input and produce as output in one call. Everything the model needs for the turn has to fit inside it.">context window</KeyTerm> is the total size the model can handle in one call. It is the desk the model works on. Only what is on the desk can be used, and the instructions, passages, conversation and question all compete for the same space.
+
+A large window does not make a call cheap. Every input token has to be processed before the model can answer, and most providers charge for input tokens on every call. A window that is large enough is necessary but not sufficient. What matters for speed is how much of the window you fill.
+
+## Prefill: why a long prompt delays the first word
+
+Here is the part most people miss. A language model works in two phases.
+
+In the <KeyTerm definition="The first phase of a language model call, in which the whole prompt is read in one pass and intermediate values are stored for every token. Its duration grows with the prompt length.">prefill</KeyTerm> phase, the model reads the entire prompt and builds a store of intermediate values for every token. This store is called the <KeyTerm definition="Key-value cache. The stored attention keys and values for each token already processed, which the model consults while generating the rest of its output.">KV cache</KeyTerm>. In the <KeyTerm definition="The second phase of a language model call, in which output tokens are produced one at a time, each reading from the cache built during prefill.">decode</KeyTerm> phase, the model writes its answer one token at a time, reading the cache each time.
+
+Picture prefill as reading the brief before you start drafting, and decode as writing the reply one word at a time with the brief open on the desk.
+
+The time to the first word is mostly prefill. It grows with the length of the prompt. Streaming hides the decode phase, which is why words appear one by one, but streaming does nothing for prefill. The silence before the first word is the prompt being read.
+
+**The knobs.** A shorter prompt is the direct fix. Some providers offer prompt caching, which stores the processed form of a prefix that stays the same across calls, such as a long set of instructions or a fixed policy document. The shared start is then not read again on every request. A smaller model for simple questions is another option.
+
+Pip's first version sent thirty passages on every turn. The model read all thirty before it said anything. Cutting to the best six halved the first-word time, and the answers got more focused as well. [Module 5](/courses/rag-latency/05-context-and-memory) shows how to budget the rest of the prompt.
+
+For a broader look at how context is assembled and managed, the [Context Engineering course](/courses/context-engineering) is the place to go next.
+
+<ChapterSummary>
+- The search returns chunks. Chunk size changes the number of vectors and the size of the prompt later.
+- A bi-encoder embeds question and passage separately and can be precomputed. A cross-encoder reads them together, is more accurate, and is slower.
+- Re-ranking pays a model pass per candidate, so the candidate count is the main cost.
+- Tokens are the unit the model reads. About three-quarters of a word each on average.
+- Prefill reads the whole prompt before the first word. A long prompt is a slow first word.
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does Pip search for chunks rather than whole documents, and what goes wrong if the chunks are very small?
+2. Your re-ranker scores 200 candidates and takes 2.4 seconds. Describe one measurement that would tell you whether 20 candidates would be almost as good.
+3. Pip's prompt grows from 6 passages to 30. Explain why the first word gets later even though streaming is on.
+</Checkpoint>

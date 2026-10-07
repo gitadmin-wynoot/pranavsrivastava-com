@@ -1,0 +1,131 @@
+---
+title: "Approximate Search: HNSW, IVF and Recall"
+summary: "Exact search is too slow at scale, so vector databases take shortcuts. This module explains HNSW and IVF from first principles, shows the trade-off through recall and latency, and gives a method for choosing a setting."
+module: 3
+time: 16
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="3" title="Approximate Search: HNSW, IVF and Recall" time="16" />
+
+<LearningObjectives>
+- Explain approximate nearest neighbour (ANN) search and why it trades a little accuracy for a lot of speed
+- Describe how HNSW navigates a layered graph, and name its three main settings
+- Describe how IVF groups vectors into clusters, and what nprobe controls
+- Define recall, measure it, and choose a setting that meets a target
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Module 2](/courses/rag-latency/02-what-search-really-does) established that exact search compares the question with every vector. That is correct and too slow at scale. This module covers the shortcuts vector databases use instead. [Module 4](/courses/rag-latency/04-chunks-rerank-and-the-window) then covers what happens to the results.
+</Callout>
+
+The alert fires at 2:14 in the morning. Search latency has crept up, and the on-call engineer opens the index settings. Nobody remembers who picked the defaults, or whether they were ever checked against a real question.
+
+This module is for that engineer. It explains what each knob does, and how to choose one with evidence, so the 2 a.m. fix is a measurement and not a guess that breaks something else.
+
+
+## The shortcut and what it costs
+
+<KeyTerm definition="Approximate nearest neighbour search. A family of methods that find vectors close to a question without checking every vector, accepting that a few of the true nearest may be missed.">Approximate nearest neighbour (ANN)</KeyTerm> search is the family of methods behind almost every production vector database. They do not look at everything. They look at the places where the answer is most likely to be, and they trust that the answer is there.
+
+That trust is the trade. You get a large speed-up, and in exchange you accept some missed results. The rest of this module is about how big that trade is, and how to control it.
+
+Two methods dominate in practice: HNSW and IVF.
+
+## HNSW: a map with layers
+
+<KeyTerm definition="Hierarchical Navigable Small World. A graph-based index that links each vector to a few nearby vectors and stacks those links in layers, so a search can move quickly across the space before zooming in.">HNSW</KeyTerm> stands for Hierarchical Navigable Small World. The name is long, but the idea is a familiar one. It builds a graph in which each vector links to a handful of its nearest neighbours. The vectors are spread across layers. The top layer holds only a few vectors with long links between them. The bottom layer holds every vector with short links. The method was introduced in a 2016 paper by Malkov and Yashunin.
+
+Picture motorways above city roads above street maps. You join the motorway, ride it to the area you want, leave it, and finish on smaller roads until you reach the house.
+
+<Diagram title="HNSW: start high, drop when stuck" caption="Each hop only has to beat the current position, not scan the whole library">
+{`
+  layer 2   A ─────────────────────────── F
+  layer 1   A ────── C ────── E ───────── F
+  layer 0   A  B  C  D  E  F  G  H  I  J  K  ...
+            ▲                                ▲
+          enter                     nearest to the question
+`}
+</Diagram>
+
+**How a search runs.** Enter at the top layer. At each layer, hop to whichever neighbour is closest to the question. When no neighbour is closer than where you are, drop one layer and keep going. On the bottom layer, collect a short list of the closest candidates and return the best.
+
+**Why it is fast.** A search visits a few hundred vectors instead of millions. It never looks at most of the library.
+
+**Why it still costs.** The links live in memory, so the index is larger than the vectors alone. Building the graph takes real time, and very large or frequent updates are expensive.
+
+**The three settings.** `M` is how many links each vector keeps. More links give better recall and use more memory. `efConstruction` controls how hard the builder works when it creates the graph. `efSearch` is the size of the candidate list kept during a query. It is the speed-versus-recall knob you will tune most often.
+
+## IVF: sort the books into rooms
+
+<KeyTerm definition="Inverted File index. A method that clusters the vectors into groups ahead of time, then at query time searches only the groups nearest to the question.">IVF</KeyTerm> stands for Inverted File index. Before any question arrives, the index runs <KeyTerm definition="An algorithm that splits a set of points into a fixed number of groups by repeatedly assigning each point to its nearest group centre and recalculating the centres.">k-means clustering</KeyTerm> over the vectors. That groups them into a fixed number of clusters, say four thousand. Each cluster gets a centre point called a <KeyTerm definition="The average position of the vectors in a cluster. It stands in for the whole cluster when deciding which cluster to search.">centroid</KeyTerm>. The index also keeps a list of the vectors that belong to each cluster. That list is the inverted file in the name.
+
+Picture a library organised into rooms by subject. Each room has a sign on the door with its average topic. To answer a question, you check which sign is nearest, walk into that room, and look only at the books there.
+
+**How a search runs.** Compare the question with the centroids. Pick the nearest few, as set by a value called `nprobe`. Search only the vectors inside those rooms.
+
+**Why it is fast.** Suppose you have five million vectors split into four thousand rooms. Each room holds about 1,250 vectors. Probing eight rooms means checking about 10,000 vectors instead of five million.
+
+**Why it still costs.** A question near the wall between two rooms may have its best answer in a room you did not visit. The search returns confidently and misses it. The rooms also drift as the data changes, so they need rebuilding when the content shifts a lot.
+
+**The settings.** `nprobe` is the number of rooms you search. More rooms means better recall and more work. The number of clusters is set when the index is built.
+
+Click around the toy library below. It has twenty points in four rooms. Switch to the room-only mode, then place the question near a wall and watch which true neighbours get missed.
+
+<NearestNeighbours />
+
+## Recall: how much of the right answer you got
+
+<KeyTerm definition="The share of the true top results, found by exact search, that an approximate search actually returns. Recall at 10 of 90% means nine of the true top ten were found.">Recall</KeyTerm> is the number that tells you whether the shortcut is safe.
+
+Here is the calculation. Exact search gives the true top ten. The approximate search gives its top ten. Recall is the overlap.
+
+```python
+def recall_at_k(exact_ids, approx_ids):
+    return len(set(exact_ids) & set(approx_ids)) / len(exact_ids)
+
+exact  = ["p1", "p4", "p7", "p9", "p12", "p15", "p18", "p20", "p22", "p25"]
+approx = ["p1", "p4", "p7", "p9", "p12", "p15", "p18", "p20", "p30", "p31"]
+print(recall_at_k(exact, approx))  # 0.8
+```
+
+Eight of the true ten were found, so recall is 0.8, or 80%.
+
+Recall matters because a passage the search misses never reaches the model. No speed gain can bring back an answer that was never read. So recall is the constraint, and speed is what you trade against it.
+
+Move the slider below and watch both numbers.
+
+<AnnTradeoff />
+
+Past about 97 or 98 percent, each extra step buys very little and costs a lot. That is the knee of the curve, and it is where most production systems should sit.
+
+## How to choose a setting
+
+Most teams keep the default and never check it. The default was tuned on a small demo corpus, checked against no real questions, and then forgotten. A better method takes an afternoon:
+
+1. Build a set of questions with known good answers. Two hundred real questions from logs is a good start.
+2. Run exact search on that set and record the true top results for each question.
+3. For each candidate setting, run the approximate search on the same set and compute recall.
+4. Pick the cheapest setting that reaches your recall target, then measure its latency on real traffic, not just on your laptop.
+
+Pip's team set a 97% target, measured it on two hundred real questions, and found a setting that met it for about a third of the original search time. That was the whole project.
+
+## Where the methods come from
+
+If you want the mechanics of building an index from scratch, the [Semantic Search course](/courses/semantic-search/03-vector-db-fundamentals) covers HNSW and IVF in its vector database module, with the index-building steps. This module is about what the settings do to the trade-off, which is the part that decides production speed.
+
+<ChapterSummary>
+- Approximate search trades a few missed results for a large speed-up. The trade is controlled by settings.
+- HNSW navigates a layered graph from coarse to fine. Its settings are M, efConstruction and efSearch.
+- IVF clusters the vectors into rooms and searches only the rooms nearest the question. Its setting is nprobe.
+- Recall is the share of the true top results that the approximate search finds. It is the constraint.
+- Choose a setting by measuring recall on real questions, then take the cheapest one that meets your target.
+</ChapterSummary>
+
+<Checkpoint>
+1. A question lands near the boundary between two IVF rooms, and the search with nprobe set to 1 returns a poor answer. Explain why, and say which setting you would change and what it costs.
+2. Your recall at 10 is 88% and your p95 search latency is 40 ms. Your target is 97%. Describe the next two measurements you would take before changing anything.
+3. An HNSW index has high recall but uses far more memory than expected. Which of the three settings would you examine first, and why?
+</Checkpoint>

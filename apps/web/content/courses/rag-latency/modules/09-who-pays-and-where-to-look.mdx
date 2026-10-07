@@ -1,0 +1,121 @@
+---
+title: "Who Pays, and Where to Look First"
+summary: "Slowness costs the person waiting, the support team, the product, the bill and the answer's quality. This module traces those costs, shows how a slow system feeds its own failure, separates the owners of each span, and gives a triage table for the first look."
+module: 9
+time: 14
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="9" title="Who Pays, and Where to Look First" time="14" />
+
+<LearningObjectives>
+- Describe the costs of a slow chatbot at the level of the person, the team, the product, the bill and the answer
+- Explain the retry feedback loop, and why retries make a slowdown worse
+- Separate an agentic answer into spans with different owners
+- Use a symptom table to choose where to look first
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Modules 1 to 8](/courses/rag-latency/01-the-four-seconds) covered how the time is spent. This module asks what the time costs, who pays, and how to decide where to look first. [Module 10](/courses/rag-latency/10-putting-it-together) then puts every fix on one timeline.
+</Callout>
+
+A customer taps "retry" four times, because nothing happened for six seconds. Each tap starts a new request. The server is now doing the work of five answers for one person. Multiply that by a busy lunchtime, and the bot is not so much slow as stuck.
+
+This module is about the people behind those numbers, and who pays when a slow system starts to feed itself.
+
+
+## What slowness costs
+
+A slow chatbot is not one problem with one cost. It is a set of costs that land on different people, and most of them are invisible on a latency dashboard.
+
+**The person asking.** A silent five seconds reads as broken. They retry, or they leave, and they remember the bot as unreliable long after it has become fast. Trust is slow to build and quick to lose.
+
+**The support team.** Slowness creates duplicate tickets and escalations to humans who were meant to be the fallback. Agents stop trusting the bot and start answering from memory, which is the outcome the bot was built to prevent.
+
+**The product.** The damage concentrates in the flows that matter most. A slow answer during checkout help or account recovery is not an inconvenience. It is the moment someone decides to phone instead.
+
+**The bill.** Slow requests hold workers and connections for longer, so you need more of both to serve the same people. Retries multiply the load on the stages that were already slow.
+
+**The answer itself.** A timeout can cut a response short. If the app fails open and displays whatever it has, a half answer can read like a confident one. Slowness is a quality problem as much as a speed problem.
+
+## The feedback loop
+
+The costs above are not fixed. They grow, because a slow system invites retries, and retries add load to the same slow system. This loop is the reason a small slowdown can become an outage.
+
+<Diagram title="The loop that turns slow into down" caption="Retries feel polite from the client side and look like an attack from the server side">
+{`
+  slow answer ─► user retries ─► more requests ─► longer queues ─► slower answer
+       ▲                                                              │
+       └──────────────────────────────────────────────────────────────┘
+`}
+</Diagram>
+
+Each retry is reasonable on its own. Together they stack. The queue grows, the answers get slower, and more people retry. The simulation below shows the effect with a service that fails briefly and then recovers. Switch between the three retry strategies and watch which one lets the service come back.
+
+<RetryStormSim />
+
+The fix is not one setting. It has three parts. Limit the queue so that requests fail fast instead of waiting forever. Back off between retries, with random jitter so that clients do not come back at the same moment. And put a circuit breaker in front of the slow dependency, so that the system stops sending it traffic while it recovers. The [Harness Patterns course's circuit breaker module](/courses/agentic-harness-patterns/05-the-circuit-breaker) covers the breaker, and its [cost and rate governor module](/courses/agentic-harness-patterns/09-the-cost-and-rate-governor) covers the limits.
+
+## Agentic answers have several owners
+
+Pip answers from documents. Many useful bots do more. They check structured facts, such as whether a customer's plan includes a feature. They call tools that change things, such as raising a ticket or issuing a credit. Then they write the answer.
+
+Each of those is a different source of latency with a different owner.
+
+<Diagram title="One agentic answer, four clocks" caption="The owners are different people with different dashboards">
+{`
+  knowledge retrieval  ████████            380 ms    your search index
+  capability lookup    █                    45 ms    your database
+  tool call            ████████████████   1200 ms    someone else's API
+  generation           ████████████        900 ms    the model
+`}
+</Diagram>
+
+A capability lookup should be a fast, deterministic read. If it is slow, the cause is a database or a network hop, and changing the model will not help. A tool call is slow because the other system is slow, so the fix belongs with that system's team, or in a timeout and fallback you control. The model is one of four owners, and it is often not the one with the longest wait.
+
+The interactive below lets you switch spans on and off. Watch the measured total and the slowest span change, and notice how the blame moves when the tool call is included.
+
+<SpanBudget />
+
+If all four are one blob called "the chatbot", the wrong owner gets the blame. If you time them as separate spans from the first day, the owner is obvious on the dashboard. Log each span with the route or agent name, the model, the token counts, the cost and the status. Tools like Langfuse were built for this. The [AI Agents course's observability module](/courses/ai-agents/08-observability-langfuse) shows the setup, and the [Agentic Harness Patterns trace pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline) shows how traces tie spans into one request.
+
+## Four places this turns up
+
+These are composite cases, built to show patterns. None of them is a report from a named company. Each pattern will be familiar to anyone who has run this kind of system.
+
+**A telecom support assistant.** Bill questions were consistently twice as slow as everything else. The trace showed bill explanations sitting in the same index as forty product manuals, so every bill question searched a shelf twenty times too large. Sharding by document type and filtering by plan before the search fixed it. This is the routing trade from [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes).
+
+**A bank's policy assistant for branch staff.** Every day around lunch, the first word took six seconds. Mornings and afternoons were fine. The embedding service ran on one small instance that also ran a nightly reporting job, and lunch was when branch staff asked the most questions. Separating the workers, adding a queue and setting a limit per service removed the spike. This is the queue from [Module 6](/courses/rag-latency/06-the-online-path).
+
+**A law firm's contract search.** A 400-page bundle took forty minutes to become searchable. The scanned pages went through OCR one at a time, and nothing reported progress, so people assumed the upload had failed and uploaded it again. Parallel OCR per page and a visible progress bar cut the wait to a few minutes and ended the duplicate uploads. This is the offline line from [Module 8](/courses/rag-latency/08-the-offline-pipeline).
+
+**A returns helper for an online shop.** "Can I return a gift?" was slow, and nothing else was. The question triggered three tool calls to three services, one after another, each opening its own connection. Parallel calls and pooled connections cut the p95 by more than half. This is the pattern from [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes).
+
+Read down the fix column in each case. The fix sat exactly where the time went. None of them was "use a bigger model."
+
+## Where to look first
+
+Use the complaint to choose a starting point. Pick the symptom closest to what you are seeing, and the table gives the first place to look.
+
+| What people report | Look first at | Why |
+|---|---|---|
+| The first word takes seconds, then the text streams fast | Queue, embed, search, re-rank | Silence before the first token is never the model's streaming |
+| Fast with 3 users, slow with 300 | Queue time and pool size | Queues and limits change shape with load, a faster model does not |
+| Uploading a long PDF takes forever, chat is fine | Parsing and chunking spans | The offline line has its own slowest belt |
+| Answers are fast but miss exact product codes | Keyword search and chunk boundaries | A quality problem wearing a speed costume |
+| Only one kind of question is slow | The route that question takes | A shelf, a candidate list or a tool call is the difference |
+
+<ChapterSummary>
+- Slowness costs the person waiting, the support team, the product, the bill and the answer's quality.
+- A slow system invites retries, and retries deepen the slowdown. Limit queues, back off with jitter, and use a circuit breaker.
+- An agentic answer has several owners. Time each one as a separate span so the blame lands in the right place.
+- The symptom table points to the first place to look. Start with the stage the symptom describes, not with the model.
+</ChapterSummary>
+
+<Checkpoint>
+1. Your retries are set to try again immediately and five times. Describe how this turns a two-second slowdown into a longer outage, and name two changes that break the loop.
+2. An answer takes 2.5 seconds, and the tool call span is 1.8 seconds. Who owns most of the wait, and what would you check before asking the model team for anything?
+3. A team reports that only questions about delivery are slow. Using the symptom table, name the first two things you would look at, and say what would confirm or rule out each.
+</Checkpoint>
