@@ -1,0 +1,186 @@
+---
+title: "Shelves, Routes and the Cheap Fixes"
+summary: "Split the index so a question searches one shelf, not the whole library. Then use caching, parallel calls and warm clients, and learn what each of them hides."
+module: 7
+time: 14
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="7" title="Shelves, Routes and the Cheap Fixes" time="14" />
+
+<LearningObjectives>
+- Explain sharding and routing, and why a routing mistake is a silent miss
+- Compare exact-match and semantic caches, and choose a similarity threshold from data
+- Explain why a cache can improve the median while leaving the p95 unchanged
+- Run independent lookups in parallel, and reuse clients across requests
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Module 6](/courses/rag-latency/06-the-online-path) walked the path and named the first fix for each stage. This module covers the fixes that cut across stages: changing what the search touches, and avoiding repeated work. [Module 8](/courses/rag-latency/08-the-offline-pipeline) then moves to the upload side.
+</Callout>
+
+A customer asks about returning a hoodie and gets a confident answer about a kitchen appliance. Nothing crashed. The search looked in the wrong place, and nothing said so.
+
+Routing, caching and parallel calls all share that quality. They are fast when they are right, and quiet when they are wrong. This module shows how to make the quiet failures visible.
+
+
+## Shelves and routes
+
+Once the library is large, you can split it so each question only needs one part.
+
+Pip's ten million vectors cover products, customer records, support tickets, policies and technical docs. A question about returns has no business scanning the product catalogue. If you know which shelf the answer sits on, you search that shelf only. Splitting the data into parts is <KeyTerm definition="Dividing a large collection of vectors into separate parts, each of which can be searched on its own.">sharding</KeyTerm>. Choosing the part is <KeyTerm definition="The step that decides which shard or shards a query should search, using a classifier, metadata or a rule.">routing</KeyTerm>.
+
+<Diagram title="Route first, then search one shelf" caption="The router can be a classifier, a rule or metadata. It is a new component that can be wrong.">
+{`
+  "refund window for a hoodie?"
+              │
+        ┌─────▼─────┐
+        │  router   │  classifier + metadata filters
+        └─────┬─────┘
+   ┌──────┬───┴────┬─────────┬────────────┐
+ products customers support POLICIES  technical
+  4.0M     2.5M     1.5M    1.0M ✔      1.0M
+                            searched
+`}
+</Diagram>
+
+Routing is a large speed-up, and it fails quietly, which makes it dangerous. Searching one shelf of 1.0 million vectors instead of all 10 million is ten times less work per question. That is a real gain, and it is only as good as the router's guess.
+
+<Callout type="warning">
+**A wrong route is a silent miss.** The search returns something, the model answers with confidence, and nothing in the logs says the right shelf was never opened. Keep a set of questions with known answers, record which shard each one was sent to, and run them after every change to the router.
+</Callout>
+
+<Callout type="warning">
+**Filtering can return fewer results than you asked for.** Some databases filter after the search instead of before it. Ask for the top ten, and if the filter removes seven of them, you get three. Check how your database applies filters and whether it promises a result count.
+</Callout>
+
+The interactive below shows the trade. Switch between the three questions, turn routing on and off, and then simulate a router that guesses wrong.
+
+<ShardRouter />
+
+The shard split itself is an ingestion decision, covered in [Module 8](/courses/rag-latency/08-the-offline-pipeline). Choosing the shards well is a product question as much as a technical one. Pip's shards follow the questions customers actually ask, which a support team can describe better than an engineer can.
+
+For how filters and routing interact with retrieval quality, the [Production RAG course's retrieval module](/courses/production-rag/06-retrieval-that-works) covers hybrid search and metadata filtering in depth.
+
+## Caching: the fastest answer is the one you did not compute
+
+Caching comes in two kinds. They differ in how safe they are.
+
+An <KeyTerm definition="A cache keyed on the normalised text of the question. It returns a stored answer only when the new question matches an old one exactly, after normalising case and spacing.">exact-match cache</KeyTerm> is safe and quick to build. Normalise the question, look it up, and return the stored answer if it is there.
+
+A <KeyTerm definition="A cache that returns a stored answer when a new question is close enough in meaning to an old one, judged by a similarity threshold. Faster than an exact-match cache, and riskier, because close is not always the same question.">semantic cache</KeyTerm> returns an old answer when a new question is close enough in meaning. It is faster and riskier. "Can I return a hoodie?" and "Can I return a hoodie I already washed?" are close in meaning and need different answers.
+
+<Diagram title="A cache that can say yes too easily" caption="The threshold is a product decision disguised as a number">
+{`
+  question ─► normalise ─► cache lookup ──── close enough? ──► old answer  (4 ms)
+                                 │
+                             not close
+                                 ▼
+                       full pipeline (2.8 s) ─► store the new answer
+`}
+</Diagram>
+
+Set the similarity threshold from data, not from feel. Take a set of question pairs labelled as "same answer" or "different answer", and find the threshold that gives you the best split. Then check the false hits on real traffic, because the pairs you labelled are not the whole distribution.
+
+Here is the exact-match version. It is short enough to read in one pass:
+
+```python
+import hashlib
+
+cache = {}
+
+def normalise(question):
+    return " ".join(question.lower().split())
+
+def cached_answer(question, compute):
+    key = hashlib.sha256(normalise(question).encode()).hexdigest()
+    if key in cache:
+        return cache[key], "hit"
+    answer = compute(question)
+    cache[key] = answer
+    return answer, "miss"
+
+slow = lambda q: "Yes, within 30 days of delivery."
+print(cached_answer("Can I still return my sofa?", slow))
+print(cached_answer("can I still   return my sofa?", slow))
+```
+
+The second call is a hit, even though the spacing and capitalisation differ.
+
+A cache also flatters your averages. The median can look excellent while the p95 stays exactly where it was, because the p95 is made of cache misses on unusual questions. Keep the percentiles on the dashboard, and check them on misses, not only on hits.
+
+## Parallel calls: stop waiting in a row
+
+If three lookups do not depend on each other, there is no reason to run them one after another. Start them together and wait for the slowest one.
+
+Pip's answer needs four lookups before it can respond: the customer profile, the order history, a policy search, and an entitlement check. None of them needs the others' answers. Run in a row, they take 530 milliseconds. Run together, they take about 180.
+
+<Diagram title="One after another, then all at once" caption="Same four calls. The wait is the sum in the first row and the longest bar in the second.">
+{`
+  one after another (530 ms)
+  profile      ████████████
+  orders                    ██████████████
+  policy                                  ██████████████████
+  entitlement                                                 █████████
+
+  all at once (180 ms)
+  profile      ████████████
+  orders       ██████████████
+  policy       ██████████████████
+  entitlement  █████████
+`}
+</Diagram>
+
+Here is the pattern in Python. The lookup function sleeps for its own duration, so the timings are real:
+
+```python
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+def lookup(name, ms):
+    time.sleep(ms / 1000)
+    return name
+
+jobs = [("profile", 120), ("orders", 140), ("policy", 180), ("entitlement", 90)]
+
+start = time.perf_counter()
+with ThreadPoolExecutor(max_workers=4) as ex:
+    results = list(ex.map(lambda job: lookup(*job), jobs))
+print(results, round((time.perf_counter() - start) * 1000), "ms")
+```
+
+The total is close to 180 milliseconds, the slowest lookup, not 530.
+
+The interactive below lets you switch between the two modes, and between pooled and new connections, to see what each change does to the wait.
+
+<ParallelVsSequential />
+
+Parallel calls have a cost of their own. Each one uses a worker or a connection, so running everything at once under load can move the queue from the bot to the downstream services. Set a limit on concurrency per caller.
+
+## Warm clients: pay the setup once
+
+On serverless platforms, the first request after a quiet spell pays for a cold start. Even on servers, building a model client or a database connection inside every request adds setup time to every call.
+
+Create the model client and the database connection once, outside the request handler, so every request after the first reuses them. A developer docs assistant we looked at had been building its model client inside every request for months. Nobody noticed, because each request took only a little longer than it should. Moving the client to module level removed the overhead from every call.
+
+## What the cheap fixes have in common
+
+Each fix in this module does one thing well and hides something else. Routing hides a wrong guess. Caching hides the tail. Parallel calls hide the cost they put on downstream services. Warm clients hide nothing, which is why they are the first thing to check.
+
+The habit that protects you is the same for all four: after every fix, look at the percentiles and the failure cases, not only at the average.
+
+<ChapterSummary>
+- Sharding splits the index, and routing chooses the shard. A routing mistake returns a confident answer from the wrong place.
+- Exact-match caches are safe. Semantic caches are faster and need a threshold chosen from labelled data.
+- A cache can improve the median and leave the p95 unchanged. Check the misses.
+- Independent lookups run in parallel, and the wait is the slowest one. Limit concurrency so you do not move the queue downstream.
+- Create clients once, outside the request path, and reuse them.
+</ChapterSummary>
+
+<Checkpoint>
+1. A router sends 3 percent of policy questions to the products shard. What would you see in the logs, and how would you find those questions without reading every answer?
+2. Your cache hit rate is 60%, your median is down to 300 ms, and your p95 has not moved. Explain why, and say which measurement would show what the misses cost.
+3. Four parallel lookups each take 150 ms, but the total is 900 ms. Give two reasons this could happen, and one change that would test each reason.
+</Checkpoint>

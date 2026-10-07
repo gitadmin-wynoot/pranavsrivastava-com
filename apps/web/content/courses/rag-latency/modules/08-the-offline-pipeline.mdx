@@ -1,0 +1,145 @@
+---
+title: "The Offline Pipeline: When the Upload Is Slow"
+summary: "Parsing, chunking, embedding and storing run when documents arrive, not when people ask. This module follows a 400-page upload through the line, explains why the slowest stage sets the pace, and shows how to re-index only what changed."
+module: 8
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="8" title="The Offline Pipeline: When the Upload Is Slow" time="12" />
+
+<LearningObjectives>
+- Describe the four stages of ingestion and what each one costs
+- Explain why semantic chunking is expensive at scale, and how to decide whether it is worth it
+- Batch embedding and storage calls, and explain why batching changes throughput
+- Re-index only the documents that changed, using content hashes
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** The first seven modules covered the online path, the one a customer sees. This module covers the offline pipeline, which runs when documents arrive. The two share a store, and the choices made here decide how much work the online path has to do. [Module 9](/courses/rag-latency/09-who-pays-and-where-to-look) then looks at what slowness costs on both sides.
+</Callout>
+
+It is Friday at ten to five. Legal uploads a 400-page bundle and wants it searchable before the Monday meeting. The progress bar says 3%. Nobody on the team has read the ingestion code since it was written.
+
+This module gives you what you need to answer "when will it be ready?" with a number instead of a shrug.
+
+
+## The upload that sits at 3%
+
+Most people never see the offline pipeline until someone uploads a 400-page contract bundle and the progress bar sits at 3% for forty minutes. Then it becomes the most important pipeline in the building.
+
+The pipeline has four stages, and each one is a separate line.
+
+<Diagram title="The ingestion line" caption="Each belt has its own workers. The slowest belt sets the speed of the whole line.">
+{`
+  PARSE ──► CHUNK ──► EMBED ──► STORE
+  4.0 s     9.0 s     1.2 s     0.2 s     per document, one worker each
+            ▲
+            the slowest belt sets the pace
+`}
+</Diagram>
+
+The figures are for one 30-page document and are illustrative. The shape matters more than the numbers. Whichever belt is slowest decides how fast the whole line moves, and adding workers to any other belt changes nothing you can feel.
+
+## Parsing: getting the text out
+
+Parsing is harder than it looks. PDFs, Word files and spreadsheets each need their own logic. A scanned page needs OCR, which costs real time per page. Multi-column layouts and tables can come out in the wrong reading order, which hurts answer quality as well as speed. A parser that is fast and wrong is worse than one that is slow and right, because the wrong text becomes the chunks the search finds.
+
+Parse with the structure kept where you can. Headings, tables and lists carry information that a flat text dump loses. The [Production RAG course's ingestion module](/courses/production-rag/04-ingestion-and-chunking) covers structure-aware parsing in more detail.
+
+## Chunking: where a clever idea gets expensive
+
+Module 4 explained chunk size. This stage is where the cutting happens, and the choice of method has a large effect on cost.
+
+**Fixed-size chunks** are cut at a set number of tokens, usually at a heading or paragraph boundary. They are cheap, predictable and easy to test.
+
+**Semantic chunking** embeds each sentence, compares it with its neighbours, and cuts where the topic shifts.
+
+<Diagram title="Semantic chunking cuts at the dip" caption="Similarity between neighbouring sentences drops where the subject changes">
+{`
+  s1 ─0.91─ s2 ─0.88─ s3 ─0.42─ s4 ─0.90─ s5 ─0.87─ s6
+                       ▲
+                  topic shift: cut here
+`}
+</Diagram>
+
+The cost sits in the embeddings. A 30-page document has roughly 750 sentences. A million documents is hundreds of millions of sentence embeddings before anything becomes searchable. Each of those is a model call, and the storage for them is also large.
+
+The useful question is not "which chunker is better?" It is "which chunker gets the answers right at a price I can pay?" Run the same evaluation questions through both methods, record the answer quality and the ingestion time, and decide with those numbers in front of you. Semantic chunking sometimes wins by a lot on messy documents and sometimes wins by almost nothing on clean ones.
+
+The interactive below lets you switch methods and adjust the workers on each stage. Watch which belt caps the line, and notice that adding workers to the others does nothing.
+
+<IngestionPipeline />
+
+## Embedding and storing: batch the work
+
+Embedding and storing should happen in batches. One call per chunk leaves the embedding service mostly idle between calls. Each call pays a fixed overhead, and that overhead dominates when the payload is small.
+
+A batch is a small change in code:
+
+```python
+def batches(items, size):
+    for start in range(0, len(items), size):
+        yield items[start:start + size]
+
+chunks = [f"chunk {n}" for n in range(10)]
+for batch in batches(chunks, 4):
+    print(len(batch), "chunks sent in one call")
+```
+
+The same pattern applies to storing. Many small writes cost far more than a few large ones, because each write pays its own round trip. Batched writes are usually the cheapest throughput gain in the whole pipeline, and they are often the one nobody has tried.
+
+## Re-indexing: only what changed
+
+The last trap is re-indexing. A nightly full rebuild is easy to write and slow to recover from. If the corpus is large, the rebuild can take longer than the day it is supposed to cover. And during the rebuild, new content may not be searchable yet.
+
+The fix is to store a content hash for every document. On each update, compare the new hash with the stored one, and process only the documents whose hash changed.
+
+```python
+import hashlib
+
+seen = {}
+
+def changed(doc_id, text):
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if seen.get(doc_id) == digest:
+        return False
+    seen[doc_id] = digest
+    return True
+
+docs = {"returns.md": "Returns are accepted within 30 days.", "delivery.md": "Delivery takes three to five days."}
+print([name for name, text in docs.items() if changed(name, text)])
+
+docs["returns.md"] = "Returns are accepted within 45 days."
+print([name for name, text in docs.items() if changed(name, text)])
+```
+
+The first run processes both documents. The second run processes only `returns.md`. Teams that make this change usually see a nightly rebuild shrink from hours to minutes, because most of the corpus did not change that day.
+
+<Callout type="tip">
+Hash the cleaned text, not the raw file. A PDF can change its metadata on every export while its text stays the same, and you do not want to re-embed it for that.
+</Callout>
+
+## Freshness is part of the speed
+
+Ingestion speed also decides how quickly new information reaches customers. A policy change that takes all night to become searchable means the bot answers from last week's rules for a day. That is a speed problem and a correctness problem at once.
+
+For this reason, the offline pipeline has its own service levels. Track the time from upload to searchable, not only the time spent in each stage. The first number is the one a person waiting for an answer actually cares about.
+
+The [Production RAG course's operations module](/courses/production-rag/10-operating-in-production) covers how to run this pipeline reliably over time, including monitoring and cost.
+
+<ChapterSummary>
+- Ingestion is a line of four stages, and the slowest stage sets the pace for the whole line.
+- Parsing decides what text the search can ever find, so a wrong parse is a quality bug as well as a speed one.
+- Semantic chunking costs one embedding per sentence. Choose it on the evaluation results, not on the idea.
+- Batch embedding and storage calls. Per-item calls pay overhead every time.
+- Hash cleaned text and re-process only the documents that changed. Track upload-to-searchable time as the freshness measure.
+</ChapterSummary>
+
+<Checkpoint>
+1. A 200-page upload takes 40 minutes, and the chunker is the slowest stage. Which change would you test first, and what evidence would tell you it is worth the quality cost?
+2. Your embedding stage processes one chunk per call and shows 15% utilisation on the embedding service. What is the likely cause, and what is the smallest change that would test it?
+3. A policy document changes by one sentence, but the nightly job re-embeds the whole corpus. Describe the change that fixes this, and the one edge case you would check for before shipping it.
+</Checkpoint>

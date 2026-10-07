@@ -77,8 +77,30 @@ export default async function CourseModulePage({ params }: Props) {
   const lessonNumber = currentIndex + 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <>
       <ReadingProgress />
+
+      {/* Persistent course title — pinned below the site header so it never
+          scrolls out of view while you're deep in a lesson. The breadcrumb
+          below gives the full path once; this is the "what am I studying"
+          reminder, the way Coursera keeps the course name on screen. */}
+      <div className="sticky top-14 z-40 mx-[calc(50%-50vw)] border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-11 flex items-center gap-2 text-sm min-w-0">
+          <Link
+            href={`/courses/${slug}`}
+            className="font-medium text-zinc-900 dark:text-zinc-100 truncate hover:underline underline-offset-2"
+          >
+            {manifest.title}
+          </Link>
+          <span className="text-zinc-300 dark:text-zinc-700 flex-none">/</span>
+          <span className="text-zinc-500 dark:text-zinc-400 truncate min-w-0">{mod.title}</span>
+          <span className="ml-auto flex-none text-xs text-zinc-400 tabular-nums">
+            {lessonNumber}/{manifest.modules.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-xs text-zinc-400 mb-8">
         <Link href="/learn" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
@@ -101,6 +123,7 @@ export default async function CourseModulePage({ params }: Props) {
         {/* Sidebar — progress + lessons (client, localStorage-backed) */}
         <ModuleNav
           slug={slug}
+          courseTitle={manifest.title}
           currentId={moduleId}
           modules={manifest.modules.map((m) => ({ id: m.id, title: m.title }))}
         />
@@ -145,6 +168,7 @@ export default async function CourseModulePage({ params }: Props) {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

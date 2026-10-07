@@ -11,11 +11,12 @@ interface ModuleMeta {
 
 interface Props {
   slug: string;
+  courseTitle: string;
   modules: ModuleMeta[];
   currentId: string;
 }
 
-export function ModuleNav({ slug, modules, currentId }: Props) {
+export function ModuleNav({ slug, courseTitle, modules, currentId }: Props) {
   const { completed } = useCourseProgress(slug);
   const total = modules.length;
   const done = modules.filter((m) => completed.has(m.id)).length;
@@ -76,7 +77,13 @@ export function ModuleNav({ slug, modules, currentId }: Props) {
   return (
     <>
       {/* Desktop sticky sidebar */}
-      <aside className="hidden lg:block w-64 flex-none sticky top-10">
+      <aside className="hidden lg:block w-64 flex-none sticky top-[104px]">
+        <Link
+          href={`/courses/${slug}`}
+          className="block mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug hover:underline underline-offset-2"
+        >
+          {courseTitle}
+        </Link>
         <div className="mb-4">{progress}</div>
         {list}
       </aside>

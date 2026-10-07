@@ -1,0 +1,124 @@
+---
+title: "Putting It Together"
+summary: "Every fix in this course lands on one timeline. This module stacks them on Pip's four and a half seconds, shows what each one buys and where it is explained, and gives a method for running the same process on your own bot."
+module: 10
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="10" title="Putting It Together" time="12" />
+
+<LearningObjectives>
+- Trace one slow answer through every stage of the course, and name the module that explains each stage
+- Apply fixes one at a time and combined, and read the effect on time to first word and on the full answer
+- Explain why the model's writing speed is unchanged by any fix in the course
+- Run the same method on a bot of your own, from measurement to a short list of changes
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** This is the last module, and it assumes the earlier nine. Each fix you have seen is a change to one stage of the waterfall from [Module 1](/courses/rag-latency/01-the-four-seconds). This module puts them on one timeline.
+</Callout>
+
+Six weeks later, the same team looks at the same dashboard. The first word arrives in under a second, and the support queue has gone quiet. Nobody bought a bigger model.
+
+This module walks back through the changes that got them there, and gives you a way to repeat the process on your own bot.
+
+
+## The whole course on one map
+
+Here is every stage of Pip's answer, with the module that explains it. Keep this map in mind for the rest of the module.
+
+<Diagram title="The course, stage by stage" caption="Each module owns one part of Pip's four and a half seconds">
+{`
+  queue ─────────── M6 ─ M7    (workers, pools, limits, parallel calls)
+  embed ─────────── M2 ─ M6    (embeddings, batching, caching)
+  search ────────── M3 ─ M7    (HNSW, IVF, recall, routing)
+  re-rank ───────── M4 ─ M6    (bi-encoders, cross-encoders, candidate count)
+  assemble ──────── M5         (context window, memory, prompt budget)
+  first word ────── M4 ─ M6    (prefill, prompt size, buffering)
+  rest of answer ── M6         (streaming, the model's writing speed)
+  offline line ──── M8         (parsing, chunking, batching, re-indexing)
+  costs and owners  M9         (retries, spans, triage)
+`}
+</Diagram>
+
+## Stacking the fixes
+
+Pip's team did not make one change and celebrate. They made four, one at a time, and measured after each. The interactive below does the same thing with the numbers from the earlier modules. Switch on one fix at a time, then combine them, and watch which bar moves.
+
+Each fix is tied to the module that explains it, so you can go back and read the reasoning.
+
+<FixTheStack />
+
+The order matters. The queue fix came first because it was the largest bar and the cheapest change. Index tuning came second, after the recall measurement made the trade safe. Routing and prompt trimming came last, because each one needed its own evaluation before it could ship.
+
+Notice what did not move. The last bar, the rest of the answer, is the model writing at its own speed. The course did not make the model faster. It made the wait before the model starts shorter, and that is what the customer was waiting for.
+
+## What the numbers mean
+
+Pip started at 4.6 seconds to the first word and 5.5 seconds for the full answer. With all four fixes on, the first word arrives at about 0.7 seconds and the full answer at about 1.6 seconds. The gap between the two in the last case is the 900 milliseconds of writing, which no fix in the course touched. In a longer answer that gap grows, and the model's writing speed matters more.
+
+The method is the thing to keep. Measure every stage. Find the largest one. Change one thing. Measure again. The fix that moves the largest bar is usually the right next step, and a fix that moves a small bar is rarely worth doing first.
+
+## Running the method on your own bot
+
+Here is the order to work in, for a bot of your own. It is the same order as the course.
+
+<Steps>
+<Step number={1} title="Add a clock to every stage">
+Queue, embed, search, re-rank, assemble, first word and the rest of the answer. One number per stage per request, logged with the request ID. [Module 1](/courses/rag-latency/01-the-four-seconds) explains how.
+</Step>
+<Step number={2} title="Read the bad afternoon">
+Look at p95, not the average. Pull the slowest one percent of requests and read their spans. The pattern in those requests is the pattern to fix. [Module 6](/courses/rag-latency/06-the-online-path) explains how each stage shows its signal.
+</Step>
+<Step number={3} title="Check the queue before anything else">
+If queue time dominates, a faster model changes nothing. Add workers, set a pool size, or set limits on the callers. [Module 9](/courses/rag-latency/09-who-pays-and-where-to-look) covers the retry loop that a queue can start.
+</Step>
+<Step number={4} title="Measure recall before touching the index">
+Keep a set of real questions with known answers. Measure recall at your current setting, then choose the cheapest setting that meets your target. [Module 3](/courses/rag-latency/03-approximate-search) explains the trade.
+</Step>
+<Step number={5} title="Print the prompt size next to the first word">
+If the prompt is big, cut it to the best few passages and measure again. Check whether the instructions can be cached. [Modules 4](/courses/rag-latency/04-chunks-rerank-and-the-window) and [5](/courses/rag-latency/05-context-and-memory) explain the budget.
+</Step>
+<Step number={6} title="Test the router and the cache on known questions">
+Run a labelled set after every change to routing or caching. A fast miss is still a miss. [Module 7](/courses/rag-latency/07-shelves-and-cheap-fixes) covers the traps.
+</Step>
+<Step number={7} title="Only then consider the model">
+By this point you will know whether the model is the problem. Most of the time it is not, and a model switch is a distraction until the other stages are measured.
+</Step>
+</Steps>
+
+## Where this course connects
+
+This course is one part of a larger set. The links below take you to the courses and labs that go deeper on each area, and each one is worth reading next to the module it matches.
+
+- **Production RAG**, the full build from ingestion to evaluation, with the [ingestion and chunking module](/courses/production-rag/04-ingestion-and-chunking), the [retrieval module](/courses/production-rag/06-retrieval-that-works), the [evaluation module](/courses/production-rag/08-evaluation) and the [operations module](/courses/production-rag/10-operating-in-production).
+- **Semantic Search**, which builds the embeddings and index in code, including the [vector database module](/courses/semantic-search/03-vector-db-fundamentals) on HNSW and IVF and the [hybrid search module](/courses/semantic-search/06-hybrid-search).
+- **Embeddings, in Depth**, on how embedding models are trained and compared, in the [embeddings course](/courses/embeddings-in-depth).
+- **Context Engineering**, for how to assemble and manage what a model reads, in the [context engineering course](/courses/context-engineering).
+- **Giving AI a Memory**, for the design of memory across sessions, in the [memory course](/courses/giving-ai-a-memory).
+- **AI Agents**, for the agent loop and the [memory](/courses/ai-agents/05-memory) and [observability](/courses/ai-agents/08-observability-langfuse) modules.
+- **Agentic Harness Patterns**, for the operational patterns that keep a slow system from becoming a broken one, including the [circuit breaker](/courses/agentic-harness-patterns/05-the-circuit-breaker), the [context boundary](/courses/agentic-harness-patterns/06-the-context-boundary) and the [trace pipeline](/courses/agentic-harness-patterns/07-the-trace-pipeline).
+- **Labs**: [a minimal RAG system in one file](/labs/minimal-rag-in-one-file), which gives you something to time, and [add memory to an AI agent](/labs/add-memory-to-an-agent).
+
+If you want the observability side in writing, the [blog post on observability for AI agents](/blog/observability-for-ai-agents) covers what to track and how to set up the tooling.
+
+## Where to go from here
+
+The model gets the blame because it is the only part of the system that talks back. Everything else is quiet until somebody times it. Time it first, and you will usually find that the slow part was never the chef.
+
+<ChapterSummary>
+- Every stage of a RAG answer has a module in this course, and every fix maps to one stage.
+- Stacking fixes one at a time shows which bar moves and why. The largest bar is usually the right next step.
+- No fix in the course changes how fast the model writes. The gains come from making the model start sooner and read less.
+- The method works on any bot: measure every stage, find the largest, change one thing, measure again.
+- The links in this module take you to the deeper courses and labs for each area.
+</ChapterSummary>
+
+<Checkpoint>
+1. Pip's team applied the queue fix and the index fix. The first word and the full answer both drop by the same 3.35 seconds. Why does the rest-of-answer span stay unchanged, and what would have to change to shorten it?
+2. Your bot has a 900 ms queue, a 300 ms search and a 1.1 second first word. Which stage would you change first, which module explains it, and what evidence would tell you the change is working?
+3. A colleague proposes switching to a faster model before any measurement. Using this course's method, describe the one measurement that would decide the question, and what result would make the switch the right call.
+</Checkpoint>

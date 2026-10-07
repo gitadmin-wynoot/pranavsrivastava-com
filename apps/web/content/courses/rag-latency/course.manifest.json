@@ -1,0 +1,33 @@
+{
+  "course_id": "rag-latency",
+  "title": "Why Your RAG Chatbot Is Slow",
+  "summary": "Find where a RAG chatbot really loses its time, then fix the right stage. Embeddings, HNSW and IVF, re-ranking, the context window, memory, queues and ingestion, followed through one customer question with interactive timers.",
+  "level": "Intermediate",
+  "track": "applied-ai",
+  "order": 8,
+  "status": "published",
+  "version": "1.0.0",
+  "last_reviewed": "2026-10-06",
+  "tags": [
+    "RAG",
+    "Latency",
+    "Vector Search",
+    "HNSW",
+    "IVF",
+    "Context Window",
+    "Memory",
+    "Observability"
+  ],
+  "modules": [
+    { "id": "01-the-four-seconds", "title": "The Four and a Half Seconds", "time_minutes": 14, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "02-what-search-really-does", "title": "What Search Really Does: Embeddings and Similarity", "time_minutes": 12, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "03-approximate-search", "title": "Approximate Search: HNSW, IVF and Recall", "time_minutes": 16, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "04-chunks-rerank-and-the-window", "title": "Chunks, Re-ranking and the Context Window", "time_minutes": 12, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "05-context-and-memory", "title": "Context and Memory: What the Model Reads Each Turn", "time_minutes": 16, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "06-the-online-path", "title": "The Online Path, Stage by Stage", "time_minutes": 12, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "07-shelves-and-cheap-fixes", "title": "Shelves, Routes and the Cheap Fixes", "time_minutes": 14, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "08-the-offline-pipeline", "title": "The Offline Pipeline: When the Upload Is Slow", "time_minutes": 12, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "09-who-pays-and-where-to-look", "title": "Who Pays, and Where to Look First", "time_minutes": 14, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" },
+    { "id": "10-putting-it-together", "title": "Putting It Together", "time_minutes": 12, "level": "Intermediate", "status": "published", "last_updated": "2026-10-06" }
+  ]
+}

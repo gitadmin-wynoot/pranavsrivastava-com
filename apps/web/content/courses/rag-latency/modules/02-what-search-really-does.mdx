@@ -1,0 +1,123 @@
+---
+title: "What Search Really Does: Embeddings and Similarity"
+summary: "Before you can make vector search fast, you need to know what it compares. Embeddings turn meaning into coordinates, similarity measures how close two meanings are, and exact search is the honest baseline."
+module: 2
+time: 12
+level: "Intermediate"
+status: "published"
+updatedAt: "2026-10-06"
+---
+
+<ChapterHeader number="2" title="What Search Really Does" time="12" />
+
+<LearningObjectives>
+- Explain what an embedding is and why similar meanings produce similar vectors
+- Compute cosine similarity by hand and in a few lines of Python
+- Describe exact search, its cost, and why it is the baseline for every faster method
+- Recognise which stage of the pipeline this module's ideas belong to
+</LearningObjectives>
+
+<Callout type="info">
+**Where you are.** [Module 1](/courses/rag-latency/01-the-four-seconds) showed that vector search is one of the largest bars in Pip's waterfall. This module explains what that stage is actually doing. [Module 3](/courses/rag-latency/03-approximate-search) then covers how to make it faster.
+</Callout>
+
+A support agent types "sofa return" into the old help-search box. Forty results come back. None of them is about returns. The agent gives up and sends the customer an email that takes two days.
+
+Nothing was slow. The search was blind to meaning, and it only matched the words it was given. Embeddings are how a system starts to see meaning. Their cost is what the rest of the course is about.
+
+
+## Why a search engine needs numbers
+
+Pip's customer asked, "Can I still return my sofa?" The policy page says, "Returns are accepted within 30 days of delivery." The two sentences share almost no words. A keyword search would miss the match. A system that understands meaning would not.
+
+So the first step in a RAG system is to turn text into numbers that carry meaning. That step is called **embedding**, and the numbers are the embedding.
+
+## Embeddings: meaning as coordinates
+
+<KeyTerm definition="A list of numbers, produced by an embedding model, that represents the meaning of a piece of text. Texts with similar meanings get lists that are close together.">An embedding</KeyTerm> is a list of numbers, often between 384 and 3,072 of them, produced by an embedding model. Each number is a coordinate. The list as a whole is called a <KeyTerm definition="A point in a high-dimensional space, written as a list of numbers. In retrieval, each chunk of text and each question becomes one vector.">vector</KeyTerm>.
+
+Picture a map where every sentence has a location. "Can I return this sofa?" and "How do I send back furniture?" sit close together. "What is your phone number?" sits far away. A real embedding space has hundreds of axes instead of two, but the principle is the same. Distance stands in for meaning.
+
+Every chunk of every document becomes one of these vectors when it is ingested. Every question becomes one at query time. That is why the search stage has so much to do: the library is millions of vectors, and each question has to be compared against them.
+
+## Similarity: how close is close
+
+Most systems measure closeness with <KeyTerm definition="A score from minus 1 to 1 that compares the angle between two vectors. 1 means the same direction, 0 means unrelated, minus 1 means opposite.">cosine similarity</KeyTerm>. It compares the angle between two vectors and ignores their length.
+
+Two arrows drawn from the same starting point make the idea concrete. A narrow angle between them means similar meaning. A wide angle means the topics have drifted apart.
+
+Here is the calculation with three-number vectors, so you can check every step. The numbers are invented for the example. Run it and read the output.
+
+```python
+import math
+
+def cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    return dot / (math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b)))
+
+question = [0.9, 0.1, 0.2]   # "Can I return this sofa?"
+returns  = [0.8, 0.2, 0.3]   # "Returns are accepted within 30 days."
+office   = [0.1, 0.9, 0.4]   # "Our head office is in Leeds."
+
+print(round(cosine(question, returns), 3))
+print(round(cosine(question, office), 3))
+```
+
+The returns passage scores about 0.98, and the office passage scores about 0.28. The ranking is what the search uses. The exact values are not important.
+
+<Callout type="warning">
+**The metric must match the model.** Embedding models are trained for a particular similarity measure. Some expect cosine, and some expect a dot product on normalised vectors. If your index was built with one and queried with the other, the results drift silently. Check it once, against a few questions whose answers you know.
+</Callout>
+
+## Exact search: read every card
+
+The simplest search compares the question vector with every stored vector, sorts the scores, and returns the top few. The result is always correct, because nothing has been skipped.
+
+Here is that method in a few lines, using the same `cosine` function:
+
+```python
+import math
+
+def cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    return dot / (math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b)))
+
+def exact_search(question, index, k=3):
+    scored = [(cosine(question, vec), text) for text, vec in index]
+    return sorted(scored, reverse=True)[:k]
+
+index = [
+    ("Returns are accepted within 30 days.", [0.8, 0.2, 0.3]),
+    ("Our head office is in Leeds.",         [0.1, 0.9, 0.4]),
+    ("Delivery takes three to five days.",   [0.5, 0.3, 0.7]),
+]
+print(exact_search([0.9, 0.1, 0.2], index, k=2))
+```
+
+Now scale it up. Five million vectors of 1,024 numbers each means about five billion multiply-and-add operations for every question. A single server might manage that a few times a second, not a few hundred times. This is why exact search is the honest baseline and rarely the production choice.
+
+<KeyTerm definition="A search that compares the question against every stored vector. It is always correct and its cost grows with the size of the library.">Exact search</KeyTerm> still has a job. It is the reference you measure everything else against. Run it on a sample of real questions, record the true top results, and then judge the faster methods by how much of that truth they recover. [Module 3](/courses/rag-latency/03-approximate-search) does exactly that.
+
+## What this means for speed
+
+Two points from this module carry forward.
+
+First, the cost of search is the number of vectors times the number of dimensions, for every question. Both numbers are choices you make. Fewer chunks, or lower-dimensional embeddings, shrink the work directly.
+
+Second, exact search is a baseline, not a target. You will almost always use an approximate method in production, and you will judge it against exact results.
+
+For a deeper treatment of the embedding models themselves, the [Embeddings, in Depth course](/courses/embeddings-in-depth) covers how they are trained and how to compare them. The [Semantic Search course](/courses/semantic-search/01-how-embeddings-work) builds the same ideas into a working system.
+
+<ChapterSummary>
+- An embedding turns text into a vector, and similar meanings produce vectors that sit close together.
+- Cosine similarity compares the angle between two vectors. Higher means closer in meaning.
+- Exact search compares the question with every vector. It is correct and expensive.
+- The cost of search is roughly the number of vectors times the number of dimensions, for every question.
+- The metric you use must match the one the model was trained for.
+</ChapterSummary>
+
+<Checkpoint>
+1. Why does "Can I still return my sofa?" match "Returns are accepted within 30 days" even though they share almost no words?
+2. Your index has 5 million vectors of 768 numbers each. Roughly how many multiply-and-add operations does one exact search need, and why does that matter for the vector search bar in Pip's waterfall?
+3. You switch to a new embedding model but keep the old index. Describe what could go wrong with cosine similarity and how you would detect it.
+</Checkpoint>

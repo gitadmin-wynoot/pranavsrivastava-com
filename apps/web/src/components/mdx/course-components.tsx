@@ -4,6 +4,18 @@ import { Figure } from "./course-figures";
 import { RelationMap } from "./relation-map";
 import { RetrievalPlayground } from "./retrieval-playground";
 import { ChunkSizer } from "./chunk-sizer";
+import {
+  LatencyStopwatch,
+  AnnTradeoff,
+  ShardRouter,
+  ParallelVsSequential,
+  IngestionPipeline,
+  SymptomTriage,
+  SpanBudget,
+  NearestNeighbours,
+  ContextBudget,
+  FixTheStack,
+} from "./latency-guide";
 import { ReActSimulator } from "./react-simulator";
 import { FolderExplorer } from "./folder-explorer";
 import { ApproachPicker } from "./approach-picker";
@@ -138,10 +150,14 @@ export function Callout({ type = "info", title, children }: CalloutProps) {
 export function LearningObjectives({ children }: { children: React.ReactNode }) {
   return (
     <div className="my-6 rounded-xl border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-950/20 px-5 py-4 not-prose">
+      {/* A real sentence, not a form-field label. The bullets below are all
+          authored as bare verbs (Build, Explain, Decide...), so they read as
+          its continuation — "you'll be able to: Build a working..." — rather
+          than as four disconnected fragments dropped under a cold heading. */}
       <div className="flex items-center gap-2 mb-3">
         <Target className="w-4 h-4 text-blue-500 flex-shrink-0" />
-        <span className="text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300">
-          What you will learn
+        <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+          By the end of this chapter, you&apos;ll be able to:
         </span>
       </div>
       <div className="text-sm text-zinc-700 dark:text-zinc-300 [&_ul]:list-none [&_ul]:pl-0 [&_ul]:space-y-2 [&_li]:flex [&_li]:items-start [&_li]:gap-2 [&_li]:leading-snug [&_li:before]:content-['✓'] [&_li:before]:text-blue-500 [&_li:before]:font-bold [&_li:before]:flex-shrink-0 [&_li:before]:mt-px">
@@ -433,5 +449,15 @@ export const courseComponents = {
   JevOrLaya,
   ProjectFitExplorer,
   StudyQuiz,
+  LatencyStopwatch,
+  AnnTradeoff,
+  ShardRouter,
+  ParallelVsSequential,
+  IngestionPipeline,
+  SymptomTriage,
+  SpanBudget,
+  NearestNeighbours,
+  ContextBudget,
+  FixTheStack,
   pre: CodeBlock,
 };
